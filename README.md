@@ -43,12 +43,12 @@ This approach makes it possible to have a large number of otherwise unsupported 
 By default, sjis_ext.bin is created inside the output folder, next to the patched game files. You can pass a fourth argument to `insertlocal` and `insertgdocs` to specify an alternative path (which should include the file name). The proxy DLL expects the file to be in the same folder as the game .exe.
 
 # VNTextProxy
-A proxy d2d1.dll for adding proportional font support to games that normally only do monospace. It can do the following:
+A proxy d2d1.dll that hooks into the game and helps with making it display non-Japanese text. It can do the following:
 * Detect whether the user's machine is using the Japanese locale, and if not, relaunch the game using [Locale Emulator](https://github.com/xupefei/Locale-Emulator). This is useful for games that crash on non-Japanese systems. Note that you need to bundle LoaderDll.dll and LocaleEmulator.dll if you intend to use this feature.
 * Load a custom font (.ttf/.otf) from the game's folder.
 * Catch calls to CreateFontA(), CreateFontIndirectA() and IDWriteFactory::CreateTextFormat() and make them use this custom font instead.
-* Catch calls to TextOutA() and ID2D1RenderTarget::DrawText() and adjust the rendered character's coordinates so it'll be correctly positioned next to the preceding character. This takes into account the width of the character in the custom font, as well as any kerning.
-* Replace calls to TextOutA() by TextOutW(), restoring non-Shift JIS characters in the process (see previous section).
+* Catch calls to TextOutA() and ID2D1RenderTarget::DrawText() to correctly position characters when using a proportional font (as many visual novel engines only do monospace).
+* Restore non-Shift JIS characters using sjis_ext.bin (see previous section).
 
 If the game doesn't reference d2d1.dll, you can use the files from the "VersionProxy" folder to turn the DLL into a version.dll proxy instead. If the game doesn't reference version.dll either, you can use [DLLProxyGenerator](https://github.com/nitrog0d/DLLProxyGenerator/releases/tag/v1.0.0) to create proxy code for a DLL it does reference.
 
