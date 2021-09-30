@@ -3,7 +3,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * ArcGameEngine (.bin)
 * CatSystem2 (.cst)
 * CrimsonSystem (no file extension; tool expects .csa)
-* Buriko General Interpreter/Ethornell (.bgi)
+* Buriko General Interpreter/Ethornell (no file extension; tool expects .bgi)
 * Kirikiri (.ks/.ks.scn)
 * Propeller (.msc)
 * RealLive (.rl)
