@@ -29,8 +29,8 @@ namespace VNTextPatch.Shared.Scripts
             if (location.Collection != _collection)
                 throw new InvalidOperationException();
 
-            MsExcel.Worksheet sheet = _workbook.Worksheets[location.ScriptName];
-            _values = sheet.UsedRange.Value;
+            MsExcel.Worksheet sheet = (MsExcel.Worksheet)_workbook.Worksheets[location.ScriptName];
+            _values = (object[,])sheet.UsedRange.Value;
         }
 
         public IEnumerable<ScriptString> GetStrings()
@@ -129,7 +129,7 @@ namespace VNTextPatch.Shared.Scripts
             if (location.Collection != _collection)
                 throw new InvalidOperationException();
 
-            MsExcel.Worksheet sheet = _workbook.Worksheets[location.ScriptName];
+            MsExcel.Worksheet sheet = (MsExcel.Worksheet)_workbook.Worksheets[location.ScriptName];
             int bottomRow = _values.GetUpperBound(0);
             char rightColumn = (char)(0x40 + _values.GetUpperBound(1));
             string address = $"A2:{rightColumn}{bottomRow}";
