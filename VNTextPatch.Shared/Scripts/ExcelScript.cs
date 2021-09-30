@@ -115,13 +115,11 @@ namespace VNTextPatch.Shared.Scripts
 
             _values[row, (int)ExcelColumn.OriginalLine] = message;
 
-            /*
             if (characterNames.Count > 0)
             {
                 string translatedNames = string.Join("/", characterNames.Select(CharacterNames.GetTranslation));
                 _values[row, (int)ExcelColumn.TranslatedCharacter] = translatedNames;
             }
-            */
         }
 
         private void WriteTable(ScriptLocation location)
