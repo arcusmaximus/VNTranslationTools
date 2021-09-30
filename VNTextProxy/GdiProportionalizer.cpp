@@ -8,6 +8,7 @@ void GdiProportionalizer::Init()
     PatchGameImports(
         {
             { "CreateFontA", CreateFontAHook },
+            { "CreateFontIndirectA", CreateFontIndirectAHook },
             { "SelectObject", SelectObjectHook },
             { "DeleteObject", DeleteObjectHook },
             { "TextOutA", TextOutAHook }
@@ -24,6 +25,26 @@ HFONT GdiProportionalizer::CreateFontAHook(int cHeight, int cWidth, int cEscapem
 
     Font* pFont = FontManager.FetchFont(FontName, cHeight, Bold, Italic, Underline);
     return pFont->GetGdiHandle();
+}
+
+HFONT GdiProportionalizer::CreateFontIndirectAHook(LOGFONTA* pFontInfo)
+{
+    return CreateFontAHook(
+        pFontInfo->lfHeight,
+        pFontInfo->lfWidth,
+        pFontInfo->lfEscapement,
+        pFontInfo->lfOrientation,
+        pFontInfo->lfWeight,
+        pFontInfo->lfItalic,
+        pFontInfo->lfUnderline,
+        pFontInfo->lfStrikeOut,
+        pFontInfo->lfCharSet,
+        pFontInfo->lfOutPrecision,
+        pFontInfo->lfClipPrecision,
+        pFontInfo->lfQuality,
+        pFontInfo->lfPitchAndFamily,
+        pFontInfo->lfFaceName
+    );
 }
 
 HGDIOBJ GdiProportionalizer::SelectObjectHook(HDC hdc, HGDIOBJ obj)
