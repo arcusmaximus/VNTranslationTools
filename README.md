@@ -44,6 +44,7 @@ By default, sjis_ext.bin is created inside the output folder, next to the patche
 
 # VNTextProxy
 A proxy d2d1.dll for adding proportional font support to games that normally only do monospace. It can do the following:
+* Detect whether the user's machine is using the Japanese locale, and if not, relaunch the game using [Locale Emulator](https://github.com/xupefei/Locale-Emulator). This is useful for games that crash on non-Japanese systems. Note that you need to bundle LoaderDll.dll and LocaleEmulator.dll if you intend to use this feature.
 * Load a custom font (.ttf/.otf) from the game's folder.
 * Catch calls to CreateFontA(), CreateFontIndirectA() and IDWriteFactory::CreateTextFormat() and make them use this custom font instead.
 * Catch calls to TextOutA() and ID2D1RenderTarget::DrawText() and adjust the rendered character's coordinates so it'll be correctly positioned next to the preceding character. This takes into account the width of the character in the custom font, as well as any kerning.
