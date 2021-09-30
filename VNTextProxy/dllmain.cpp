@@ -12,8 +12,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
         /*
         if (GetACP() != 932)
         {
-            LocaleEmulator::Relaunch();
-            ExitProcess(0);
+            if (LocaleEmulator::Relaunch())
+                ExitProcess(0);
         }
         //*/
 
