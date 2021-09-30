@@ -52,4 +52,4 @@ A proxy d2d1.dll that hooks into the game and helps with making it display non-J
 
 If the game doesn't reference d2d1.dll, you can use the files from the "VersionProxy" folder to turn the DLL into a version.dll proxy instead. If the game doesn't reference version.dll either, you can use [DLLProxyGenerator](https://github.com/nitrog0d/DLLProxyGenerator/releases/tag/v1.0.0) to create proxy code for a DLL it does reference.
 
-The source code comes with an empty "EnginePatches" class where you can add game hooks specific for the engine you're working with. Microsoft's [Detours](https://github.com/microsoft/Detours) library is already included.
+The source code comes with an empty "EnginePatches" class where you can add game-specific hooks. Microsoft's [Detours](https://github.com/microsoft/Detours) library is already included.
