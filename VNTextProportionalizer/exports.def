@@ -1,0 +1,15 @@
+LIBRARY d2d1
+EXPORTS
+	D2D1CreateFactory=FakeD2D1CreateFactory @1
+	D2D1MakeRotateMatrix=FakeD2D1MakeRotateMatrix @2
+	D2D1MakeSkewMatrix=FakeD2D1MakeSkewMatrix @3
+	D2D1IsMatrixInvertible=FakeD2D1IsMatrixInvertible @4
+	D2D1InvertMatrix=FakeD2D1InvertMatrix @5
+	D2D1ConvertColorSpace=FakeD2D1ConvertColorSpace @6
+	D2D1CreateDevice=FakeD2D1CreateDevice @7
+	D2D1CreateDeviceContext=FakeD2D1CreateDeviceContext @8
+	D2D1SinCos=FakeD2D1SinCos @9
+	D2D1Tan=FakeD2D1Tan @10
+	D2D1Vec3Length=FakeD2D1Vec3Length @11
+	D2D1ComputeMaximumScaleFactor=FakeD2D1ComputeMaximumScaleFactor @12
+	D2D1GetGradientMeshInteriorPointsFromCoonsPatch=FakeD2D1GetGradientMeshInteriorPointsFromCoonsPatch @13
