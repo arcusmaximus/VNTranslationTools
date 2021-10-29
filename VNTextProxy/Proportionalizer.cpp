@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 
 #define PROPORTIONALIZER_CHARACTER_SPACING 5
 
@@ -75,15 +75,15 @@ bool Proportionalizer::HandleFormattingCode(wchar_t c)
 {
     switch (c)
     {
-    case L'êž':
+    case L'é¾ ':
         Bold = !Bold;
         return true;
 
-    case L'âÞ':
+    case L'ç±¥':
         Italic = !Italic;
         return true;
 
-    case L'èo':
+    case L'é‘°':
         Underline = !Underline;
         return true;
     }
