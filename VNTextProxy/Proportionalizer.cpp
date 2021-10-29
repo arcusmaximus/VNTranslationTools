@@ -9,7 +9,8 @@ void Proportionalizer::Init()
     FontName = LoadCustomFont();
     PatchGameImports(
         {
-            { "MultiByteToWideChar", MultiByteToWideCharHook }
+            { "MultiByteToWideChar", MultiByteToWideCharHook },
+            { "MessageBoxA", MessageBoxAHook }
         }
     );
 }
@@ -133,7 +134,7 @@ BOOL Proportionalizer::PatchGameImport(void* pContext, DWORD nOrdinal, LPCSTR ps
 int Proportionalizer::MultiByteToWideCharHook(UINT codePage, DWORD flags, LPCCH lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar)
 {
     wstring wstr = SjisTunnelDecoder::Decode(lpMultiByteStr, cbMultiByte);
-    wstr = StringUtil::ToHalfWidth(wstr);
+    //wstr = StringUtil::ToHalfWidth(wstr);
     int numWchars = wstr.size();
     if (cbMultiByte < 0)
         numWchars++;
@@ -146,4 +147,11 @@ int Proportionalizer::MultiByteToWideCharHook(UINT codePage, DWORD flags, LPCCH 
         memcpy(lpWideCharStr, wstr.c_str(), numWchars * sizeof(wchar_t));
     }
     return numWchars;
+}
+
+int Proportionalizer::MessageBoxAHook(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
+{
+    wstring wstrCaption = SjisTunnelDecoder::Decode(lpCaption);
+    wstring wstrText = SjisTunnelDecoder::Decode(lpText);
+    return MessageBoxW(hWnd, wstrText.c_str(), wstrCaption.c_str(), uType);
 }
