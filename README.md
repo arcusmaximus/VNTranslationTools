@@ -10,7 +10,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * Ren'Py (.rpy)
 * ShSystem (.hst)
 * Qlie (.s)
-* SystemNNN (.nnn)
+* SystemNNN (.nnn, .spt)
 * YU-RIS (.ybn)
 
 The tool can extract text into Excel spreadsheets (.xlsx), and reinsert text from Excel or Google Docs spreadsheets. Reinserting from Google Docs requires an API key in VNTextPatch.exe.config; in addition, the spreadsheet should be publically accessible.
