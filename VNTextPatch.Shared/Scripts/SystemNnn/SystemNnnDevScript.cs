@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using VNTextPatch.Shared.Util;
 
-namespace VNTextPatch.Shared.Scripts
+namespace VNTextPatch.Shared.Scripts.SystemNnn
 {
-    internal class SystemNnnScript : IScript
+    internal class SystemNnnDevScript : SystemNnnBaseScript, IScript
     {
         private static readonly byte[] MessageDataHeader =
             { 0x2D, 0x2D, 0x4D, 0x45, 0x53, 0x53, 0x41, 0x47, 0x45, 0x44, 0x41, 0x54, 0x41, 0x20, 0x20, 0x00 };
@@ -14,18 +13,6 @@ namespace VNTextPatch.Shared.Scripts
         private static readonly byte[] CommandDataHeader =
             { 0x2D, 0x43, 0x4F, 0x4D, 0x4D, 0x41, 0x4E, 0x44, 0x44, 0x41, 0x54, 0x41, 0x20, 0x20, 0x20, 0x00 };
 
-        private static readonly Dictionary<byte[], byte[]> FormattingReplacements =
-            new Dictionary<byte[], byte[]>
-            {
-                {  new[] { (byte)'<', (byte)'b', (byte)'>' }, new byte[] { 0xFC, 0xFD } },
-                {  new[] { (byte)'<', (byte)'i', (byte)'>' }, new byte[] { 0xFC, 0xFE } },
-                {  new[] { (byte)'<', (byte)'u', (byte)'>' }, new byte[] { 0xFC, 0xFF } },
-
-                {  new[] { (byte)'<', (byte)'/', (byte)'b', (byte)'>' }, new byte[] { 0xFC, 0xFD } },
-                {  new[] { (byte)'<', (byte)'/', (byte)'i', (byte)'>' }, new byte[] { 0xFC, 0xFE } },
-                {  new[] { (byte)'<', (byte)'/', (byte)'u', (byte)'>' }, new byte[] { 0xFC, 0xFF } },
-            };
-        
         public string Extension => ".nnn";
 
         private byte[] _data;
@@ -42,18 +29,10 @@ namespace VNTextPatch.Shared.Scripts
             foreach (NnnRange range in GetTextRanges())
             {
                 stream.Position = range.Offset;
-                string message = reader.ReadZeroTerminatedSjisString();
-                message = Regex.Replace(message, @"(?<=^|\r\n)//.+?($|\r\n)", "");
-                message = message.TrimEnd('\r', '\n');
-                Match match = Regex.Match(message, @"^(?<name>[^「『』」\r\n]+)\r\n(?<message>[「『].+[』」])\s*$", RegexOptions.Singleline);
-                if (match.Success)
+                string text = reader.ReadZeroTerminatedSjisString();
+                foreach (ScriptString str in ParseFileText(text))
                 {
-                    yield return new ScriptString(match.Groups["name"].Value, ScriptStringType.CharacterName);
-                    yield return new ScriptString(match.Groups["message"].Value, ScriptStringType.Message);
-                }
-                else
-                {
-                    yield return new ScriptString(message, ScriptStringType.Message);
+                    yield return str;
                 }
             }
         }
@@ -63,26 +42,9 @@ namespace VNTextPatch.Shared.Scripts
             using IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator();
             foreach (NnnRange range in GetTextRanges())
             {
-                WordWrapper wrapper = range.Type == NnnMessageType.LPrint ? ProportionalWordWrapper.Secondary : ProportionalWordWrapper.Default;
-
-                if (!stringEnumerator.MoveNext())
-                    throw new Exception("Too few lines in translation file.");
-
-                string text = stringEnumerator.Current.Text;
-                text = wrapper.Wrap(text);
-                if (stringEnumerator.Current.Type == ScriptStringType.CharacterName)
-                {
-                    if (!stringEnumerator.MoveNext() || stringEnumerator.Current.Type != ScriptStringType.Message)
-                        throw new Exception("No message found after character name.");
-
-                    text = text.Replace(" ", "　") + "\r\n" + wrapper.Wrap(stringEnumerator.Current.Text);
-                }
-
-                text = StringUtil.FancifyQuotes(text);
-                byte[] textBytes = StringUtil.SjisTunnelEncoding.GetBytes(text);
-                textBytes = BinaryUtil.Replace(textBytes, FormattingReplacements);
+                byte[] textBytes = FormatFileText(stringEnumerator, range.Type);
                 if (textBytes.Length + 1 > range.Length)
-                    throw new ArgumentException($"Message {text} is too long (can be {range.Length - 1} SJIS-encoded bytes at most)");
+                    throw new ArgumentException($"Message is too long (can be {range.Length - 1} SJIS-encoded bytes at most)");
 
                 Array.Copy(textBytes, 0, _data, range.Offset, textBytes.Length);
                 _data[range.Offset + textBytes.Length] = 0;
@@ -140,14 +102,6 @@ namespace VNTextPatch.Shared.Scripts
             public int Offset;
             public int Length;
             public NnnMessageType Type;
-        }
-
-        private enum NnnMessageType
-        {
-            Print,
-            LPrint,
-            Append,
-            Draw
         }
 
         private enum NnnCommandType

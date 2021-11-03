@@ -8,6 +8,7 @@ using VNTextPatch.Shared.Scripts.Kirikiri;
 using VNTextPatch.Shared.Scripts.Propeller;
 using VNTextPatch.Shared.Scripts.RealLive;
 using VNTextPatch.Shared.Scripts.ShSystem;
+using VNTextPatch.Shared.Scripts.SystemNnn;
 using VNTextPatch.Shared.Scripts.Yuris;
 
 namespace VNTextPatch.Shared.Scripts
@@ -32,7 +33,8 @@ namespace VNTextPatch.Shared.Scripts
                     new RealLiveScript(),
                     new RenpyScript(),
                     new ShSystemScript(),
-                    new SystemNnnScript(),
+                    new SystemNnnDevScript(),
+                    new SystemNnnReleaseScript(),
                     new TextScript(),
                     new TjsScript(),
                     new YurisScript()

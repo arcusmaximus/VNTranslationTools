@@ -75,7 +75,9 @@
     <Compile Include="Scripts\RealLive\RealLiveDisassembler.cs" />
     <Compile Include="Scripts\ShSystem\ShSystemDisassembler.cs" />
     <Compile Include="Scripts\ShSystem\ShSystemScript.cs" />
-    <Compile Include="Scripts\SystemNnnScript.cs" />
+    <Compile Include="Scripts\SystemNnn\SystemNnnBaseScript.cs" />
+    <Compile Include="Scripts\SystemNnn\SystemNnnDevScript.cs" />
+    <Compile Include="Scripts\SystemNnn\SystemNnnReleaseScript.cs" />
     <Compile Include="Scripts\TextScript.cs" />
     <Compile Include="Scripts\Kirikiri\TjsScript.cs" />
     <Compile Include="CharacterNames.cs" />
