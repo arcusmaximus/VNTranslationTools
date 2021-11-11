@@ -143,13 +143,13 @@ namespace VNTextPatch.Shared.Scripts.Yuris
                 if (!stringEnumerator.MoveNext())
                     throw new InvalidDataException("Not enough lines in translated script");
 
-                return $"{name}「{stringEnumerator.Current.Text}」";
-                //return $"{name}\"{MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text)}\"";
+                //return $"{name}「{stringEnumerator.Current.Text}」";
+                return $"{name}\"{MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text)}\"";
             }
             else
             {
-                return stringEnumerator.Current.Text;
-                //return MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text);
+                //return stringEnumerator.Current.Text;
+                return MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text);
             }
         }
 
