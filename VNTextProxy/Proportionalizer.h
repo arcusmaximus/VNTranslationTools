@@ -26,4 +26,19 @@ private:
 	static BOOL __stdcall PatchGameImport(void* pContext, DWORD nOrdinal, LPCSTR pszFunc, void** ppvFunc);
 	static int __stdcall MultiByteToWideCharHook(UINT codePage, DWORD flags, LPCCH lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar);
 	static int __stdcall MessageBoxAHook(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
+	static BOOL __stdcall SetWindowTextAHook(HWND hWnd, LPCSTR lpString);
+	static HWND __stdcall CreateWindowExAHook(
+		DWORD dwExStyle,
+		LPCSTR lpClassName,
+		LPCSTR lpWindowName,
+		DWORD dwStyle,
+		int X,
+		int Y,
+		int nWidth,
+		int nHeight,
+		HWND hWndParent,
+		HMENU hMenu,
+		HINSTANCE hInstance,
+		LPVOID lpParam
+	);
 };

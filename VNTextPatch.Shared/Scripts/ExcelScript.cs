@@ -38,8 +38,8 @@ namespace VNTextPatch.Shared.Scripts
             int lastRow = _values.GetUpperBound(0);
             for (int rowNumber = 2; rowNumber <= lastRow; rowNumber++)
             {
-                string characterNames = _values[rowNumber, (int)ExcelColumn.TranslatedCharacter] as string ??
-                                        _values[rowNumber, (int)ExcelColumn.OriginalCharacter] as string;
+                string characterNames = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.TranslatedCharacter] as string) ??
+                                        StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.OriginalCharacter] as string);
                 if (characterNames != null)
                 {
                     foreach (string characterName in characterNames.Split('/'))
@@ -59,23 +59,23 @@ namespace VNTextPatch.Shared.Scripts
 
         private string GetText(int rowNumber)
         {
-            string originalText = _values[rowNumber, (int)ExcelColumn.OriginalLine] as string;
+            string originalText = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.OriginalLine] as string);
             if (originalText != null)
                 Total++;
 
-            string translatedText = _values[rowNumber, (int)ExcelColumn.TranslatedLine] as string;
+            string translatedText = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.TranslatedLine] as string);
             if (translatedText != null)
                 Translated++;
 
-            string checkedText = _values[rowNumber, (int)ExcelColumn.CheckedLine] as string;
+            string checkedText = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.CheckedLine] as string);
             if (checkedText != null)
                 Checked++;
 
-            string editedText = _values[rowNumber, (int)ExcelColumn.EditedLine] as string;
+            string editedText = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.EditedLine] as string);
             if (editedText != null)
                 Edited++;
 
-            return StringUtil.NullIf(editedText, ".") ?? StringUtil.NullIf(checkedText, ".") ?? translatedText ?? originalText;
+            return editedText ?? checkedText ?? translatedText ?? originalText;
         }
 
         public void WritePatched(IEnumerable<ScriptString> strings, ScriptLocation location)
