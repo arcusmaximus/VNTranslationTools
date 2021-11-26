@@ -95,17 +95,27 @@ bool Proportionalizer::HandleFormattingCode(wchar_t c)
 
 wstring Proportionalizer::LoadCustomFont()
 {
+    wchar_t folderPath[MAX_PATH];
+    GetModuleFileName(GetModuleHandle(nullptr), folderPath, sizeof(folderPath) / sizeof(wchar_t));
+    wchar_t* pLastSlash = wcsrchr(folderPath, L'\\');
+    if (pLastSlash != nullptr)
+        *pLastSlash = L'\0';
+
     WIN32_FIND_DATA findData;
-    HANDLE hFind = FindFirstFile(L"*.ttf", &findData);
+    wstring searchPath = wstring(folderPath) + L"\\*.ttf";
+    HANDLE hFind = FindFirstFile(searchPath.c_str(), &findData);
     if (hFind == INVALID_HANDLE_VALUE)
     {
-        hFind = FindFirstFile(L"*.otf", &findData);
+        searchPath = wstring(folderPath) + L"\\*.otf";
+        hFind = FindFirstFile(searchPath.c_str(), &findData);
         if (hFind == INVALID_HANDLE_VALUE)
             return L"";
     }
     FindClose(hFind);
 
-    AddFontResourceExW(findData.cFileName, FR_PRIVATE, nullptr);
+    wstring fontFilePath = wstring(folderPath) + L"\\" + findData.cFileName;
+    AddFontResourceExW(fontFilePath.c_str(), FR_PRIVATE, nullptr);
+
     wchar_t* pDot = wcsrchr(findData.cFileName, L'.');
     *pDot = L'\0';
     return findData.cFileName;
