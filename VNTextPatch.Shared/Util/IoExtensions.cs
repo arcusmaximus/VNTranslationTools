@@ -130,7 +130,7 @@ namespace VNTextPatch.Shared.Util
 
         public static int WriteZeroTerminatedSjisString(this BinaryWriter writer, string str)
         {
-            int length = StringUtil.SjisEncoding.GetBytes(str, 0, str.Length, TextBuffer, 0);
+            int length = StringUtil.SjisTunnelEncoding.GetBytes(str, 0, str.Length, TextBuffer, 0);
             writer.Write(TextBuffer, 0, length);
             writer.Write((byte)0);
             return length + 1;

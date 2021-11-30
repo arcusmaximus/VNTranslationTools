@@ -93,7 +93,7 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
                             throw new InvalidDataException("Not enough strings in script file");
 
                         text = scriptStringEnumerator.Current.Text;
-                        //text = ProportionalWordWrapper.Default.Wrap(text);
+                        text = ProportionalWordWrapper.Default.Wrap(text);
                     }
 
                     int offset;

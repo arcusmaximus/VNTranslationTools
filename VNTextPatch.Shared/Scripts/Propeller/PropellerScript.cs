@@ -96,6 +96,9 @@ namespace VNTextPatch.Shared.Scripts.Propeller
                 patcher.ReplaceBytes(range.Length - 4, textBytes);
             }
 
+            if (stringEnumerator.MoveNext())
+                throw new Exception("Too many strings in translation");
+
             patcher.CopyUpTo((int)inputStream.Length);
 
             foreach (int offset in _addressOffsets)

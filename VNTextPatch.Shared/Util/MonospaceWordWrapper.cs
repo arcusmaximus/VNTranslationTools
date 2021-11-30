@@ -19,15 +19,7 @@ namespace VNTextPatch.Shared.Util
 
         protected override int GetTextWidth(string text, int offset, int length)
         {
-            int width = 0;
-            for (int i = offset; i < offset + length; i++)
-            {
-                if (StringUtil.IsJapaneseCharacter(text[i]))
-                    width += 2;
-                else
-                    width++;
-            }
-            return width;
+            return length;
         }
 
         protected override int LineWidth

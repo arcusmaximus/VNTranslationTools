@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace VNTextPatch.Shared.Util
@@ -11,17 +12,24 @@ namespace VNTextPatch.Shared.Util
         {
             StringBuilder result = new StringBuilder();
 
-            foreach (string line in text.Split(new[] { lineBreak }, System.StringSplitOptions.None))
+            foreach (string line in text.Split(new[] { lineBreak }, StringSplitOptions.None))
             {
                 int lineStartPos = 0;
                 foreach (int lineEndPos in GetWrapPositions(line))
                 {
+                    if (lineEndPos == lineStartPos)
+                        continue;
+
                     if (result.Length > 0)
                         result.Append(lineBreak);
 
-                    result.Append(line, lineStartPos, lineEndPos - lineStartPos);
+                    int adjustedLineEndPos = lineEndPos;
+                    if (lineEndPos < line.Length && "，。？」』】）’”".IndexOf(line[lineEndPos]) >= 0)
+                        adjustedLineEndPos++;
 
-                    lineStartPos = lineEndPos;
+                    result.Append(line, lineStartPos, adjustedLineEndPos - lineStartPos);
+
+                    lineStartPos = adjustedLineEndPos;
                     while (lineStartPos < line.Length && line[lineStartPos] == ' ')
                     {
                         lineStartPos++;

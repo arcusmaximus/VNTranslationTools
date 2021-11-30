@@ -139,6 +139,9 @@
     <PackageReference Include="Microsoft.Office.Interop.Excel">
       <Version>15.0.4795.1000</Version>
     </PackageReference>
+    <PackageReference Include="MSOffice.Object.Library">
+      <Version>15.0.4420.1018</Version>
+    </PackageReference>
     <PackageReference Include="System.Diagnostics.DiagnosticSource">
       <Version>4.5.0</Version>
     </PackageReference>
