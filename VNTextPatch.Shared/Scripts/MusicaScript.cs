@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts
@@ -9,8 +11,6 @@ namespace VNTextPatch.Shared.Scripts
 
         protected override IEnumerable<Range> GetRanges(string script)
         {
-            char[] argSeparators = { ' ', '\t' };
-
             TrackingStringReader reader = new TrackingStringReader(script);
             while (true)
             {
@@ -19,32 +19,59 @@ namespace VNTextPatch.Shared.Scripts
                 if (line == null)
                     break;
 
-                if (!line.StartsWith(".message "))
+                Match match = Regex.Match(line, @"(?<command>[.\w]+)(?:[ \t](?<arg>[^ \t]*))+");
+                if (!match.Success)
                     continue;
 
-                int messageNumPos = line.IndexOfAny(argSeparators) + 1;
-                if (messageNumPos == 0)
-                    continue;
+                string command = match.Groups["command"].Value;
+                CaptureCollection args = match.Groups["arg"].Captures;
+                IEnumerable<Range> ranges = command switch
+                                            {
+                                                ".message" => GetMessageRanges(lineStartPos, args),
+                                                ".select" => GetSelectRanges(lineStartPos, args),
+                                                _ => Enumerable.Empty<Range>()
+                                            };
 
-                int audioPos = line.IndexOfAny(argSeparators, messageNumPos) + 1;
-                if (audioPos == 0)
-                    continue;
+                foreach (Range range in ranges)
+                {
+                    yield return range;
+                }
+            }
+        }
 
-                int namePos = line.IndexOfAny(argSeparators, audioPos) + 1;
-                if (namePos == 0)
-                    continue;
+        private static IEnumerable<Range> GetMessageRanges(int lineStartPos, CaptureCollection args)
+        {
+            if (args.Count < 4)
+                yield break;
 
-                if (script[lineStartPos + namePos] == '@')
+            Capture name = args[2];
+            if (name.Length > 0)
+            {
+                int namePos = name.Index;
+                int nameLength = name.Length;
+                if (name.Value[0] == '@')
+                {
                     namePos++;
+                    nameLength--;
+                }
 
-                int messagePos = line.IndexOfAny(argSeparators, namePos) + 1;
-                if (messagePos == 0)
+                yield return new Range(lineStartPos + namePos, nameLength, ScriptStringType.CharacterName);
+            }
+
+            Capture messageStart = args[3];
+            Capture messageEnd = args[args.Count - 1];
+            yield return new Range(lineStartPos + messageStart.Index, messageEnd.Index + messageEnd.Length - messageStart.Index, ScriptStringType.Message);
+        }
+
+        private static IEnumerable<Range> GetSelectRanges(int lineStartPos, CaptureCollection args)
+        {
+            foreach (Capture choice in args)
+            {
+                int colonIdx = choice.Value.IndexOf(':');
+                if (colonIdx < 0)
                     continue;
 
-                if (messagePos - namePos > 1)
-                    yield return new Range(lineStartPos + namePos, messagePos - namePos - 1, ScriptStringType.CharacterName);
-
-                yield return new Range(lineStartPos + messagePos, line.Length - messagePos, ScriptStringType.Message);
+                yield return new Range(lineStartPos + choice.Index, colonIdx, ScriptStringType.Message);
             }
         }
 
@@ -59,11 +86,9 @@ namespace VNTextPatch.Shared.Scripts
 
         protected override string GetTextForWrite(ScriptString str)
         {
-            if (str.Type == ScriptStringType.CharacterName)
-                return str.Text.Replace(" ", "　");
-
             string text = MonospaceWordWrapper.Default.Wrap(str.Text);
-            return text.Replace("\r\n", "\\n");
+            return text.Replace(" ", "　")
+                       .Replace("\r\n", "\\n");
         }
     }
 }
