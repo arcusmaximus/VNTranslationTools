@@ -19,7 +19,7 @@ namespace VNTextPatch.Shared.Scripts
                 if (line == null)
                     break;
 
-                Match match = Regex.Match(line, @"(?<command>[.\w]+)(?:[ \t](?<arg>[^ \t]*))+");
+                Match match = Regex.Match(line, @"^(?<command>\.\w+)(?:[ \t](?<arg>[^ \t]*))+$");
                 if (!match.Success)
                     continue;
 
