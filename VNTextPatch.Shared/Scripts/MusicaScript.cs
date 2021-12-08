@@ -62,7 +62,8 @@ namespace VNTextPatch.Shared.Scripts
             if (str.Type == ScriptStringType.CharacterName)
                 return str.Text.Replace(" ", "　");
 
-            return str.Text;
+            string text = MonospaceWordWrapper.Default.Wrap(str.Text);
+            return text.Replace("\r\n", "\\n");
         }
     }
 }
