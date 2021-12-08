@@ -8,7 +8,6 @@ namespace VNTextPatch.Shared.Scripts
 {
     public abstract class PlainTextScript : IScript
     {
-        private Encoding _encoding;
         private string _script;
 
         public abstract string Extension { get; }
@@ -19,9 +18,9 @@ namespace VNTextPatch.Shared.Scripts
             ArraySegment<byte> data = new ArraySegment<byte>(File.ReadAllBytes(filePath));
             data = DecryptScript(data);
 
-            _encoding = GetEncoding(data);
-            int preambleLength = _encoding.GetPreamble().Length;
-            _script = _encoding.GetString(data.Array, data.Offset + preambleLength, data.Count - preambleLength);
+            Encoding encoding = GetReadEncoding(data);
+            int preambleLength = encoding.GetPreamble().Length;
+            _script = encoding.GetString(data.Array, data.Offset + preambleLength, data.Count - preambleLength);
             _script = PreprocessScript(_script);
         }
 
@@ -39,7 +38,7 @@ namespace VNTextPatch.Shared.Scripts
             MemoryStream outputMemStream = new MemoryStream();
 
             using (IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator())
-            using (StreamWriter writer = new StreamWriter(outputMemStream, Encoding.Unicode))
+            using (StreamWriter writer = new StreamWriter(outputMemStream, GetWriteEncoding()))
             {
                 int lineIdx = 0;
                 int copyStart = 0;
@@ -72,9 +71,14 @@ namespace VNTextPatch.Shared.Scripts
             }
         }
 
-        protected virtual Encoding GetEncoding(ArraySegment<byte> data)
+        protected virtual Encoding GetReadEncoding(ArraySegment<byte> data)
         {
             return StringUtil.SjisEncoding;
+        }
+
+        protected virtual Encoding GetWriteEncoding()
+        {
+            return StringUtil.SjisTunnelEncoding;
         }
 
         protected virtual ArraySegment<byte> DecryptScript(ArraySegment<byte> data)

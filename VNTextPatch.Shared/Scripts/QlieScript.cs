@@ -9,7 +9,12 @@ namespace VNTextPatch.Shared.Scripts
     {
         public override string Extension => ".s";
 
-        protected override Encoding GetEncoding(ArraySegment<byte> data)
+        protected override Encoding GetReadEncoding(ArraySegment<byte> data)
+        {
+            return Encoding.Unicode;
+        }
+
+        protected override Encoding GetWriteEncoding()
         {
             return Encoding.Unicode;
         }

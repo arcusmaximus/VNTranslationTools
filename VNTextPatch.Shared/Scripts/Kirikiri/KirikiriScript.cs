@@ -29,7 +29,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
             return KirikiriDescrambler.Descramble(data);
         }
 
-        protected override Encoding GetEncoding(ArraySegment<byte> data)
+        protected override Encoding GetReadEncoding(ArraySegment<byte> data)
         {
             if (data.Count >= 3 && data.Get(0) == 0xEF && data.Get(1) == 0xBB && data.Get(2) == 0xBF)
                 return Encoding.UTF8;
@@ -38,6 +38,11 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
                 return Encoding.Unicode;
 
             return StringUtil.SjisEncoding;
+        }
+
+        protected override Encoding GetWriteEncoding()
+        {
+            return Encoding.Unicode;
         }
 
         protected override string PreprocessScript(string script)

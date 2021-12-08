@@ -27,6 +27,7 @@ namespace VNTextPatch.Shared.Scripts
                     new CrimsonSystemScript(),
                     new EthornellScript(),
                     new KirikiriScript(),
+                    new MusicaScript(),
                     new PropellerScript(),
                     new PsbScript(),
                     new QlieScript(),

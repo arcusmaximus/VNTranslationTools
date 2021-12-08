@@ -67,6 +67,7 @@
     <Compile Include="Scripts\ExcelScriptCollection.cs" />
     <Compile Include="Scripts\Kirikiri\KirikiriDescrambler.cs" />
     <Compile Include="Scripts\Kirikiri\PsbScript.cs" />
+    <Compile Include="Scripts\MusicaScript.cs" />
     <Compile Include="Scripts\Propeller\PropellerV1Disassembler.cs" />
     <Compile Include="Scripts\Propeller\PropellerScript.cs" />
     <Compile Include="Scripts\QlieScript.cs" />
