@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using VNTextPatch.Shared.Util;
@@ -78,9 +79,18 @@ namespace VNTextPatch.Shared.Scripts
         protected override string GetTextForRead(Range range)
         {
             string text = base.GetTextForRead(range);
-            if (range.Type == ScriptStringType.CharacterName)
-                text = text.Replace("　", "");
 
+            if (range.Type == ScriptStringType.CharacterName && StringUtil.ContainsJapaneseText(text))
+                text = text.Replace("　", "");
+            else
+                text = text.Replace("　", " ");
+
+            text = text.Replace("\\n", "\r\n");
+            text = Regex.Replace(
+                text,
+                @"\\\$(..)",
+                m => ((char)int.Parse(m.Groups[1].Value, NumberStyles.HexNumber)).ToString()
+            );
             return text;
         }
 
