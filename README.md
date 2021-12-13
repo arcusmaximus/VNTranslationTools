@@ -1,9 +1,10 @@
 # VNTextPatch
 A tool for extracting original text from, and patching translated text into, a variety of visual novel formats. Currently the following engines are supported:
 * ArcGameEngine (.bin)
-* CatSystem2 (.cst)
-* CrimsonSystem (no file extension; tool expects .csa)
 * Buriko General Interpreter/Ethornell (no file extension; tool expects .bgi)
+* CatSystem2 (.cst)
+* Cyberworks C,system/CrimsonSystem (no file extension; tool expects .csa)
+* Musica (.sc)
 * Kirikiri (.ks/.ks.scn)
 * Propeller (.msc)
 * RealLive (.rl)
