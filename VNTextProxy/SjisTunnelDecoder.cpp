@@ -28,6 +28,8 @@ wstring SjisTunnelDecoder::Decode(const char* pText, int count)
             if (lowByte < 0x40)
             {
                 int lowIdx = lowByte;
+                if (lowIdx > ',')
+                    lowIdx--;
                 if (lowIdx > ' ')
                     lowIdx--;
                 if (lowIdx > '\r')

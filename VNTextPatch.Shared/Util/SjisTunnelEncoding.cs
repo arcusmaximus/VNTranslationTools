@@ -178,6 +178,8 @@ namespace VNTextPatch.Shared.Util
                 lowByte++;
             if (lowByte >= ' ')
                 lowByte++;
+            if (lowByte >= ',')
+                lowByte++;
 
             sjisChar = (char)((highByte << 8) | lowByte);
             _mappings[origChar] = sjisChar;
