@@ -97,14 +97,6 @@ namespace VNTextPatch.Shared.Util
         {
             numBytes = 0;
 
-            /*
-            for (int i = charIdx; i < charIdx + numChars; i++)
-            {
-                if (str[i] == '…' || str[i] == '―')
-                    return false;
-            }
-            */
-
             try
             {
                 numBytes = SjisEncoding.GetBytes(str, charIdx, numChars, bytes, byteIdx);
@@ -172,12 +164,20 @@ namespace VNTextPatch.Shared.Util
                 return sjisChar;
 
             int sjisIdx = _mappings.Count;
-            if (sjisIdx == 0x3B * 0x32)
+            if (sjisIdx == 0x3B * 0x3B)
                 throw new Exception("SJIS tunnel limit exceeded");
 
-            int highSjisIdx = Math.DivRem(sjisIdx, 0x32, out int lowSjisIdx);
+            int highSjisIdx = Math.DivRem(sjisIdx, 0x3B, out int lowSjisIdx);
             int highByte = highSjisIdx < 0x1F ? 0x81 + highSjisIdx : 0xE0 + (highSjisIdx - 0x1F);
-            int lowByte = 0xE + lowSjisIdx;
+            int lowByte = 1 + lowSjisIdx;
+            if (lowByte >= '\t')
+                lowByte++;
+            if (lowByte >= '\n')
+                lowByte++;
+            if (lowByte >= '\r')
+                lowByte++;
+            if (lowByte >= ' ')
+                lowByte++;
 
             sjisChar = (char)((highByte << 8) | lowByte);
             _mappings[origChar] = sjisChar;

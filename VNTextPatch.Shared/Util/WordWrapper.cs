@@ -24,7 +24,7 @@ namespace VNTextPatch.Shared.Util
                         result.Append(lineBreak);
 
                     int adjustedLineEndPos = lineEndPos;
-                    if (lineEndPos < line.Length && "，。？」』】）’”".IndexOf(line[lineEndPos]) >= 0)
+                    if (lineEndPos < line.Length && "，。？！」』】）’”".IndexOf(line[lineEndPos]) >= 0)
                         adjustedLineEndPos++;
 
                     result.Append(line, lineStartPos, adjustedLineEndPos - lineStartPos);

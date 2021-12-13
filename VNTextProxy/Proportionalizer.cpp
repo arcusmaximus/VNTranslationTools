@@ -10,9 +10,11 @@ void Proportionalizer::Init()
     PatchGameImports(
         {
             { "MultiByteToWideChar", MultiByteToWideCharHook },
-            { "MessageBoxA", MessageBoxAHook },
+            { "RegisterClassA", RegisterClassAHook },
+            { "CreateWindowExA", CreateWindowExAHook },
+            { "DefWindowProcA", DefWindowProcAHook },
             { "SetWindowTextA", SetWindowTextAHook },
-            { "CreateWindowExA", CreateWindowExAHook }
+            { "MessageBoxA", MessageBoxAHook }
         }
     );
 }
@@ -161,11 +163,60 @@ int Proportionalizer::MultiByteToWideCharHook(UINT codePage, DWORD flags, LPCCH 
     return numWchars;
 }
 
-int Proportionalizer::MessageBoxAHook(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
+ATOM Proportionalizer::RegisterClassAHook(const WNDCLASSA* pWndClass)
 {
-    wstring caption = SjisTunnelDecoder::Decode(lpCaption);
-    wstring text = SjisTunnelDecoder::Decode(lpText);
-    return MessageBoxW(hWnd, text.c_str(), caption.c_str(), uType);
+    WNDCLASSW wndClass;
+    wndClass.style = pWndClass->style;
+    wndClass.lpfnWndProc = pWndClass->lpfnWndProc;
+    wndClass.cbClsExtra = pWndClass->cbClsExtra;
+    wndClass.cbWndExtra = pWndClass->cbWndExtra;
+    wndClass.hInstance = pWndClass->hInstance;
+    wndClass.hIcon = pWndClass->hIcon;
+    wndClass.hCursor = pWndClass->hCursor;
+    wndClass.hbrBackground = pWndClass->hbrBackground;
+
+    wstring menuName;
+    if (pWndClass->lpszMenuName != nullptr)
+    {
+        menuName = StringUtil::ToWString(pWndClass->lpszMenuName);
+        wndClass.lpszMenuName = menuName.c_str();
+    }
+    else
+    {
+        wndClass.lpszMenuName = nullptr;
+    }
+
+    wstring className;
+    if (pWndClass->lpszClassName != nullptr)
+    {
+        className = StringUtil::ToWString(pWndClass->lpszClassName);
+        wndClass.lpszClassName = className.c_str();
+    }
+    else
+    {
+        wndClass.lpszClassName = nullptr;
+    }
+
+    return RegisterClassW(&wndClass);
+}
+
+HWND Proportionalizer::CreateWindowExAHook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
+{
+    wstring className = StringUtil::ToWString(lpClassName);
+    wstring windowName = SjisTunnelDecoder::Decode(lpWindowName);
+    //windowName = StringUtil::ToHalfWidth(windowName);
+    CreatingWindow = true;
+    HWND hWnd = CreateWindowExW(dwExStyle, className.c_str(), windowName.c_str(), dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+    CreatingWindow = false;
+    return hWnd;
+}
+
+LRESULT Proportionalizer::DefWindowProcAHook(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (CreatingWindow)
+        return DefWindowProcW(hWnd, msg, wParam, lParam);
+
+    return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
 
 BOOL Proportionalizer::SetWindowTextAHook(HWND hWnd, LPCSTR lpString)
@@ -175,10 +226,9 @@ BOOL Proportionalizer::SetWindowTextAHook(HWND hWnd, LPCSTR lpString)
     return SetWindowTextW(hWnd, text.c_str());
 }
 
-HWND Proportionalizer::CreateWindowExAHook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
+int Proportionalizer::MessageBoxAHook(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
 {
-    wstring className = StringUtil::ToWString(lpClassName);
-    wstring windowName = SjisTunnelDecoder::Decode(lpWindowName);
-    //windowName = StringUtil::ToHalfWidth(windowName);
-    return CreateWindowExW(dwExStyle, className.c_str(), windowName.c_str(), dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+    wstring caption = SjisTunnelDecoder::Decode(lpCaption);
+    wstring text = SjisTunnelDecoder::Decode(lpText);
+    return MessageBoxW(hWnd, text.c_str(), caption.c_str(), uType);
 }

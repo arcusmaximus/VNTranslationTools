@@ -25,8 +25,7 @@ private:
 	
 	static BOOL __stdcall PatchGameImport(void* pContext, DWORD nOrdinal, LPCSTR pszFunc, void** ppvFunc);
 	static int __stdcall MultiByteToWideCharHook(UINT codePage, DWORD flags, LPCCH lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar);
-	static int __stdcall MessageBoxAHook(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
-	static BOOL __stdcall SetWindowTextAHook(HWND hWnd, LPCSTR lpString);
+	static ATOM __stdcall RegisterClassAHook(const WNDCLASSA* pWndClass);
 	static HWND __stdcall CreateWindowExAHook(
 		DWORD dwExStyle,
 		LPCSTR lpClassName,
@@ -41,4 +40,9 @@ private:
 		HINSTANCE hInstance,
 		LPVOID lpParam
 	);
+	static LRESULT __stdcall DefWindowProcAHook(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	static BOOL __stdcall SetWindowTextAHook(HWND hWnd, LPCSTR lpString);
+	static int __stdcall MessageBoxAHook(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
+
+	static inline bool CreatingWindow{};
 };

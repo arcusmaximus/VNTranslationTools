@@ -27,9 +27,19 @@ wstring SjisTunnelDecoder::Decode(const char* pText, int count)
 
             if (lowByte < 0x40)
             {
-                int lowIdx = lowByte - 0xE;
+                int lowIdx = lowByte;
+                if (lowIdx > ' ')
+                    lowIdx--;
+                if (lowIdx > '\r')
+                    lowIdx--;
+                if (lowIdx > '\n')
+                    lowIdx--;
+                if (lowIdx > '\t')
+                    lowIdx--;
 
-                int index = highIdx * 0x32 + lowIdx;
+                lowIdx--;
+
+                int index = highIdx * 0x3B + lowIdx;
                 result += Mappings[index];
                 continue;
             }
