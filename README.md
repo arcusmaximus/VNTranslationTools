@@ -3,7 +3,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * ArcGameEngine (.bin)
 * Buriko General Interpreter/Ethornell (no file extension; tool expects .bgi)
 * CatSystem2 (.cst)
-* Cyberworks C,system/CrimsonSystem (no file extension; tool expects .csa)
+* Cyberworks C,system (no file extension; tool expects .csa)
 * Musica (.sc)
 * Kirikiri (.ks/.ks.scn)
 * Propeller (.msc)
@@ -57,5 +57,6 @@ The source code comes with an empty "EnginePatches" class where you can add game
 
 # Other VN tools
 Depending on your game's engine, you may also be interested in these other tools:
+* [CSystemTools](https://github.com/arcusmaximus/CSystemTools)
 * [EthornellTools](https://github.com/arcusmaximus/EthornellTools)
 * [KirikiriTools](https://github.com/arcusmaximus/KirikiriTools)
