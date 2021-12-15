@@ -164,10 +164,10 @@ namespace VNTextPatch.Shared.Util
                 return sjisChar;
 
             int sjisIdx = _mappings.Count;
-            if (sjisIdx == 0x3B * 0x3B)
+            if (sjisIdx == 0x3B * 0x3A)
                 throw new Exception("SJIS tunnel limit exceeded");
 
-            int highSjisIdx = Math.DivRem(sjisIdx, 0x3B, out int lowSjisIdx);
+            int highSjisIdx = Math.DivRem(sjisIdx, 0x3A, out int lowSjisIdx);
             int highByte = highSjisIdx < 0x1F ? 0x81 + highSjisIdx : 0xE0 + (highSjisIdx - 0x1F);
             int lowByte = 1 + lowSjisIdx;
             if (lowByte >= '\t')

@@ -41,7 +41,7 @@ wstring SjisTunnelDecoder::Decode(const char* pText, int count)
 
                 lowIdx--;
 
-                int index = highIdx * 0x3B + lowIdx;
+                int index = highIdx * 0x3A + lowIdx;
                 result += Mappings[index];
                 continue;
             }
