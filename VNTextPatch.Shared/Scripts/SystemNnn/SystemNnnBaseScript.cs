@@ -55,6 +55,8 @@ namespace VNTextPatch.Shared.Scripts.SystemNnn
                 text = wrapper.Wrap(text);
             }
 
+            text = text.Replace("#", "＃");
+
             text = StringUtil.FancifyQuotes(text);
             byte[] textBytes = StringUtil.SjisTunnelEncoding.GetBytes(text);
             textBytes = BinaryUtil.Replace(textBytes, FormattingReplacements);

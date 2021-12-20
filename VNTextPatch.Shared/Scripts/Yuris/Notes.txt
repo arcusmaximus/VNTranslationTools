@@ -1,0 +1,215 @@
+﻿=====================================
+ysc.ybn (Command list)
+=====================================
+int magic = 'YSCM'
+int version
+int numCommands
+int padding = 0
+Command[numCommands]
+    sz name
+    byte numAttributes
+    Attribute[numAttributes]
+        sz name
+        byte
+        byte
+
+sz errorMessages[0x90]
+byte[0x100]
+
+=====================================
+yscfg.ybn (Project configuration)
+=====================================
+int magic = 'YSCF'
+int version
+int padding = 0
+int compile
+int screenWidth
+int screenHeight
+int enable
+byte imageTypeSlots[8]
+byte soundTypeSlots[4]
+int thread
+int debugMode
+int sound
+int windowResize
+int windowFrame
+int filePriorityDev
+int filePriorityDebug
+int filePriorityRelease
+int padding = 0
+short captionLength
+byte caption[captionLength]
+
+=====================================
+yse.ybn (Error messages)
+=====================================
+int magic = 'YSER'
+int version
+int numErrors
+int padding = 0
+Error[numErrors]
+    int id
+    sz message
+
+=====================================
+ysl.ybn (Labels)
+=====================================
+int magic = 'YSLB'
+int version
+int numLabels
+int labelRangeStartIndexes[0x100]       // labelRangeStartIndexes[N] = index of first label with ID >= (N << 24)
+
+Label[numLabels]
+    byte nameLength
+    byte name[nameLength]
+    int id
+    int offset
+    short scriptIndex
+    byte padding[2]
+
+=====================================
+yst.ybn (Global counts)
+=====================================
+int magic = 'YSTD'
+int version
+int numVariables
+int numTexts
+
+=====================================
+yst_list.ybn (Script file index)
+=====================================
+int magic = 'YSTL'
+int version
+int numScripts
+Script[numScripts]
+    int index
+    int pathLength
+    byte path[pathLength]
+    FILETIME modificationTime
+    int numVariables
+    int numLabels
+    int numTexts
+
+=====================================
+yst*.ybn (Compiled script)
+=====================================
+int magic = 'YSTB'
+int version
+int numInstructions
+int instructionsSize (= numInstructions * 4)
+int attributeDescriptorsSize
+int attributeValuesSize
+int lineNumbersSize
+int padding
+
+Instruction[numInstructions]
+    byte opcode
+    byte numAttributes
+    byte ?
+    byte padding
+
+AttributeDescriptor[attributeDescriptorsSize / 12]
+    short id
+    short type (1 = long, 2 = double, 3 = string)
+    int size
+    int offsetInAttributeValues
+
+byte attributeValues[attributeValuesSize]
+
+int lineNumbers[lineNumbersSize / 4]
+
+=====================================
+ysv.ybn (Variables)
+=====================================
+int magic = 'YSVR'
+int version
+short numVariables
+Variable[numVariables]
+    byte scope (1 = global, 2 = static)
+    short scriptId
+    short variableIndex
+    byte type (1 = long, 2 = double, 3 = string)
+    byte numDimensions
+    int dimensionSize[numDimensions]
+    if type == 1
+        long value
+    elseif type == 2
+        double value
+    elseif type == 3
+        short exprLength
+        byte expr[exprLength]
+
+=====================================
+YSCom.ycd (Compiler definition)
+=====================================
+int magic = 'YSCD'
+int version
+int numCommands
+int padding
+
+Command[count]
+    sz name
+    byte numAttributes
+    Attribute[numAttributes]
+        sz name
+        byte
+        byte
+        byte
+        byte
+
+int numSystemVars
+int padding
+SystemVar[numSystemVars]
+    sz name
+    byte type
+    byte numDimensions
+    int bounds[numDimensions]
+
+int numErrorMessages
+int padding
+sz[numErrorMessages]
+
+sz extraErrors[37]
+
+int num?
+int padding
+byte[num*num]
+
+byte[0x100*8]
+
+=====================================
+Expression VM
+=====================================
+Apart from the scenario VM, YU-RIS has a tiny stack-based expression VM.
+Each instruction consists of an opcode byte followed by a 16-bit argument length.
+
+21 00 00                notequal
+25 00 00                mod
+26 00 00                logand
+29 01 00 00             performvarindexation (uses all the stack values since the last "preparevarindexation" instruction as indexes)
+2A 00 00                mul
+2B 00 00                add
+2C 00 00                nop (array index separator)
+2D 00 00                sub
+2F 00 00                div
+3D 00 00                equal
+3C 00 00                less
+3E 00 00                greater
+41 00 00                binand
+42 01 00 XX             pushint8
+46 08 00 XX{8}          pushdouble
+48 03 00 24/40 XX XX    pushscalarvar
+49 04 00 XX{4}          pushint32
+4C 08 00 XX{8}          pushint64
+4D XX XX 22 ... 22      pushstring (quoted string with support for \\, \n and \t escape codes, but not \" or \')
+4F 00 00                binor
+52 00 00                changesign
+53 00 00                le
+56 03 00 24 XX XX       preparevarindexation
+57 02 00 XX XX          pushint16
+5A 00 00                ge
+5E 00 00                binxor
+69 00 00                tonumber
+73 00 00                tostring
+76 03 00 24/40 XX XX    pusharrayvar (used to specify @ARRAY() in e.g. VARINFO in SEARCH mode)
+7C 00 00                logor
