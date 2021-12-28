@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
+using VNTextPatch.Shared.Scripts;
 
 namespace VNTextPatch.Shared.Util
 {
@@ -8,14 +10,14 @@ namespace VNTextPatch.Shared.Util
     {
         private static readonly char[] LineBreakChars = { ' ', '-' };
 
-        public string Wrap(string text, string lineBreak = "\r\n")
+        public string Wrap(string text, Regex controlCodePattern = null, string lineBreak = "\r\n")
         {
             StringBuilder result = new StringBuilder();
 
             foreach (string line in text.Split(new[] { lineBreak }, StringSplitOptions.None))
             {
                 int lineStartPos = 0;
-                foreach (int lineEndPos in GetWrapPositions(line))
+                foreach (int lineEndPos in GetWrapPositions(line, controlCodePattern))
                 {
                     if (lineEndPos == lineStartPos)
                         continue;
@@ -23,13 +25,9 @@ namespace VNTextPatch.Shared.Util
                     if (result.Length > 0)
                         result.Append(lineBreak);
 
-                    int adjustedLineEndPos = lineEndPos;
-                    if (lineEndPos < line.Length && "，。？！」』】）’”".IndexOf(line[lineEndPos]) >= 0)
-                        adjustedLineEndPos++;
+                    result.Append(line, lineStartPos, lineEndPos - lineStartPos);
 
-                    result.Append(line, lineStartPos, adjustedLineEndPos - lineStartPos);
-
-                    lineStartPos = adjustedLineEndPos;
+                    lineStartPos = lineEndPos;
                     while (lineStartPos < line.Length && line[lineStartPos] == ' ')
                     {
                         lineStartPos++;
@@ -38,6 +36,32 @@ namespace VNTextPatch.Shared.Util
             }
 
             return result.ToString();
+        }
+
+        public IEnumerable<int> GetWrapPositions(string text, Regex controlCodePattern)
+        {
+            if (controlCodePattern == null)
+            {
+                foreach (int position in GetWrapPositions(text))
+                {
+                    yield return position;
+                }
+                yield break;
+            }
+
+            StringBuilder cleanedText = new StringBuilder();
+            SortedList<int, int> positionMapping = new SortedList<int, int>();
+            foreach (Range range in StringUtil.GetSurroundingRanges(text, controlCodePattern))
+            {
+                positionMapping.Add(range.Offset, cleanedText.Length);
+                cleanedText.Append(text, range.Offset, range.Length);
+            }
+
+            foreach (int position in GetWrapPositions(cleanedText.ToString()))
+            {
+                int mappingIdx = positionMapping.Values.BinaryLastLessOrEqual(position);
+                yield return position - positionMapping.Values[mappingIdx] + positionMapping.Keys[mappingIdx];
+            }
         }
 
         public IEnumerable<int> GetWrapPositions(string text)
@@ -78,6 +102,9 @@ namespace VNTextPatch.Shared.Util
                         lineEndPos = searchPos;
                     }
                 }
+
+                if (lineEndPos < text.Length && "，。？！」』】）’”".IndexOf(text[lineEndPos]) >= 0)
+                    lineEndPos++;
 
                 yield return lineEndPos;
 

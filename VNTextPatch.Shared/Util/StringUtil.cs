@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using VNTextPatch.Shared.Scripts;
 
 namespace VNTextPatch.Shared.Util
 {
@@ -114,17 +116,32 @@ namespace VNTextPatch.Shared.Util
             int startPos = 0;
             foreach (Match match in regex.Matches(input))
             {
-                if (match.Index > startPos)
+                if (startPos < match.Index)
                     result.Append(replaceSurrounding(startPos, input.Substring(startPos, match.Index - startPos)));
 
                 result.Append(replaceMatch(match));
                 startPos = match.Index + match.Length;
             }
 
-            if (input.Length > startPos)
+            if (startPos < input.Length)
                 result.Append(replaceSurrounding(startPos, input.Substring(startPos)));
 
             return result.ToString();
+        }
+
+        public static IEnumerable<Range> GetSurroundingRanges(string input, Regex regex)
+        {
+            int startPos = 0;
+            foreach (Match match in regex.Matches(input))
+            {
+                if (startPos < match.Index)
+                    yield return new Range(startPos, match.Index - startPos, ScriptStringType.Message);
+
+                startPos = match.Index + match.Length;
+            }
+
+            if (startPos < input.Length)
+                yield return new Range(startPos, input.Length - startPos, ScriptStringType.Message);
         }
 
         public static string FancifyQuotes(string str, string tagRegex = null)

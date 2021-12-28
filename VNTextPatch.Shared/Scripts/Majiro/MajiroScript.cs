@@ -195,6 +195,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
 
         private void WriteStrings(BinaryPatcher patcher, IEnumerable<ScriptString> strings)
         {
+            Regex rubyRegex = new Regex(@"\[(.+?)\]");
             using IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator();
             foreach (MajiroTextCodeRange range in _textRanges)
             {
@@ -203,13 +204,17 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                 if (!stringEnumerator.MoveNext())
                     throw new InvalidDataException("Not enough strings in translation");
 
-                text = MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text);
+                text = stringEnumerator.Current.Text;
                 if (stringEnumerator.Current.Type == ScriptStringType.CharacterName)
                 {
                     if (!stringEnumerator.MoveNext())
                         throw new InvalidDataException("Not enough strings in translation");
 
-                    text += $"「{MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text)}」";
+                    text += $"「{MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text, rubyRegex)}」";
+                }
+                else
+                {
+                    text = MonospaceWordWrapper.Default.Wrap(text, rubyRegex);
                 }
 
                 patcher.CopyUpTo(range.Offset);

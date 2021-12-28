@@ -89,5 +89,26 @@ namespace VNTextPatch.Shared.Util
         {
             return items as IList<T> ?? items.ToList();
         }
+
+        public static int BinaryLastLessOrEqual<TValue>(this IList<TValue> list, TValue value)
+        {
+            IComparer<TValue> comparer = Comparer<TValue>.Default;
+
+            int start = 0;
+            int end = list.Count;
+            while (start < end)
+            {
+                int pivot = start + (end - start) / 2;
+                int comparison = comparer.Compare(value, list[pivot]);
+                if (comparison < 0)
+                    end = pivot;
+                else if (comparison == 0)
+                    return pivot;
+                else
+                    start = pivot + 1;
+            }
+
+            return start - 1;
+        }
     }
 }
