@@ -5,6 +5,7 @@ using System.Linq;
 using VNTextPatch.Shared.Scripts.ArcGameEngine;
 using VNTextPatch.Shared.Scripts.Ethornell;
 using VNTextPatch.Shared.Scripts.Kirikiri;
+using VNTextPatch.Shared.Scripts.Majiro;
 using VNTextPatch.Shared.Scripts.Propeller;
 using VNTextPatch.Shared.Scripts.RealLive;
 using VNTextPatch.Shared.Scripts.ShSystem;
@@ -27,6 +28,7 @@ namespace VNTextPatch.Shared.Scripts
                     new CrimsonSystemScript(),
                     new EthornellScript(),
                     new KirikiriScript(),
+                    new MajiroScript(),
                     new MusicaScript(),
                     new PropellerScript(),
                     new PsbScript(),
