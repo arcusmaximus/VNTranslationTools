@@ -22,8 +22,7 @@ namespace VNTextPatch.Shared.Scripts.SystemNnn
             BinaryUtil.Xor(_data, 0, _data.Length, 0xFF);
 
             SptItem header = GetSptItems().First();
-            if (header.Length != 0x20 ||
-                header.Identify != SptIdentify.Data ||
+            if (header.Identify != SptIdentify.Data ||
                 header.Code != SptCode.DataHeader)
             {
                 throw new InvalidDataException("Invalid .spt header");
@@ -129,10 +128,15 @@ namespace VNTextPatch.Shared.Scripts.SystemNnn
         {
             patcher.PatchAddress(4 * (int)SptHeaderField.MessageTable);
             patcher.PatchAddress(4 * (int)SptHeaderField.StringTable);
-            patcher.PatchAddress(4 * (int)SptHeaderField.SubcallTable);
-            patcher.PatchAddress(4 * (int)SptHeaderField.SelectTable);
-            patcher.PatchAddress(4 * (int)SptHeaderField.CommandCallTable);
-            patcher.PatchAddress(4 * (int)SptHeaderField.ScriptCallTable);
+
+            SptItem header = GetSptItems().First();
+            if (header.Length > (int)SptHeaderField.SubcallTable)
+            {
+                patcher.PatchAddress(4 * (int)SptHeaderField.SubcallTable);
+                patcher.PatchAddress(4 * (int)SptHeaderField.SelectTable);
+                patcher.PatchAddress(4 * (int)SptHeaderField.CommandCallTable);
+                patcher.PatchAddress(4 * (int)SptHeaderField.ScriptCallTable);
+            }
 
             for (int i = 0; i < _messageCount; i++)
             {

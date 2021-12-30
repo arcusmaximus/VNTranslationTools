@@ -22,8 +22,8 @@ namespace VNTextPatch.Shared.Scripts.SystemNnn
         protected virtual IEnumerable<ScriptString> ParseFileText(string text)
         {
             text = Regex.Replace(text, @"(?<=^|\r\n)//.+?($|\r\n)", "");
-            text = text.TrimEnd('\r', '\n');
-            Match match = Regex.Match(text, @"^(?<name>[^「『』」\r\n]+)\r\n(?<message>[「『].+[』」])\s*$", RegexOptions.Singleline);
+            text = text.Trim('\r', '\n');
+            Match match = Regex.Match(text, @"^(?<name>[^「『（）』」\r\n]+)\r\n(?<message>[「『（].+[）』」])\s*$", RegexOptions.Singleline);
             if (match.Success)
             {
                 yield return new ScriptString(match.Groups["name"].Value, ScriptStringType.CharacterName);
