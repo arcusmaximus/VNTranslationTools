@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using VNTextPatch.Shared.Util;
@@ -37,27 +38,28 @@ namespace VNTextPatch.Shared.Scripts.Majiro
 
         public IEnumerable<ScriptString> GetStrings()
         {
-            foreach (MajiroTextCodeRange range in _textRanges)
-            {
-                switch (range.Type)
-                {
-                    case MajiroTextCodeType.Ldstr:
-                        yield return new ScriptString(range.Text, ScriptStringType.Message);
-                        break;
+            return _textRanges.SelectMany(GetScriptStrings);
+        }
 
-                    case MajiroTextCodeType.Text:
-                        Match match = Regex.Match(range.Text, @"^(?<name>.+?)「(?<message>.+)」$", RegexOptions.Singleline);
-                        if (match.Success)
-                        {
-                            yield return new ScriptString(match.Groups["name"].Value, ScriptStringType.CharacterName);
-                            yield return new ScriptString(match.Groups["message"].Value, ScriptStringType.Message);
-                        }
-                        else
-                        {
-                            yield return new ScriptString(range.Text, ScriptStringType.Message);
-                        }
-                        break;
-                }
+        private static IEnumerable<ScriptString> GetScriptStrings(MajiroTextCodeRange range)
+        {
+            switch (range.Type)
+            {
+                case MajiroTextCodeType.Ldstr:
+                    yield return new ScriptString(range.Text, ScriptStringType.Message);
+                    break;
+
+                case MajiroTextCodeType.Text:
+                    Match match = Regex.Match(range.Text, @"^(?:(?<name>[^「」\r\n]+)「(?<message>.+?)」(?:\r\n|$))+$", RegexOptions.Singleline);
+                    if (!match.Success)
+                        yield return new ScriptString(range.Text, ScriptStringType.Message);
+
+                    for (int i = 0; i < match.Groups["name"].Captures.Count; i++)
+                    {
+                        yield return new ScriptString(match.Groups["name"].Captures[i].Value, ScriptStringType.CharacterName);
+                        yield return new ScriptString(match.Groups["message"].Captures[i].Value, ScriptStringType.Message);
+                    }
+                    break;
             }
         }
 
@@ -199,30 +201,41 @@ namespace VNTextPatch.Shared.Scripts.Majiro
             using IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator();
             foreach (MajiroTextCodeRange range in _textRanges)
             {
-                string text;
-
-                if (!stringEnumerator.MoveNext())
-                    throw new InvalidDataException("Not enough strings in translation");
-
-                text = stringEnumerator.Current.Text;
-                if (stringEnumerator.Current.Type == ScriptStringType.CharacterName)
+                string newText = null;
+                foreach (ScriptString origString in GetScriptStrings(range))
                 {
                     if (!stringEnumerator.MoveNext())
                         throw new InvalidDataException("Not enough strings in translation");
 
-                    text += $"「{MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text, rubyRegex)}」";
-                }
-                else
-                {
-                    text = MonospaceWordWrapper.Default.Wrap(text, rubyRegex);
+                    ScriptString newString = stringEnumerator.Current;
+                    if (newString.Type != origString.Type)
+                        throw new InvalidDataException("Translation string type doesn't match original");
+
+                    switch (newString.Type)
+                    {
+                        case ScriptStringType.CharacterName:
+                            if (newText != null)
+                                newText += "\r\n";
+
+                            newText += newString.Text;
+                            break;
+
+                        case ScriptStringType.Message:
+                            if (newText == null)
+                                newText = MonospaceWordWrapper.Default.Wrap(newString.Text, rubyRegex);
+                            else
+                                newText += $"「{MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text, rubyRegex)}」";
+
+                            break;
+                    }
                 }
 
                 patcher.CopyUpTo(range.Offset);
 
                 byte[] newCode = range.Type switch
                                  {
-                                     MajiroTextCodeType.Ldstr => AssembleLdstr(text),
-                                     MajiroTextCodeType.Text => AssembleText(text)
+                                     MajiroTextCodeType.Ldstr => AssembleLdstr(newText),
+                                     MajiroTextCodeType.Text => AssembleText(newText)
                                  };
                 patcher.ReplaceBytes(range.Length, newCode);
             }
@@ -333,7 +346,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
             return value;
         }
 
-        private struct MajiroTextCodeRange
+        private readonly struct MajiroTextCodeRange
         {
             public MajiroTextCodeRange(int offset, int length, string text, MajiroTextCodeType type)
             {
@@ -343,10 +356,10 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                 Type = type;
             }
 
-            public int Offset;
-            public int Length;
-            public string Text;
-            public MajiroTextCodeType Type;
+            public readonly int Offset;
+            public readonly int Length;
+            public readonly string Text;
+            public readonly MajiroTextCodeType Type;
         }
 
         private enum MajiroTextCodeType
