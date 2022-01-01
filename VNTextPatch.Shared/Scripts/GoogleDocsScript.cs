@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Google.Apis.Sheets.v4.Data;
 using Google.Apis.Util;
 using VNTextPatch.Shared.Util;
@@ -23,16 +24,18 @@ namespace VNTextPatch.Shared.Scripts
             string sheetName = location.ScriptName;
 
             string range = GetScriptRange(collection.GetSheet(sheetName));
-            var request = collection.GetService().Spreadsheets.Values.BatchGet(collection.SpreadsheetId);
+            var request = GoogleDocsScriptCollection.GetService().Spreadsheets.Values.BatchGet(collection.SpreadsheetId);
             request.Ranges = new Repeatable<string>(new[] { range });
-            _cells = request.Execute().ValueRanges[0].Values;
+            _cells = request.ExecuteRateLimited().ValueRanges[0].Values;
         }
 
         public IEnumerable<ScriptString> GetStrings()
         {
             for (int rowIdx = 1; rowIdx < _cells.Count; rowIdx++)
             {
-                string characterNames = GetCellContent(rowIdx, ExcelColumn.TranslatedCharacter);
+                string characterNames = GetCellContent(rowIdx, ExcelColumn.TranslatedCharacter) ??
+                                        GetCellContent(rowIdx, ExcelColumn.OriginalCharacter);
+
                 if (characterNames != null)
                 {
                     foreach (string characterName in characterNames.Split('/'))

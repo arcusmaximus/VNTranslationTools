@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
@@ -55,15 +58,48 @@ namespace VNTextPatch.Shared.Scripts
             throw new NotImplementedException();
         }
 
-        internal SheetsService GetService()
+        internal static SheetsService GetService()
         {
-            return new SheetsService(
-                new BaseClientService.Initializer
-                {
-                    ApiKey = ConfigurationManager.AppSettings["GoogleApiKey"],
-                    ApplicationName = "TextPatch"
-                }
-            );
+            BaseClientService.Initializer initializer = GetServiceAccountInitializer() ?? GetApiKeyInitializer();
+            if (initializer == null)
+            {
+                throw new Exception("No Google credentials registered. Please put an API key in the \"GoogleApiKey\" entry of the .config file, " +
+                                    "or store the private key of a service account in a file called \"google-service-account.json\".");
+            }
+
+            initializer.ApplicationName = "VNTextPatch";
+            return new SheetsService(initializer);
+        }
+
+        private static BaseClientService.Initializer GetApiKeyInitializer()
+        {
+            string apiKey = ConfigurationManager.AppSettings["GoogleApiKey"];
+            if (string.IsNullOrEmpty(apiKey))
+                return null;
+
+            return new BaseClientService.Initializer
+                   {
+                       ApiKey = apiKey
+                   };
+        }
+
+        private static BaseClientService.Initializer GetServiceAccountInitializer()
+        {
+            string keyFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "google-service-account.json");
+            if (!File.Exists(keyFilePath))
+                return null;
+
+            var credential = (ServiceAccountCredential)GoogleCredential.FromFile(keyFilePath).UnderlyingCredential;
+            var credentialInitializer = new ServiceAccountCredential.Initializer(credential.Id)
+                                        {
+                                            Key = credential.Key,
+                                            Scopes = new[] { SheetsService.Scope.SpreadsheetsReadonly }
+                                        };
+            credential = new ServiceAccountCredential(credentialInitializer);
+            return new BaseClientService.Initializer
+                   {
+                       HttpClientInitializer = credential
+                   };
         }
 
         internal Sheet GetSheet(string sheetName)
