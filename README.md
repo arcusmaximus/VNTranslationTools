@@ -15,7 +15,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * SystemNNN (.nnn/.spt)
 * YU-RIS (.ybn)
 
-The tool can extract text into Excel spreadsheets (.xlsx), and reinsert text from Excel or Google Docs spreadsheets. Reinserting from Google Docs requires an API key in VNTextPatch.exe.config; in addition, the spreadsheet should be publically accessible.
+The tool can extract text into Excel spreadsheets (.xlsx), and reinsert text from Excel or Google Docs spreadsheets.
 
 The command line syntax is as follows:
 
@@ -28,6 +28,12 @@ VNTextPatch insertgdocs <folder containing original game files> <Google Docs spr
 The input folder should only contain the original scenario files. If it contains files of another format, VNTextPatch may not be able to determine the input format to use.
 
 Depending on the game, some customization in the tool's source code may be needed. For example, Kirikiri .ks files have no uniform way of indicating character names in dialogue lines, so you may need to extend KirikiriScript.cs to make the tool aware of the method your specific game uses.
+
+To use `insertgdocs`, you need either a Google API key or a Google service account. Both can be created and managed on the [Google Cloud Dashboard](https://console.cloud.google.com/apis/credentials).
+* If you want to use an API key, open VNTextPatch.exe.config and paste the key in the entry called "GoogleApiKey".
+* If you want to use a service account, place the account's private key in a file called "google-service-account.json" next to VNTextPatch.exe.
+
+The Google Spreadsheet API needs to be enabled for the API key/service account.
 
 ## Character name translation
 After running `extractlocal`, VNTextPatch will populate a file called names.xml with all the character names it encountered. If you add translations for these names inside this file and run `extractlocal` again, the newly extracted spreadsheet will have the translated names prefilled as a convenience.
