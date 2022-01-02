@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using VNTextPatch.Shared.Scripts.AdvHD;
 using VNTextPatch.Shared.Scripts.ArcGameEngine;
 using VNTextPatch.Shared.Scripts.Ethornell;
 using VNTextPatch.Shared.Scripts.Kirikiri;
@@ -23,6 +24,7 @@ namespace VNTextPatch.Shared.Scripts
             TemporaryScripts =
                 new IScript[]
                 {
+                    new AdvHdScript(),
                     new AgeScript(),
                     new CatSystemScript(),
                     new CrimsonSystemScript(),
