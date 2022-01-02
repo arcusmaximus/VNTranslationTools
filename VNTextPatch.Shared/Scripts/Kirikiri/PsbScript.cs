@@ -115,23 +115,24 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
                     yield return new ScriptPsbString(displayCharacterName ?? realCharacterName, ScriptStringType.CharacterName);
                 }
 
-                PsbString message = text[2] as PsbString;
-                if (message == null)
+                PsbList messageList = text;
+                int messageIndex = 2;
+                if (messageList[messageIndex] is PsbList multiLanguageTexts && multiLanguageTexts.Count >= 1)
                 {
-                    PsbList multiLanguageTexts = text[2] as PsbList;
-                    if (multiLanguageTexts != null && multiLanguageTexts.Count >= 1)
+                    if (multiLanguageTexts[0] is PsbList japaneseText && japaneseText.Count >= 2)
                     {
-                        PsbList japaneseText = multiLanguageTexts[0] as PsbList;
-                        if (japaneseText != null && japaneseText.Count >= 2)
-                        {
-                            // [name, text, speechtext, searchtext]
-                            message = japaneseText[1] as PsbString;
-                        }
+                        // [name, text, speechtext, searchtext]
+                        messageList = japaneseText;
+                        messageIndex = 1;
                     }
                 }
 
-                if (message != null)
+                if (messageList[messageIndex] is PsbString message)
+                {
+                    message = new PsbString(message.Value);
+                    messageList[messageIndex] = message;
                     yield return new ScriptPsbString(scene, lineIndex, textIndex, message, ScriptStringType.Message);
+                }
             }
         }
 

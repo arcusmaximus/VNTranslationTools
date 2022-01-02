@@ -48,11 +48,9 @@ namespace VNTextPatch.Shared
 
         private void Write()
         {
-            using (Stream stream = File.OpenWrite(FilePath))
-            {
-                XmlSerializer serializer = new XmlSerializer(typeof(Document));
-                serializer.Serialize(stream, new Document { Characters = _translations.Select(n => new Character { JapaneseName = n.Key, EnglishName = n.Value }).ToArray() });
-            }
+            using Stream stream = File.Open(FilePath, FileMode.Create, FileAccess.Write);
+            XmlSerializer serializer = new XmlSerializer(typeof(Document));
+            serializer.Serialize(stream, new Document { Characters = _translations.Select(n => new Character { JapaneseName = n.Key, EnglishName = n.Value }).ToArray() });
         }
 
         private static string FilePath
