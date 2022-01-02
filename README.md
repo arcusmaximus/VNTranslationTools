@@ -59,7 +59,7 @@ A proxy d2d1.dll that hooks into the game and helps with making it display non-J
 * Catch calls to TextOutA() and ID2D1RenderTarget::DrawText() to correctly position characters when using a proportional font (as many visual novel engines only do monospace).
 * Restore non-Shift JIS characters using sjis_ext.bin (see previous section).
 
-If the game doesn't reference d2d1.dll, you can use the files from the "VersionProxy" folder to turn the DLL into a version.dll proxy instead. If the game doesn't reference version.dll either, you can use [DLLProxyGenerator](https://github.com/nitrog0d/DLLProxyGenerator/releases/tag/v1.0.0) to create proxy code for a DLL it does reference.
+If the game doesn't reference d2d1.dll, you can use the files from one of the "\*Proxy" folders to create a different proxy for, say, version.dll. If the game doesn't reference any of the provided proxies, you can use [DLLProxyGenerator](https://github.com/nitrog0d/DLLProxyGenerator/releases/tag/v1.0.0) to make your own.
 
 The source code comes with an empty "EnginePatches" class where you can add game-specific hooks. Microsoft's [Detours](https://github.com/microsoft/Detours) library is already included.
 
