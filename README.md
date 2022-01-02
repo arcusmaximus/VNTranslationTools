@@ -13,6 +13,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * ShSystem (.hst)
 * Qlie (.s)
 * SystemNNN (.nnn/.spt)
+* WillPlus AdvHD (.ws2)
 * YU-RIS (.ybn)
 
 The tool can extract text into Excel spreadsheets (.xlsx), and reinsert text from Excel or Google Docs spreadsheets.
