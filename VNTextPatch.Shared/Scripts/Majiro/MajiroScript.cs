@@ -15,6 +15,8 @@ namespace VNTextPatch.Shared.Scripts.Majiro
         private byte[] _data;
         private int _codeOffset;
         private int _codeSize;
+        private int _entryPointAddr;
+        private readonly List<int> _functionAddrs = new List<int>();
         private readonly List<int> _absoluteAddressOffsets = new List<int>();
         private readonly List<int> _relativeAddressOffsets = new List<int>();
         private readonly List<MajiroTextCodeRange> _textRanges = new List<MajiroTextCodeRange>();
@@ -23,6 +25,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
         public void Load(ScriptLocation location)
         {
             _data = File.ReadAllBytes(location.ToFilePath());
+            _functionAddrs.Clear();
             _absoluteAddressOffsets.Clear();
             _relativeAddressOffsets.Clear();
             _textRanges.Clear();
@@ -70,7 +73,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
             string signature = Encoding.ASCII.GetString(reader.ReadBytes(0x10));
 
             _absoluteAddressOffsets.Add((int)stream.Position);
-            int entryPoint = reader.ReadInt32();
+            _entryPointAddr = reader.ReadInt32();
 
             int numLines = reader.ReadInt32();
 
@@ -80,6 +83,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                 int nameHash = reader.ReadInt32();
                 _absoluteAddressOffsets.Add((int)stream.Position);
                 int addr = reader.ReadInt32();
+                _functionAddrs.Add(addr);
             }
 
             _codeSize = reader.ReadInt32();
@@ -104,11 +108,35 @@ namespace VNTextPatch.Shared.Scripts.Majiro
 
         private void ReadCode(Stream stream)
         {
-            Stack<MajiroTextCodeRange> ldstrRanges = new Stack<MajiroTextCodeRange>();
+            List<int> remainingAddresses = new List<int>();
+            remainingAddresses.Add(_entryPointAddr);
+            remainingAddresses.AddRange(_functionAddrs);
+            while (true)
+            {
+                int currentAddr = (int)stream.Position - _codeOffset;
+                remainingAddresses.RemoveAll(a => a < currentAddr);
+                if (remainingAddresses.Count == 0)
+                    break;
 
+                ReadCodeUntilRet(stream, remainingAddresses.Min(), remainingAddresses);
+            }
+        }
+
+        private void ReadCodeUntilRet(Stream stream, int addr, List<int> remainingAddresses)
+        {
+            stream.Position = _codeOffset + addr;
             MajiroDisassembler disassembler = new MajiroDisassembler(stream);
-            disassembler.RelativeAddressEncountered += offset => _relativeAddressOffsets.Add(offset);
+            disassembler.RelativeAddressEncountered +=
+                offset =>
+                {
+                    _relativeAddressOffsets.Add(offset);
 
+                    int distance = BitConverter.ToInt32(_data, offset);
+                    int targetAddr = (offset - _codeOffset) + 4 + distance;
+                    remainingAddresses.Add(targetAddr);
+                };
+
+            Stack<MajiroTextCodeRange> ldstrRanges = new Stack<MajiroTextCodeRange>();
             int textStartOffset = -1;
             string currentText = null;
             while (stream.Position < stream.Length)
@@ -162,6 +190,9 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                         choices.Reverse();
                         _textRanges.AddRange(choices);
                         break;
+
+                    case MajiroOpcodes.Ret:
+                        return;
 
                     default:
                         if (!string.IsNullOrWhiteSpace(currentText))

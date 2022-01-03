@@ -44,12 +44,19 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                     case 's':
                     {
                         int length = _reader.ReadUInt16();
-                        byte[] bytes = _reader.ReadBytes(length - 1);
-                        if (_reader.ReadByte() != 0)
-                            throw new InvalidDataException();
+                        if (length == 0)
+                        {
+                            operands.Add(string.Empty);
+                        }
+                        else
+                        {
+                            byte[] bytes = _reader.ReadBytes(length - 1);
+                            if (_reader.ReadByte() != 0)
+                                throw new InvalidDataException();
 
-                        string str = StringUtil.SjisEncoding.GetString(bytes);
-                        operands.Add(str);
+                            string str = StringUtil.SjisEncoding.GetString(bytes);
+                            operands.Add(str);
+                        }
                         break;
                     }
 

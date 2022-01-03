@@ -179,5 +179,6 @@ namespace VNTextPatch.Shared.Scripts.Majiro
         public const int Ldstr = 0x0801;
         public const int Call = 0x080F;
         public const int Callp = 0x0810;
+        public const int Ret = 0x082B;
     }
 }

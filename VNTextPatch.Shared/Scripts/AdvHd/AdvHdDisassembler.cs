@@ -300,13 +300,13 @@ namespace VNTextPatch.Shared.Scripts.AdvHD
                     return _reader.ReadSingle();
 
                 case 's':
-                    int startOffset = (int)_stream.Position;
+                    int offset = (int)_stream.Position;
                     _reader.SkipZeroTerminatedSjisString();
-                    int length = (int)_stream.Position - startOffset;
-                    return new Range(startOffset, length, ScriptStringType.Internal);
+                    int length = (int)_stream.Position - offset;
+                    return new Range(offset, length, ScriptStringType.Internal);
 
                 default:
-                    throw new InvalidDataException();
+                    throw new ArgumentException();
             }
         }
     }
