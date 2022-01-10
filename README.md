@@ -11,6 +11,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * RealLive (.rl)
 * Ren'Py (.rpy)
 * ShSystem (.hst)
+* Silky's/AI6WIN (.mes)
 * Qlie (.s)
 * SystemNNN (.nnn/.spt)
 * WillPlus AdvHD (.ws2)
