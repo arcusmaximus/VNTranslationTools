@@ -28,6 +28,12 @@ namespace VNTextPatch.Shared
             private set;
         }
 
+        public int TotalCharacters
+        {
+            get;
+            private set;
+        }
+
         public void ExtractOne(string inputScriptName, string textScriptName)
         {
             if (!_inputCollection.Exists(inputScriptName))
@@ -42,7 +48,12 @@ namespace VNTextPatch.Shared
                 _textCollection.Add(textScriptName);
 
             _textScript.WritePatched(strings, new ScriptLocation(_textCollection, textScriptName));
-            TotalLines += strings.Count(s => s.Type == ScriptStringType.Message);
+
+            foreach (ScriptString str in strings.Where(s => s.Type == ScriptStringType.Message))
+            {
+                TotalLines++;
+                TotalCharacters += str.Text.Count(c => "「」『』【】（）“”、。？！".IndexOf(c) < 0);
+            }
         }
 
         public void ExtractAll()

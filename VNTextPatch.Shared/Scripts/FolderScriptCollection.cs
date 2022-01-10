@@ -26,9 +26,10 @@ namespace VNTextPatch.Shared.Scripts
                 new IScript[]
                 {
                     new AdvHdScript(),
+                    new ArtemisScript(),
                     new AgeScript(),
                     new CatSystemScript(),
-                    new CrimsonSystemScript(),
+                    new CSystemScript(),
                     new EthornellScript(),
                     new KirikiriScript(),
                     new MajiroScript(),
@@ -48,13 +49,14 @@ namespace VNTextPatch.Shared.Scripts
                 };
         }
 
-        public FolderScriptCollection(string folderPath, string extension)
+        public FolderScriptCollection(string folderPath, string extension, string format = null)
         {
             if (!Directory.Exists(folderPath))
                 throw new DirectoryNotFoundException($"{folderPath} does not exist");
 
             FolderPath = folderPath;
             Extension = extension ?? string.Empty;
+            Format = format;
         }
 
         public string Name
@@ -72,9 +74,28 @@ namespace VNTextPatch.Shared.Scripts
             get;
         }
 
+        public string Format
+        {
+            get;
+        }
+
         public IScript GetTemporaryScript()
         {
-            return TemporaryScripts.First(f => (f.Extension ?? string.Empty).Equals(Extension, StringComparison.InvariantCultureIgnoreCase));
+            IScript script;
+            if (Format != null)
+            {
+                string typeName = Format + "Script";
+                script = TemporaryScripts.FirstOrDefault(f => f.GetType().Name.Equals(typeName, StringComparison.InvariantCultureIgnoreCase));
+                if (script == null)
+                    throw new NotSupportedException($"Format {Format} is not supported");
+            }
+            else
+            {
+                script = TemporaryScripts.FirstOrDefault(f => (f.Extension ?? string.Empty).Equals(Extension, StringComparison.InvariantCultureIgnoreCase));
+                if (script == null)
+                    throw new NotSupportedException($"Extension {Extension} is not supported");
+            }
+            return script;
         }
 
         public IEnumerable<string> Scripts

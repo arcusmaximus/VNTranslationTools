@@ -5,7 +5,7 @@ using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts
 {
-    internal class CrimsonSystemScript : IScript
+    internal class CSystemScript : IScript
     {
         private byte[] _data;
         private List<CSystemStringRange> _stringRanges;

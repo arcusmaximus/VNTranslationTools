@@ -60,8 +60,9 @@
     <Compile Include="Scripts\AdvHd\AdvHdScript.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeScript.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeDisassembler.cs" />
+    <Compile Include="Scripts\ArtemisScript.cs" />
     <Compile Include="Scripts\CatSystemScript.cs" />
-    <Compile Include="Scripts\CrimsonSystemScript.cs" />
+    <Compile Include="Scripts\CSystemScript.cs" />
     <Compile Include="Scripts\Ethornell\EthornellDisassembler.cs" />
     <Compile Include="Scripts\Ethornell\EthornellV0Disassembler.cs" />
     <Compile Include="Scripts\Ethornell\EthornellScript.cs" />
