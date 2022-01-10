@@ -1,10 +1,11 @@
 # VNTextPatch
 A tool for extracting original text from, and patching translated text into, a variety of visual novel formats. Currently the following engines are supported:
 * ArcGameEngine (.bin)
-* Buriko General Interpreter/Ethornell (no file extension; tool expects .bgi)
+* Artemis (.txt; append `--format=artemis` to command line)
+* Buriko General Interpreter/Ethornell (no file extension; rename to .bgi or append `--format=ethornell` to command line)
 * CatSystem2 (.cst)
-* Cyberworks C,system (no file extension; tool expects .csa)
-* Kirikiri (.ks/.ks.scn)
+* Cyberworks C,system (no file extension; rename to .csa or append `--format=csystem` to command line)
+* Kirikiri (.ks/.scn)
 * Majiro (.mjo)
 * Musica (.sc)
 * Propeller (.msc)
