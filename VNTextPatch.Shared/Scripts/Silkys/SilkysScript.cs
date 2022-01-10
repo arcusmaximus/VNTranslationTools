@@ -56,8 +56,6 @@ namespace VNTextPatch.Shared.Scripts.Silkys
             {
                 int instrOffset = (int)_disassembler.Stream.Position;
                 (byte opcode, List<object> operands) = _disassembler.ReadInstruction();
-                if (opcode == 0x1B)
-                    ;
 
                 HandleMessageInstructions(instrOffset, opcode, operands, ref messageStartOffset, ref inRuby);
                 HandleCharacterNameInstructions(opcode, operands, stack);
