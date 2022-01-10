@@ -103,10 +103,10 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
                     continue;
 
                 PsbList text = (PsbList)texts[textIndex.IntValue - 1];
-                PsbString realCharacterName = text[0] as PsbString;
+                PsbString realCharacterName = GetIsolatedString(text, 0);
                 if (realCharacterName != null)
                 {
-                    PsbString displayCharacterName = text[1] as PsbString;
+                    PsbString displayCharacterName = GetIsolatedString(text, 1);
                     if (displayCharacterName == null && realCharacterName.Value != "＠")
                     {
                         displayCharacterName = new PsbString(realCharacterName.Value);
@@ -115,25 +115,32 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
                     yield return new ScriptPsbString(displayCharacterName ?? realCharacterName, ScriptStringType.CharacterName);
                 }
 
-                PsbList messageList = text;
-                int messageIndex = 2;
-                if (messageList[messageIndex] is PsbList multiLanguageTexts && multiLanguageTexts.Count >= 1)
+                PsbString message;
+                if (text[2] is PsbList multiLanguageTexts && multiLanguageTexts.Count >= 1 &&
+                    multiLanguageTexts[0] is PsbList japaneseText && japaneseText.Count >= 2)
                 {
-                    if (multiLanguageTexts[0] is PsbList japaneseText && japaneseText.Count >= 2)
-                    {
-                        // [name, text, speechtext, searchtext]
-                        messageList = japaneseText;
-                        messageIndex = 1;
-                    }
+                    // [name, text, speechtext, searchtext]
+                    message = GetIsolatedString(japaneseText, 1);
+                }
+                else
+                {
+                    message = GetIsolatedString(text, 2);
                 }
 
-                if (messageList[messageIndex] is PsbString message)
-                {
-                    message = new PsbString(message.Value);
-                    messageList[messageIndex] = message;
+                if (message != null)
                     yield return new ScriptPsbString(scene, lineIndex, textIndex, message, ScriptStringType.Message);
-                }
             }
+        }
+
+        private static PsbString GetIsolatedString(PsbList list, int index)
+        {
+            if (list[index] is PsbString str)
+            {
+                str = new PsbString(str.Value);
+                list[index] = str;
+                return str;
+            }
+            return null;
         }
 
         private IEnumerable<ScriptPsbString> GetSelectStrings(PsbDictionary scene)

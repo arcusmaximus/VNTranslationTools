@@ -105,7 +105,7 @@ namespace VNTextPatch.Shared.Scripts.AdvHD
                     if (match.Success)
                         newText += match.Value;
 
-                    newText = newText.Replace("\r\n", "\\n");
+                    newText = newText.Replace("\r\n", " \\n");      // Add space to avoid end-of-line characters getting cut off while message builds up
                     break;
             }
             return newText;

@@ -120,5 +120,13 @@ namespace VNTextPatch.Shared.Util
             patcher.CopyUpTo(input.Length);
             return outputStream.ToArray();
         }
+
+        public static int FlipEndianness(int value)
+        {
+            return ((value >> 24) & 0xFF) |
+                   ((value >> 8) & 0xFF00) |
+                   ((value << 8) & 0xFF0000) |
+                   (value << 24);
+        }
     }
 }

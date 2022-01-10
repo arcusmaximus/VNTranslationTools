@@ -9,7 +9,7 @@ namespace VNTextPatch.Shared.Util
 {
     public static class StringUtil
     {
-        public static readonly Encoding SjisEncoding = Encoding.GetEncoding(932, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
+        public static readonly Encoding SjisEncoding = Encoding.GetEncoding(932, EncoderFallback.ExceptionFallback, DecoderFallback.ReplacementFallback);
         public static readonly SjisTunnelEncoding SjisTunnelEncoding = new SjisTunnelEncoding();
 
         private static readonly char[] ControlChars = "\a\b\f\n\r\t\v".ToCharArray();
@@ -129,19 +129,22 @@ namespace VNTextPatch.Shared.Util
             return result.ToString();
         }
 
-        public static IEnumerable<Range> GetSurroundingRanges(string input, Regex regex)
+        public static IEnumerable<(Range, bool)> GetMatchingAndSurroundingRanges(string input, Regex regex)
         {
             int startPos = 0;
             foreach (Match match in regex.Matches(input))
             {
                 if (startPos < match.Index)
-                    yield return new Range(startPos, match.Index - startPos, ScriptStringType.Message);
+                    yield return (new Range(startPos, match.Index - startPos, ScriptStringType.Message), false);
+
+                if (match.Length > 0)
+                    yield return (new Range(match.Index, match.Length, ScriptStringType.Message), true);
 
                 startPos = match.Index + match.Length;
             }
 
             if (startPos < input.Length)
-                yield return new Range(startPos, input.Length - startPos, ScriptStringType.Message);
+                yield return (new Range(startPos, input.Length - startPos, ScriptStringType.Message), false);
         }
 
         public static string FancifyQuotes(string str, string tagRegex = null)
@@ -149,7 +152,7 @@ namespace VNTextPatch.Shared.Util
             MatchCollection tagMatches = tagRegex != null ? Regex.Matches(str, tagRegex) : null;
             str = Regex.Replace(
                 str,
-                @"(?<=^|[ ""])'",
+                @"(?<=^|\s|"")'",
                 m => IsInTag(m.Index) ? m.Value : "‘"
             );
             str = Regex.Replace(
@@ -159,7 +162,7 @@ namespace VNTextPatch.Shared.Util
             );
             str = Regex.Replace(
                 str,
-                @"(?<=^| )""",
+                @"(?<=^|\s)""",
                 m => IsInTag(m.Index) ? m.Value : "“"
             );
             str = Regex.Replace(

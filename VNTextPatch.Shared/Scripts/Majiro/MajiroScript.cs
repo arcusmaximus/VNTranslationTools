@@ -19,7 +19,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
         private readonly List<int> _functionAddrs = new List<int>();
         private readonly List<int> _absoluteAddressOffsets = new List<int>();
         private readonly List<int> _relativeAddressOffsets = new List<int>();
-        private readonly List<MajiroTextCodeRange> _textRanges = new List<MajiroTextCodeRange>();
+        private readonly List<MajiroTextCodeRange> _textCodeRanges = new List<MajiroTextCodeRange>();
         private int _numInlineLineMarkers;
 
         public void Load(ScriptLocation location)
@@ -28,7 +28,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
             _functionAddrs.Clear();
             _absoluteAddressOffsets.Clear();
             _relativeAddressOffsets.Clear();
-            _textRanges.Clear();
+            _textCodeRanges.Clear();
             _numInlineLineMarkers = 0;
 
             Stream stream = new MemoryStream(_data);
@@ -41,7 +41,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
 
         public IEnumerable<ScriptString> GetStrings()
         {
-            return _textRanges.SelectMany(GetScriptStrings);
+            return _textCodeRanges.SelectMany(GetScriptStrings);
         }
 
         private static IEnumerable<ScriptString> GetScriptStrings(MajiroTextCodeRange range)
@@ -53,7 +53,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                     break;
 
                 case MajiroTextCodeType.Text:
-                    Match match = Regex.Match(range.Text, @"^(?:(?<name>[^「」\r\n]+)「(?<message>.+?)」(?:\r\n|$))+$", RegexOptions.Singleline);
+                    Match match = Regex.Match(range.Text, @"^(?:(?<name>[^「」\r\n]+)「(?<message>.+?)」?(?:\r\n|$))+$", RegexOptions.Singleline);
                     if (!match.Success)
                         yield return new ScriptString(range.Text, ScriptStringType.Message);
 
@@ -188,7 +188,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                             choices.Add(ldstrRanges.Pop());
                         }
                         choices.Reverse();
-                        _textRanges.AddRange(choices);
+                        _textCodeRanges.AddRange(choices);
                         break;
 
                     case MajiroOpcodes.Ret:
@@ -204,7 +204,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                                 textEndOffset = prevRange.Offset;
                             }
 
-                            _textRanges.Add(new MajiroTextCodeRange(textStartOffset, textEndOffset - textStartOffset, currentText.Trim(), MajiroTextCodeType.Text));
+                            _textCodeRanges.Add(new MajiroTextCodeRange(textStartOffset, textEndOffset - textStartOffset, currentText.Trim(), MajiroTextCodeType.Text));
                         }
 
                         textStartOffset = -1;
@@ -230,7 +230,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
         {
             Regex rubyRegex = new Regex(@"\[(.+?)\]");
             using IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator();
-            foreach (MajiroTextCodeRange range in _textRanges)
+            foreach (MajiroTextCodeRange range in _textCodeRanges)
             {
                 string newText = null;
                 foreach (ScriptString origString in GetScriptStrings(range))

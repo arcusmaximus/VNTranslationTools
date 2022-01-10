@@ -75,7 +75,10 @@ namespace VNTextPatch.Shared.Scripts
             if (editedText != null)
                 Edited++;
 
-            return editedText ?? checkedText ?? translatedText ?? originalText;
+            return StringUtil.NullIf(editedText, ".") ??
+                   StringUtil.NullIf(checkedText, ".") ??
+                   translatedText ??
+                   originalText;
         }
 
         public void WritePatched(IEnumerable<ScriptString> strings, ScriptLocation location)

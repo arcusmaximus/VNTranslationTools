@@ -51,8 +51,11 @@ namespace VNTextPatch.Shared.Util
 
             StringBuilder cleanedText = new StringBuilder();
             SortedList<int, int> positionMapping = new SortedList<int, int>();
-            foreach (Range range in StringUtil.GetSurroundingRanges(text, controlCodePattern))
+            foreach ((Range range, bool isControlCode) in StringUtil.GetMatchingAndSurroundingRanges(text, controlCodePattern))
             {
+                if (isControlCode)
+                    continue;
+
                 positionMapping.Add(range.Offset, cleanedText.Length);
                 cleanedText.Append(text, range.Offset, range.Length);
             }

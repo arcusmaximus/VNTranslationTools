@@ -10,6 +10,7 @@ using VNTextPatch.Shared.Scripts.Majiro;
 using VNTextPatch.Shared.Scripts.Propeller;
 using VNTextPatch.Shared.Scripts.RealLive;
 using VNTextPatch.Shared.Scripts.ShSystem;
+using VNTextPatch.Shared.Scripts.Silkys;
 using VNTextPatch.Shared.Scripts.SystemNnn;
 using VNTextPatch.Shared.Scripts.Yuris;
 
@@ -38,6 +39,7 @@ namespace VNTextPatch.Shared.Scripts
                     new RealLiveScript(),
                     new RenpyScript(),
                     new ShSystemScript(),
+                    new SilkysScript(),
                     new SystemNnnDevScript(),
                     new SystemNnnReleaseScript(),
                     new TextScript(),
