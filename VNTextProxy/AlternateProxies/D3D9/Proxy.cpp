@@ -17,4 +17,4 @@ void Proxy::Init()
 #undef RESOLVE
 }
 
-__declspec(naked) void FakeDirect3DCreate9() { _asm { jmp[Proxy::OriginalDirect3DCreate9] } }
+__declspec(naked) void FakeDirect3DCreate9() { __asm { jmp [Proxy::OriginalDirect3DCreate9] } }

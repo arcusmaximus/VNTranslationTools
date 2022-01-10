@@ -5,5 +5,5 @@ class Proxy
 public:
     static void Init();
 
-    static inline void *OriginalDirect3DCreate9{};
+    static inline void* OriginalDirect3DCreate9{};
 };
