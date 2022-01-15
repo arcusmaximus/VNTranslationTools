@@ -3,11 +3,13 @@ using System.IO;
 using System.Text.RegularExpressions;
 using VNTextPatch.Shared.Util;
 
-namespace VNTextPatch.Shared.Scripts.AdvHD
+namespace VNTextPatch.Shared.Scripts.AdvHd
 {
     public class AdvHdScript : IScript
     {
         public string Extension => ".ws2";
+
+        private static readonly string[] NameControlCodes = { "%LC", "%LF", "%LR" };
 
         private byte[] _data;
         private readonly List<int> _addressOffsets = new List<int>();
@@ -16,14 +18,33 @@ namespace VNTextPatch.Shared.Scripts.AdvHD
         public void Load(ScriptLocation location)
         {
             _data = File.ReadAllBytes(location.ToFilePath());
-            _addressOffsets.Clear();
-            _textRanges.Clear();
 
             Stream stream = new MemoryStream(_data);
-            AdvHdDisassembler disassembler = new AdvHdDisassembler(stream);
-            disassembler.AddressEncountered += o => _addressOffsets.Add(o);
-            disassembler.TextEncountered += r => _textRanges.Add(r);
-            disassembler.Disassemble();
+            AdvHdDisassemblerBase[] disassemblers =
+                {
+                    new AdvHdDisassemblerV1(stream),
+                    new AdvHdDisassemblerV2(stream)
+                };
+            foreach (AdvHdDisassemblerBase disassembler in disassemblers)
+            {
+                stream.Position = 0;
+                _addressOffsets.Clear();
+                _textRanges.Clear();
+
+                disassembler.AddressEncountered += o => _addressOffsets.Add(o);
+                disassembler.TextEncountered += r => _textRanges.Add(r);
+                try
+                {
+                    disassembler.Disassemble();
+                }
+                catch
+                {
+                    continue;
+                }
+                return;
+            }
+
+            throw new InvalidDataException("Failed to read file");
         }
 
         public IEnumerable<ScriptString> GetStrings()
@@ -79,7 +100,10 @@ namespace VNTextPatch.Shared.Scripts.AdvHD
             switch (type)
             {
                 case ScriptStringType.CharacterName:
-                    text = text.Replace("%LF", "");
+                    foreach (string controlCode in NameControlCodes)
+                    {
+                        text = text.Replace(controlCode, "");
+                    }
                     break;
 
                 case ScriptStringType.Message:
@@ -95,9 +119,14 @@ namespace VNTextPatch.Shared.Scripts.AdvHD
             switch (type)
             {
                 case ScriptStringType.CharacterName:
-                    if (origText.StartsWith("%LF"))
-                        newText = "%LF" + newText;
-
+                    foreach (string controlCode in NameControlCodes)
+                    {
+                        if (origText.StartsWith(controlCode))
+                        {
+                            newText = controlCode + newText;
+                            break;
+                        }
+                    }
                     break;
 
                 case ScriptStringType.Message:
