@@ -116,11 +116,24 @@ wstring Proportionalizer::LoadCustomFont()
     FindClose(hFind);
 
     wstring fontFilePath = wstring(folderPath) + L"\\" + findData.cFileName;
-    AddFontResourceExW(fontFilePath.c_str(), FR_PRIVATE, nullptr);
+    int numFonts = AddFontResourceExW(fontFilePath.c_str(), FR_PRIVATE, nullptr);
+    if (numFonts == 0)
+        return L"";
 
-    wchar_t* pDot = wcsrchr(findData.cFileName, L'.');
-    *pDot = L'\0';
-    return findData.cFileName;
+    HMODULE hGdi32 = GetModuleHandle(L"gdi32");
+    auto GetFontResourceInfoW = (GetFontResourceInfoW_t*)GetProcAddress(hGdi32, "GetFontResourceInfoW");
+    if (GetFontResourceInfoW == nullptr)
+    {
+        wchar_t* pDot = wcsrchr(findData.cFileName, L'.');
+        *pDot = L'\0';
+        return findData.cFileName;
+    }
+
+    vector<LOGFONTW> fontInfos;
+    fontInfos.resize(numFonts);
+    DWORD fontInfosSize = sizeof(LOGFONTW) * numFonts;
+    GetFontResourceInfoW(fontFilePath.c_str(), &fontInfosSize, fontInfos.data(), 2);
+    return fontInfos[0].lfFaceName;
 }
 
 void Proportionalizer::PatchGameImports(const map<string, void*>& replacementFuncs)
