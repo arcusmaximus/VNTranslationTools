@@ -3,9 +3,9 @@ using System.IO;
 
 namespace VNTextPatch.Shared.Scripts.Silkys
 {
-    internal class Ai6WinDisassembler : SilkysDisassemblerBase
+    internal class SilkysDisassembler : SilkysDisassemblerBase
     {
-        private static readonly SilkysOpcodes Ai6WinOpcodes =
+        private static readonly SilkysOpcodes SilkysOpcodes =
             new SilkysOpcodes
             {
                 Yield = 0x00,
@@ -20,7 +20,7 @@ namespace VNTextPatch.Shared.Scripts.Silkys
                 IsMessage1Obfuscated = false
             };
 
-        private static readonly Dictionary<byte, string> Ai6WinOperandTemplates =
+        private static readonly Dictionary<byte, string> SilkysOperandTemplates =
             new Dictionary<byte, string>
             {
                 { 0x00, "" },       // yield
@@ -73,7 +73,7 @@ namespace VNTextPatch.Shared.Scripts.Silkys
                 { 0xFF, "" }
             };
 
-        private static readonly SilkysSyscalls Ai6WinSyscalls =
+        private static readonly SilkysSyscalls SilkysSyscalls =
             new SilkysSyscalls
             {
                 Exec = 31,
@@ -82,18 +82,18 @@ namespace VNTextPatch.Shared.Scripts.Silkys
 
         private readonly int _numMessages;
 
-        public Ai6WinDisassembler(Stream stream)
+        public SilkysDisassembler(Stream stream)
             : base(stream)
         {
             _numMessages = _reader.ReadInt32();
             CodeOffset = 4 + _numMessages * 4;
         }
 
-        public override SilkysOpcodes Opcodes => Ai6WinOpcodes;
+        public override SilkysOpcodes Opcodes => SilkysOpcodes;
 
-        public override SilkysSyscalls Syscalls => Ai6WinSyscalls;
+        public override SilkysSyscalls Syscalls => SilkysSyscalls;
 
-        protected override Dictionary<byte, string> OperandTemplates => Ai6WinOperandTemplates;
+        protected override Dictionary<byte, string> OperandTemplates => SilkysOperandTemplates;
 
         public override int CodeOffset
         {

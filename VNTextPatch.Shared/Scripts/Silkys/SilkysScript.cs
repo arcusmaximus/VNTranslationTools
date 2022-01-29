@@ -316,7 +316,7 @@ namespace VNTextPatch.Shared.Scripts.Silkys
                 _data[firstLineOffset + 3] == 0x00 &&
                 _data[firstLineOffset + 4] == 0x00)
             {
-                return new Ai6WinDisassembler(stream);
+                return new SilkysDisassembler(stream);
             }
             // In the Silky's+ version of the format, the message count is followed by the special message count, which is (hopefully)
             // not an address of a message marker

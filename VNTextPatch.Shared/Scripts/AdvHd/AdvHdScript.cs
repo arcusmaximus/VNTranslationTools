@@ -76,7 +76,7 @@ namespace VNTextPatch.Shared.Scripts.AdvHd
 
                 string newText = stringEnumerator.Current.Text;
                 if (range.Type == ScriptStringType.Message)
-                    newText = ProportionalWordWrapper.Default.Wrap(newText);
+                    newText = MonospaceWordWrapper.Default.Wrap(newText);
 
                 newText = AddControlCodes(origText, newText, range.Type);
 

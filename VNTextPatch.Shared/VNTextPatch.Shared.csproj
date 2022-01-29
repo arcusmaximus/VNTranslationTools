@@ -86,7 +86,7 @@
     <Compile Include="Scripts\RealLive\RealLiveDisassembler.cs" />
     <Compile Include="Scripts\ShSystem\ShSystemDisassembler.cs" />
     <Compile Include="Scripts\ShSystem\ShSystemScript.cs" />
-    <Compile Include="Scripts\Silkys\Ai6WinDisassembler.cs" />
+    <Compile Include="Scripts\Silkys\SilkysDisassembler.cs" />
     <Compile Include="Scripts\Silkys\SilkysOpcodes.cs" />
     <Compile Include="Scripts\Silkys\SilkysPlusDisassembler.cs" />
     <Compile Include="Scripts\Silkys\SilkysDisassemblerBase.cs" />
