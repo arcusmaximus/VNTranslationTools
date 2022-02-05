@@ -104,7 +104,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
 
                 PsbList text = (PsbList)texts[textIndex.IntValue - 1];
                 PsbString realCharacterName = GetIsolatedString(text, 0);
-                if (realCharacterName != null)
+                if (!string.IsNullOrEmpty(realCharacterName?.Value))
                 {
                     PsbString displayCharacterName = GetIsolatedString(text, 1);
                     if (displayCharacterName == null && realCharacterName.Value != "＠")
