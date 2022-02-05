@@ -103,21 +103,15 @@ namespace VNTextPatch.Shared.Scripts.Silkys
                 if (value1 is int int1 && value2 is int int2)
                     stack.Push(int1 + int2);
             }
-            else if (opcode == _opcodes.Syscall)
+            else if (opcode == _opcodes.Syscall &&
+                     stack.Count == 3 &&
+                     stack.Pop() is int funcId &&
+                     funcId == _disassembler.Syscalls.Exec &&
+                     stack.Pop() is int execId &&
+                     execId == _disassembler.Syscalls.ExecSetCharacterName &&
+                     stack.Pop() is Range name)
             {
-                int funcId = (int)stack.Pop();
-                if (funcId == _disassembler.Syscalls.Exec)
-                {
-                    int execId = (int)stack.Pop();
-                    if (execId == _disassembler.Syscalls.ExecSetCharacterName)
-                    {
-                        Range name = (Range)stack.Pop();
-                        name.Offset--;
-                        name.Length++;
-                        name.Type = ScriptStringType.CharacterName;
-                        _textCodeRanges.Add(name);
-                    }
-                }
+                _textCodeRanges.Add(new Range(name.Offset - 1, name.Length + 1, ScriptStringType.CharacterName));
                 stack.Clear();
             }
             else
@@ -131,6 +125,16 @@ namespace VNTextPatch.Shared.Scripts.Silkys
             foreach (Range codeRange in _textCodeRanges)
             {
                 string text = CodeToText(codeRange);
+                if (codeRange.Type == ScriptStringType.Message)
+                {
+                    Match match = Regex.Match(text, @"^〈(?<name>.+?)〉：(?<message>.+)", RegexOptions.Singleline);
+                    if (match.Success)
+                    {
+                        yield return new ScriptString(match.Groups["name"].Value, ScriptStringType.CharacterName);
+                        text = match.Groups["message"].Value;
+                    }
+                }
+
                 yield return new ScriptString(text, codeRange.Type);
             }
         }
@@ -144,12 +148,23 @@ namespace VNTextPatch.Shared.Scripts.Silkys
             using IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator();
             foreach (Range range in _textCodeRanges)
             {
+                patcher.CopyUpTo(range.Offset);
+
                 if (!stringEnumerator.MoveNext())
                     throw new InvalidDataException("Not enough strings in translation");
 
-                patcher.CopyUpTo(range.Offset);
+                string newText = stringEnumerator.Current.Text;
+                if (stringEnumerator.Current.Type == ScriptStringType.CharacterName && range.Type == ScriptStringType.Message)
+                {
+                    newText = $"〈{newText}〉：";
 
-                string newText = MonospaceWordWrapper.Default.Wrap(stringEnumerator.Current.Text, new Regex(@"\[.+?\]"));
+                    if (!stringEnumerator.MoveNext())
+                        throw new InvalidDataException("Not enough strings in translation");
+
+                    newText += stringEnumerator.Current.Text;
+                }
+
+                newText = MonospaceWordWrapper.Default.Wrap(newText, new Regex(@"\[.+?\]"));
                 byte[] newCode = TextToCode(newText, range.Type);
                 patcher.ReplaceBytes(range.Length, newCode);
             }
