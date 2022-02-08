@@ -97,25 +97,10 @@ bool Proportionalizer::HandleFormattingCode(wchar_t c)
 
 wstring Proportionalizer::LoadCustomFont()
 {
-    wchar_t folderPath[MAX_PATH];
-    GetModuleFileName(GetModuleHandle(nullptr), folderPath, sizeof(folderPath) / sizeof(wchar_t));
-    wchar_t* pLastSlash = wcsrchr(folderPath, L'\\');
-    if (pLastSlash != nullptr)
-        *pLastSlash = L'\0';
+    wstring fontFilePath = FindCustomFontFile();
+    if (fontFilePath.empty())
+        return L"";
 
-    WIN32_FIND_DATA findData;
-    wstring searchPath = wstring(folderPath) + L"\\*.ttf";
-    HANDLE hFind = FindFirstFile(searchPath.c_str(), &findData);
-    if (hFind == INVALID_HANDLE_VALUE)
-    {
-        searchPath = wstring(folderPath) + L"\\*.otf";
-        hFind = FindFirstFile(searchPath.c_str(), &findData);
-        if (hFind == INVALID_HANDLE_VALUE)
-            return L"";
-    }
-    FindClose(hFind);
-
-    wstring fontFilePath = wstring(folderPath) + L"\\" + findData.cFileName;
     int numFonts = AddFontResourceExW(fontFilePath.c_str(), FR_PRIVATE, nullptr);
     if (numFonts == 0)
         return L"";
@@ -124,9 +109,10 @@ wstring Proportionalizer::LoadCustomFont()
     auto GetFontResourceInfoW = (GetFontResourceInfoW_t*)GetProcAddress(hGdi32, "GetFontResourceInfoW");
     if (GetFontResourceInfoW == nullptr)
     {
-        wchar_t* pDot = wcsrchr(findData.cFileName, L'.');
-        *pDot = L'\0';
-        return findData.cFileName;
+        wstring fontFileName = fontFilePath;
+        fontFileName.erase(0, fontFileName.rfind(L'\\') + 1);
+        fontFileName.erase(fontFileName.find(L'.'), -1);
+        return fontFileName;
     }
 
     vector<LOGFONTW> fontInfos;
@@ -134,6 +120,30 @@ wstring Proportionalizer::LoadCustomFont()
     DWORD fontInfosSize = sizeof(LOGFONTW) * numFonts;
     GetFontResourceInfoW(fontFilePath.c_str(), &fontInfosSize, fontInfos.data(), 2);
     return fontInfos[0].lfFaceName;
+}
+
+wstring Proportionalizer::FindCustomFontFile()
+{
+    wchar_t folderPath[MAX_PATH];
+    GetModuleFileName(GetModuleHandle(nullptr), folderPath, sizeof(folderPath) / sizeof(wchar_t));
+    wchar_t* pLastSlash = wcsrchr(folderPath, L'\\');
+    if (pLastSlash != nullptr)
+        *pLastSlash = L'\0';
+
+    vector<wstring> extensions = { L".ttf", L".ttc", L".otf" };
+    WIN32_FIND_DATA findData;
+    for (const wstring& extension : extensions)
+    {
+        wstring searchPath = wstring(folderPath) + L"\\*" + extension;
+        HANDLE hFind = FindFirstFile(searchPath.c_str(), &findData);
+        if (hFind != INVALID_HANDLE_VALUE)
+        {
+            FindClose(hFind);
+            return wstring(folderPath) + L"\\" + findData.cFileName;
+        }
+    }
+
+    return L"";
 }
 
 void Proportionalizer::PatchGameImports(const map<string, void*>& replacementFuncs)

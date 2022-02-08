@@ -22,6 +22,7 @@ protected:
 private:
     typedef BOOL (__stdcall GetFontResourceInfoW_t)(const wchar_t* lpszFilename, LPDWORD cbBuffer, LPVOID lpBuffer, DWORD dwQueryType);
     static std::wstring LoadCustomFont();
+    static std::wstring FindCustomFontFile();
     static bool HandleFormattingCode(wchar_t c);
     
     static BOOL __stdcall PatchGameImport(void* pContext, DWORD nOrdinal, LPCSTR pszFunc, void** ppvFunc);
