@@ -48,7 +48,7 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
                 { 0x0019, "i" },
                 { 0x001A, "" },
                 { 0x001B, "" },
-                { 0x001C, "" },
+                { 0x001C, "" },         // call user function
                 { 0x001D, "" },
                 { 0x001E, "" },
                 { 0x001F, "" },
@@ -503,6 +503,7 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
                 new Dictionary<int, Action>
                 {
                     { 0x0003, ReadPushStringAddressOperand },
+                    { 0x001C, HandleUserFunctionCall },
                     { 0x0140, HandleMessage },
                     { 0x0160, HandleChoiceScreen }
                 };
@@ -539,6 +540,17 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
             int offset = (int)_reader.BaseStream.Position;
             int address = _reader.ReadInt32();
             _stringStack.Push(new StackItem(offset, address));
+        }
+
+        private void HandleUserFunctionCall()
+        {
+            if (_stringStack.Count == 0)
+                return;
+
+            int funcNameAddr = _stringStack.Pop().Value;
+            string funcName = ReadStringAtAddress(funcNameAddr);
+            if (funcName == "_SelectEx")
+                HandleChoiceScreen();
         }
 
         private void HandleMessage()

@@ -60,7 +60,7 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
                         break;
 
                     case 'z':
-                        ReadInlineStringOperand();
+                        SkipInlineStringOperand();
                         break;
 
                     default:
@@ -93,9 +93,18 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
             OnStringAddressEncountered(offset, address, type);
         }
 
-        protected void ReadInlineStringOperand()
+        protected void SkipInlineStringOperand()
         {
-            _reader.ReadZeroTerminatedSjisString();
+            _reader.SkipZeroTerminatedSjisString();
+        }
+
+        protected string ReadStringAtAddress(int addr)
+        {
+            long prevPos = _reader.BaseStream.Position;
+            _reader.BaseStream.Position = CodeOffset + addr;
+            string str = _reader.ReadZeroTerminatedSjisString();
+            _reader.BaseStream.Position = prevPos;
+            return str;
         }
 
         protected void OnCodeAddressEncountered(int offset, int address)

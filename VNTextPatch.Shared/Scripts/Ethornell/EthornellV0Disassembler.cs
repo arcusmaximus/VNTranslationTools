@@ -245,7 +245,7 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
             int count = _reader.ReadInt32();
             for (int i = 0; i < count; i++)
             {
-                ReadInlineStringOperand();
+                SkipInlineStringOperand();
             }
         }
 
@@ -255,7 +255,7 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
             int count = _reader.ReadInt32();
             for (int i = 0; i < count; i++)
             {
-                ReadInlineStringOperand();
+                SkipInlineStringOperand();
             }
         }
 
@@ -264,7 +264,7 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
             int count = _reader.ReadInt32();
             for (int i = 0; i < count; i++)
             {
-                ReadInlineStringOperand();
+                SkipInlineStringOperand();
                 ReadCodeAddress();
             }
         }
