@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using VNTextPatch.Shared.Util;
@@ -79,6 +80,14 @@ namespace VNTextPatch.Shared.Scripts.Silkys
             {
                 inRuby = false;
             }
+            else if (opcode == _opcodes.PushInt && _data[instrOffset + 5] == _opcodes.LineNumber)
+            {
+            }
+            else if (opcode == _opcodes.LineNumber ||
+                     opcode == _opcodes.Nop1 ||
+                     opcode == _opcodes.Nop2)
+            {
+            }
             else
             {
                 if (messageStartOffset >= 0)
@@ -106,9 +115,8 @@ namespace VNTextPatch.Shared.Scripts.Silkys
             else if (opcode == _opcodes.Syscall &&
                      stack.Count == 3 &&
                      stack.Pop() is int funcId &&
-                     funcId == _disassembler.Syscalls.Exec &&
                      stack.Pop() is int execId &&
-                     execId == _disassembler.Syscalls.ExecSetCharacterName &&
+                     _disassembler.Syscalls.Any(s => funcId == s.Exec && execId == s.ExecSetCharacterName) &&
                      stack.Pop() is Range name)
             {
                 _textCodeRanges.Add(new Range(name.Offset - 1, name.Length + 1, ScriptStringType.CharacterName));
@@ -253,10 +261,6 @@ namespace VNTextPatch.Shared.Scripts.Silkys
                 else if (opcode == _opcodes.Yield)
                 {
                     result.Append("]");
-                }
-                else
-                {
-                    throw new InvalidDataException();
                 }
             }
             return result.ToString();

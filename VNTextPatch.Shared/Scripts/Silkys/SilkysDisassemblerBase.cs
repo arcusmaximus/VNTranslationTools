@@ -30,7 +30,7 @@ namespace VNTextPatch.Shared.Scripts.Silkys
             get;
         }
 
-        public abstract SilkysSyscalls Syscalls
+        public abstract SilkysSyscalls[] Syscalls
         {
             get;
         }

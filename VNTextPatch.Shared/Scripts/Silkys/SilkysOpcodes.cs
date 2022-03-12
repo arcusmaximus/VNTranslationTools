@@ -10,6 +10,9 @@
         public byte PushInt;
         public byte PushString;
         public byte Syscall;
+        public byte LineNumber;
+        public byte Nop1;
+        public byte Nop2;
 
         public bool IsMessage1Obfuscated;
     }

@@ -16,6 +16,9 @@ namespace VNTextPatch.Shared.Scripts.Silkys
                 PushInt = 0x32,
                 PushString = 0x33,
                 Syscall = 0x18,
+                LineNumber = 0xFF,
+                Nop1 = 0xFC,
+                Nop2 = 0xFD,
 
                 IsMessage1Obfuscated = true
             };
@@ -70,16 +73,27 @@ namespace VNTextPatch.Shared.Scripts.Silkys
                 { 0x41, "" },       // ge
                 { 0x42, "" },       // eq
                 { 0x43, "" },       // neq
+                { 0xFA, "" },
+                { 0xFB, "" },
+                { 0xFC, "" },
+                { 0xFD, "" },
                 { 0xFE, "" },
                 { 0xFF, "" }
             };
 
-        private static readonly SilkysSyscalls SilkysPlusSyscalls =
+        private static readonly SilkysSyscalls[] SilkysPlusSyscalls =
+        {
             new SilkysSyscalls
             {
                 Exec = 29,
                 ExecSetCharacterName = 11
-            };
+            },
+            new SilkysSyscalls
+            {
+                Exec = 29,
+                ExecSetCharacterName = 15
+            }
+        };
 
         private readonly int _numMessages;
         private readonly int _numSpecialMessages;
@@ -96,7 +110,7 @@ namespace VNTextPatch.Shared.Scripts.Silkys
 
         protected override Dictionary<byte, string> OperandTemplates => SilkysPlusOperandTemplates;
 
-        public override SilkysSyscalls Syscalls => SilkysPlusSyscalls;
+        public override SilkysSyscalls[] Syscalls => SilkysPlusSyscalls;
 
         public override int CodeOffset
         {

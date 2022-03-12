@@ -16,6 +16,9 @@ namespace VNTextPatch.Shared.Scripts.Silkys
                 PushInt = 0x32,
                 PushString = 0x33,
                 Syscall = 0x18,
+                LineNumber = 0xFF,
+                Nop1 = 0xFC,
+                Nop2 = 0xFD,
 
                 IsMessage1Obfuscated = false
             };
@@ -73,12 +76,14 @@ namespace VNTextPatch.Shared.Scripts.Silkys
                 { 0xFF, "" }
             };
 
-        private static readonly SilkysSyscalls Ai6WinSyscalls =
+        private static readonly SilkysSyscalls[] Ai6WinSyscalls =
+        {
             new SilkysSyscalls
             {
                 Exec = 31,
                 ExecSetCharacterName = 15
-            };
+            }
+        };
 
         private readonly int _numMessages;
 
@@ -91,7 +96,7 @@ namespace VNTextPatch.Shared.Scripts.Silkys
 
         public override SilkysOpcodes Opcodes => Ai6WinOpcodes;
 
-        public override SilkysSyscalls Syscalls => Ai6WinSyscalls;
+        public override SilkysSyscalls[] Syscalls => Ai6WinSyscalls;
 
         protected override Dictionary<byte, string> OperandTemplates => Ai6WinOperandTemplates;
 
