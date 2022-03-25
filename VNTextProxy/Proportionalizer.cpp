@@ -7,16 +7,6 @@ using namespace std;
 void Proportionalizer::Init()
 {
     FontName = LoadCustomFont();
-    PatchGameImports(
-        {
-            { "MultiByteToWideChar", MultiByteToWideCharHook },
-            { "RegisterClassA", RegisterClassAHook },
-            { "CreateWindowExA", CreateWindowExAHook },
-            { "DefWindowProcA", DefWindowProcAHook },
-            { "SetWindowTextA", SetWindowTextAHook },
-            { "MessageBoxA", MessageBoxAHook }
-        }
-    );
 }
 
 int Proportionalizer::MeasureStringWidth(const wstring& str, int fontSize)
@@ -105,21 +95,10 @@ wstring Proportionalizer::LoadCustomFont()
     if (numFonts == 0)
         return L"";
 
-    HMODULE hGdi32 = GetModuleHandle(L"gdi32");
-    auto GetFontResourceInfoW = (GetFontResourceInfoW_t*)GetProcAddress(hGdi32, "GetFontResourceInfoW");
-    if (GetFontResourceInfoW == nullptr)
-    {
-        wstring fontFileName = fontFilePath;
-        fontFileName.erase(0, fontFileName.rfind(L'\\') + 1);
-        fontFileName.erase(fontFileName.find(L'.'), -1);
-        return fontFileName;
-    }
-
-    vector<LOGFONTW> fontInfos;
-    fontInfos.resize(numFonts);
-    DWORD fontInfosSize = sizeof(LOGFONTW) * numFonts;
-    GetFontResourceInfoW(fontFilePath.c_str(), &fontInfosSize, fontInfos.data(), 2);
-    return fontInfos[0].lfFaceName;
+    wstring fontFileName = fontFilePath;
+    fontFileName.erase(0, fontFileName.rfind(L'\\') + 1);
+    fontFileName.erase(fontFileName.find(L'.'), -1);
+    return fontFileName;
 }
 
 wstring Proportionalizer::FindCustomFontFile()
@@ -144,114 +123,4 @@ wstring Proportionalizer::FindCustomFontFile()
     }
 
     return L"";
-}
-
-void Proportionalizer::PatchGameImports(const map<string, void*>& replacementFuncs)
-{
-    HMODULE hExe = GetModuleHandle(nullptr);
-    DetourEnumerateImportsEx(hExe, (void*)&replacementFuncs, nullptr, PatchGameImport);
-}
-
-BOOL Proportionalizer::PatchGameImport(void* pContext, DWORD nOrdinal, LPCSTR pszFunc, void** ppvFunc)
-{
-    if (pszFunc == nullptr || ppvFunc == nullptr)
-        return true;
-
-    map<string, void*>* pReplacementFuncs = (map<string, void*>*)pContext;
-    auto it = pReplacementFuncs->find(pszFunc);
-    if (it != pReplacementFuncs->end())
-    {
-        MemoryUnprotector unprotect(ppvFunc, 4);
-        *ppvFunc = it->second;
-    }
-
-    return true;
-}
-
-int Proportionalizer::MultiByteToWideCharHook(UINT codePage, DWORD flags, LPCCH lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar)
-{
-    wstring wstr = SjisTunnelDecoder::Decode(lpMultiByteStr, cbMultiByte);
-    //wstr = StringUtil::ToHalfWidth(wstr);
-    int numWchars = wstr.size();
-    if (cbMultiByte < 0)
-        numWchars++;
-
-    if (cchWideChar > 0)
-    {
-        if (numWchars > cchWideChar)
-            return 0;
-
-        memcpy(lpWideCharStr, wstr.c_str(), numWchars * sizeof(wchar_t));
-    }
-    return numWchars;
-}
-
-ATOM Proportionalizer::RegisterClassAHook(const WNDCLASSA* pWndClass)
-{
-    WNDCLASSW wndClass;
-    wndClass.style = pWndClass->style;
-    wndClass.lpfnWndProc = pWndClass->lpfnWndProc;
-    wndClass.cbClsExtra = pWndClass->cbClsExtra;
-    wndClass.cbWndExtra = pWndClass->cbWndExtra;
-    wndClass.hInstance = pWndClass->hInstance;
-    wndClass.hIcon = pWndClass->hIcon;
-    wndClass.hCursor = pWndClass->hCursor;
-    wndClass.hbrBackground = pWndClass->hbrBackground;
-
-    wstring menuName;
-    if (pWndClass->lpszMenuName != nullptr)
-    {
-        menuName = StringUtil::ToWString(pWndClass->lpszMenuName);
-        wndClass.lpszMenuName = menuName.c_str();
-    }
-    else
-    {
-        wndClass.lpszMenuName = nullptr;
-    }
-
-    wstring className;
-    if (pWndClass->lpszClassName != nullptr)
-    {
-        className = StringUtil::ToWString(pWndClass->lpszClassName);
-        wndClass.lpszClassName = className.c_str();
-    }
-    else
-    {
-        wndClass.lpszClassName = nullptr;
-    }
-
-    return RegisterClassW(&wndClass);
-}
-
-HWND Proportionalizer::CreateWindowExAHook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
-{
-    wstring className = StringUtil::ToWString(lpClassName);
-    wstring windowName = SjisTunnelDecoder::Decode(lpWindowName);
-    //windowName = StringUtil::ToHalfWidth(windowName);
-    CreatingWindow = true;
-    HWND hWnd = CreateWindowExW(dwExStyle, className.c_str(), windowName.c_str(), dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-    CreatingWindow = false;
-    return hWnd;
-}
-
-LRESULT Proportionalizer::DefWindowProcAHook(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    if (CreatingWindow)
-        return DefWindowProcW(hWnd, msg, wParam, lParam);
-
-    return DefWindowProcA(hWnd, msg, wParam, lParam);
-}
-
-BOOL Proportionalizer::SetWindowTextAHook(HWND hWnd, LPCSTR lpString)
-{
-    wstring text = SjisTunnelDecoder::Decode(lpString);
-    //text = StringUtil::ToHalfWidth(text);
-    return SetWindowTextW(hWnd, text.c_str());
-}
-
-int Proportionalizer::MessageBoxAHook(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
-{
-    wstring caption = SjisTunnelDecoder::Decode(lpCaption);
-    wstring text = SjisTunnelDecoder::Decode(lpText);
-    return MessageBoxW(hWnd, text.c_str(), caption.c_str(), uType);
 }

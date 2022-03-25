@@ -95,6 +95,7 @@
     <ClInclude Include="D2DProportionalizer.h" />
     <ClInclude Include="EnginePatches.h" />
     <ClInclude Include="GdiProportionalizer.h" />
+    <ClInclude Include="ImportHooker.h" />
     <ClInclude Include="LocaleEmulator.h" />
     <ClInclude Include="Proxy.h" />
     <ClInclude Include="Font.h" />
@@ -102,14 +103,16 @@
     <ClInclude Include="MemoryUnprotector.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Proportionalizer.h" />
-    <ClInclude Include="SjisTunnelDecoder.h" />
+    <ClInclude Include="SjisTunnelEncoding.h" />
     <ClInclude Include="StringUtil.h" />
+    <ClInclude Include="Win32AToWAdapter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D2DProportionalizer.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EnginePatches.cpp" />
     <ClCompile Include="GdiProportionalizer.cpp" />
+    <ClCompile Include="ImportHooker.cpp" />
     <ClCompile Include="LocaleEmulator.cpp" />
     <ClCompile Include="Proxy.cpp" />
     <ClCompile Include="Font.cpp" />
@@ -120,8 +123,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Proportionalizer.cpp" />
-    <ClCompile Include="SjisTunnelDecoder.cpp" />
+    <ClCompile Include="SjisTunnelEncoding.cpp" />
     <ClCompile Include="StringUtil.cpp" />
+    <ClCompile Include="Win32AToWAdapter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />

@@ -17,6 +17,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
         }
         //*/
 
+        Win32AToWAdapter::Init();
+
         // Uncomment one of these depending on what the game uses
         GdiProportionalizer::Init();
         //D2DProportionalizer::Init();

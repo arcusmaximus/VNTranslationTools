@@ -3,7 +3,7 @@
 void D2DProportionalizer::Init()
 {
     Proportionalizer::Init();
-    PatchGameImports(
+    ImportHooker::Hook(
         {
             { "DWriteCreateFactory", DWriteCreateFactoryHook },
             { "D3D11CreateDevice", D3D11CreateDeviceHook }

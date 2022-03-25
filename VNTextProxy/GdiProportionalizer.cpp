@@ -5,7 +5,7 @@ using namespace std;
 void GdiProportionalizer::Init()
 {
     Proportionalizer::Init();
-    PatchGameImports(
+    ImportHooker::Hook(
         {
             { "CreateFontA", CreateFontAHook },
             { "CreateFontIndirectA", CreateFontIndirectAHook },
@@ -67,7 +67,7 @@ BOOL GdiProportionalizer::DeleteObjectHook(HGDIOBJ obj)
 
 BOOL GdiProportionalizer::TextOutAHook(HDC dc, int x, int y, LPCSTR pString, int count)
 {
-    wstring text = StringUtil::ToHalfWidth(SjisTunnelDecoder::Decode(pString, count));
+    wstring text = SjisTunnelEncoding::Decode(pString, count);
     Font* pFont = CurrentFonts[dc];
     if (!AdaptRenderArgs(text.c_str(), text.size(), pFont->GetHeight(), x, y))
         return false;
