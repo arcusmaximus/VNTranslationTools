@@ -9,7 +9,6 @@ void Win32AToWAdapter::Init()
             { "MultiByteToWideChar", MultiByteToWideCharHook },
             { "WideCharToMultiByte", WideCharToMultiByteHook },
             { "DefWindowProcA", DefWindowProcAHook },
-            { "SetWindowTextA", SetWindowTextAHook },
             { "AppendMenuA", AppendMenuAHook },
             { "InsertMenuA", InsertMenuAHook },
             { "InsertMenuItemA", InsertMenuItemAHook },
@@ -111,11 +110,6 @@ LRESULT Win32AToWAdapter::DefWindowProcAHook(HWND hWnd, UINT msg, WPARAM wParam,
             return DefWindowProcA(hWnd, msg, wParam, lParam);
         }
     }
-}
-
-BOOL Win32AToWAdapter::SetWindowTextAHook(HWND hWnd, LPCSTR lpString)
-{
-    return SetWindowTextW(hWnd, SjisTunnelEncoding::Decode(lpString).c_str());
 }
 
 BOOL Win32AToWAdapter::AppendMenuAHook(HMENU hMenu, UINT uFlags, UINT_PTR uIDNewItem, LPCSTR lpNewItem)
