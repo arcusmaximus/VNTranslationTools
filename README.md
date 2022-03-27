@@ -56,7 +56,7 @@ By default, sjis_ext.bin is created inside the output folder, next to the patche
 # VNTextProxy
 A proxy d2d1.dll that hooks into the game and helps with making it display non-Japanese text. It can do the following:
 * Detect whether the user's machine is using the Japanese locale, and if not, relaunch the game using [Locale Emulator](https://github.com/xupefei/Locale-Emulator). This is useful for games that crash on non-Japanese systems. Note that you need to bundle LoaderDll.dll and LocaleEmulator.dll if you intend to use this feature.
-* Load a custom font (.ttf/.ttc/.otf) from the game's folder.
+* Load a custom font (.ttf/.ttc/.otf) from the game's folder. The font file name should be the same as the font name.
 * Catch calls to CreateFontA(), CreateFontIndirectA() and IDWriteFactory::CreateTextFormat() and make them use this custom font instead.
 * Catch calls to TextOutA() and ID2D1RenderTarget::DrawText() to correctly position characters when using a proportional font (as many visual novel engines only do monospace).
 * Restore non-Shift JIS characters using sjis_ext.bin (see previous section).
