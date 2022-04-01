@@ -9,9 +9,19 @@ namespace VNTextPatch.Shared.Scripts.Yuris
 {
     public class YurisScript : IScript
     {
+        private static class ExpressionOpcodes
+        {
+            public const byte PerformVarIndexation = 0x29;
+            public const byte Add = 0x2B;
+            public const byte PushString = 0x4D;
+            public const byte PrepareVarIndexation = 0x56;
+            public const byte PushInt16 = 0x57;
+        }
+
         private string _lastFolderPath;
         private YurisCommandList _commandList;
         private byte _wordCommandId;
+        private byte _evalCommandId;
         private byte _gosubCommandId;
         private byte _cgCommandId;
 
@@ -75,9 +85,10 @@ namespace VNTextPatch.Shared.Scripts.Yuris
             if (_script == null)
                 yield break;
 
-            foreach (string str in GetStringAttributes().Select(a => GetAttributeValue(a)))
+            foreach (List<YurisAttribute> attrs in GetStringAttributeGroups())
             {
-                Match dialogueMatch = Regex.Match(str, @"^(?<name>.+?)「(?<text>.+?)」$");
+                string str = string.Join("", attrs.Select(a => GetAttributeValue(a)));
+                Match dialogueMatch = Regex.Match(str, @"^(?<name>.+?)「(?<text>.+?)」$", RegexOptions.Singleline);
                 if (dialogueMatch.Success)
                 {
                     yield return new ScriptString(dialogueMatch.Groups["name"].Value, ScriptStringType.CharacterName);
@@ -97,15 +108,26 @@ namespace VNTextPatch.Shared.Scripts.Yuris
             using (IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator())
             {
                 BinaryPatcher patcher = new BinaryPatcher(inputStream, outputStream, a => _attributeValuesOffset + a, o => o - _attributeValuesOffset);
-                foreach (YurisAttribute attr in GetStringAttributes())
+                foreach (List<YurisAttribute> attrs in GetStringAttributeGroups())
                 {
-                    patcher.CopyUpTo(attr.ValueOffset);
+                    for (int i = 0; i < attrs.Count; i++)
+                    {
+                        patcher.CopyUpTo(attrs[i].ValueOffset);
 
-                    string text = GetNextMessage(stringEnumerator);
-                    byte[] newData = SerializeAttributeValue(attr, text);
-                    patcher.ReplaceBytes(attr.ValueLength, newData);
+                        byte[] newData;
+                        if (i == 0)
+                        {
+                            string text = GetNextMessage(stringEnumerator);
+                            newData = SerializeAttributeValue(attrs[i], text);
+                        }
+                        else
+                        {
+                            newData = Array.Empty<byte>();
+                        }
 
-                    patcher.PatchInt32(attr.DescriptorOffset + 4, newData.Length);
+                        patcher.PatchInt32(attrs[i].DescriptorOffset + 4, newData.Length);
+                        patcher.ReplaceBytes(attrs[i].ValueLength, newData);
+                    }
                 }
 
                 if (stringEnumerator.MoveNext())
@@ -153,31 +175,51 @@ namespace VNTextPatch.Shared.Scripts.Yuris
             }
         }
 
-        private IEnumerable<YurisAttribute> GetStringAttributes()
+        private IEnumerable<List<YurisAttribute>> GetStringAttributeGroups()
         {
             using IEnumerator<YurisAttribute> attrEnumerator = GetAttributes().GetEnumerator();
-            List<YurisAttribute> attrs = new List<YurisAttribute>();
+            List<YurisAttribute> commandAttrs = new List<YurisAttribute>();
+            List<YurisAttribute> stringAttrs = new List<YurisAttribute>();
             foreach (YurisCommand command in GetCommands())
             {
-                attrs.Clear();
+                commandAttrs.Clear();
                 for (int i = 0; i < command.NumAttributes; i++)
                 {
                     if (!attrEnumerator.MoveNext())
                         throw new InvalidDataException();
 
-                    attrs.Add(attrEnumerator.Current);
+                    commandAttrs.Add(attrEnumerator.Current);
                 }
 
-                foreach (YurisAttribute attr in GetStringAttributes(command, attrs))
+                IEnumerable<YurisAttribute> commandStringAttrs = GetStringAttributes(command, commandAttrs);
+                if (command.Id == _gosubCommandId)
                 {
-                    yield return attr;
+                    if (stringAttrs.Count > 0)
+                    {
+                        yield return stringAttrs;
+                        stringAttrs.Clear();
+                    }
+                    foreach (YurisAttribute stringAttr in commandStringAttrs)
+                    {
+                        yield return new List<YurisAttribute> { stringAttr };
+                    }
+                    continue;
+                }
+
+                stringAttrs.AddRange(commandStringAttrs);
+
+                if (command.Id != _wordCommandId && command.Id != _evalCommandId && stringAttrs.Count > 0)
+                {
+                    yield return stringAttrs;
+                    stringAttrs.Clear();
                 }
             }
         }
 
         private IEnumerable<YurisAttribute> GetStringAttributes(YurisCommand command, List<YurisAttribute> attrs)
         {
-            if (command.Id == _wordCommandId)
+            if (command.Id == _wordCommandId ||
+                command.Id == _evalCommandId)
             {
                 yield return attrs[0];
             }
@@ -201,7 +243,7 @@ namespace VNTextPatch.Shared.Scripts.Yuris
             }
             else if (command.Id != _cgCommandId)
             {
-                foreach (YurisAttribute attr in attrs.Where(a => a.Type == YurisAttributeType.String))
+                foreach (YurisAttribute attr in attrs.Where(a => a.Type == YurisAttributeType.Expression))
                 {
                     string value = GetAttributeValue(attr);
                     if (value != null && StringUtil.ContainsJapaneseText(value))
@@ -241,35 +283,75 @@ namespace VNTextPatch.Shared.Scripts.Yuris
                 case YurisAttributeType.Raw:
                 {
                     YurisControlCodesToStandard(_script, attr.ValueOffset, attr.ValueLength);
-                    return StringUtil.SjisEncoding.GetString(_script, attr.ValueOffset, attr.ValueLength);
+                    return StringUtil.SjisTunnelEncoding.GetString(_script, attr.ValueOffset, attr.ValueLength);
                 }
 
-                case YurisAttributeType.String:
+                case YurisAttributeType.Expression:
                 {
-                    // We expect expression bytecode of the form:
-                    // 4D           pushstring opcode
-                    // XX XX        argument length
-                    // 22 ... 22    quoted string (could also be 27 ... 27)
-                    if (attr.ValueLength < 3)
-                        return null;
-
-                    byte opcode = _script[attr.ValueOffset];
-                    if (opcode != 0x4D)
-                        return null;
-
-                    int argLength = BitConverter.ToUInt16(_script, attr.ValueOffset + 1);
-                    if (3 + argLength != attr.ValueLength)
-                        return null;
-
-                    string str = StringUtil.SjisEncoding.GetString(_script, attr.ValueOffset + 3, argLength);
-                    str = UnquoteString(str);
-                    str = Regex.Replace(str, @"(?<!\r)\n", "\r\n");
-                    return str;
+                    return EvaluatePushStringExpression(attr) ??
+                           EvaluateChrExpression(attr);
                 }
 
                 default:
                     return null;
             }
+        }
+
+        private string EvaluatePushStringExpression(in YurisAttribute attr)
+        {
+            // We expect expression bytecode of the form:
+            // 4D           pushstring opcode
+            // XX XX        argument length
+            // 22 ... 22    quoted string (could also be 27 ... 27)
+            if (attr.ValueLength < 3)
+                return null;
+
+            byte opcode = _script[attr.ValueOffset];
+            if (opcode != ExpressionOpcodes.PushString)
+                return null;
+
+            int argLength = BitConverter.ToUInt16(_script, attr.ValueOffset + 1);
+            if (3 + argLength != attr.ValueLength)
+                return null;
+
+            string str = StringUtil.SjisTunnelEncoding.GetString(_script, attr.ValueOffset + 3, argLength);
+            str = UnquoteString(str);
+            str = Regex.Replace(str, @"(?<!\r)\n", "\r\n");
+            return str;
+        }
+
+        private string EvaluateChrExpression(in YurisAttribute attr)
+        {
+            // Currently only supporting control codes
+            if (attr.ValueLength != 33)
+                return null;
+
+            // Expecting the following bytecode:
+            // 56 03 00 24 XX XX        preparevarindexation $_CHR
+            // 57 02 00 EF 00           pushint16 0xEF
+            // 29 01 00 00              performvarindexation
+            // 56 03 00 24 XX XX        preparevarindexation $_CHR
+            // 57 02 00 XX XX           pushint16 XXXX
+            // 29 01 00 00              performvarindexation
+            // 2B 00 00                 add
+            if (_script[attr.ValueOffset + 0] != ExpressionOpcodes.PrepareVarIndexation ||
+                _script[attr.ValueOffset + 6] != ExpressionOpcodes.PushInt16 ||
+                _script[attr.ValueOffset + 9] != 0xEF ||
+                _script[attr.ValueOffset + 10] != 0x00 ||
+                _script[attr.ValueOffset + 11] != ExpressionOpcodes.PerformVarIndexation ||
+                _script[attr.ValueOffset + 15] != ExpressionOpcodes.PrepareVarIndexation ||
+                _script[attr.ValueOffset + 19] != _script[attr.ValueOffset + 4] ||
+                _script[attr.ValueOffset + 20] != _script[attr.ValueOffset + 5] ||
+                _script[attr.ValueOffset + 21] != ExpressionOpcodes.PushInt16 ||
+                _script[attr.ValueOffset + 26] != ExpressionOpcodes.PerformVarIndexation ||
+                _script[attr.ValueOffset + 30] != ExpressionOpcodes.Add)
+            {
+                return null;
+            }
+
+            byte[] controlCode = { 0xEF, _script[attr.ValueOffset + 24] };
+            YurisControlCodesToStandard(controlCode, 0, 2);
+            return StringUtil.SjisEncoding.GetString(controlCode);
         }
 
         private static byte[] SerializeAttributeValue(in YurisAttribute attr, string value)
@@ -283,7 +365,7 @@ namespace VNTextPatch.Shared.Scripts.Yuris
                     return data;
                 }
 
-                case YurisAttributeType.String:
+                case YurisAttributeType.Expression:
                 {
                     value = value.Replace("\r", "");
                     value = QuoteString(value);
@@ -401,6 +483,7 @@ namespace VNTextPatch.Shared.Scripts.Yuris
 
             _commandList = new YurisCommandList(filePath);
             _wordCommandId = _commandList.GetCommandId("WORD");
+            _evalCommandId = _commandList.GetCommandId("_");
             _gosubCommandId = _commandList.GetCommandId("GOSUB");
             _cgCommandId = _commandList.GetCommandId("CG");
             _lastFolderPath = folderPath;

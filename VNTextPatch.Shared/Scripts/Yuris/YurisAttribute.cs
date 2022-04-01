@@ -26,6 +26,6 @@ namespace VNTextPatch.Shared.Scripts.Yuris
         Raw = 0,
         Long = 1,
         Double = 2,
-        String = 3
+        Expression = 3
     }
 }
