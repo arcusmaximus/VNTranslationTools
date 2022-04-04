@@ -8,6 +8,11 @@ void Win32AToWAdapter::Init()
         {
             { "MultiByteToWideChar", MultiByteToWideCharHook },
             { "WideCharToMultiByte", WideCharToMultiByteHook },
+
+            { "GetModuleFileNameA", GetModuleFileNameAHook },
+            { "CreateFileA", CreateFileAHook },
+
+            { "PeekMessageA", PeekMessageAHook },
             { "DefWindowProcA", DefWindowProcAHook },
             { "AppendMenuA", AppendMenuAHook },
             { "InsertMenuA", InsertMenuAHook },
@@ -64,6 +69,63 @@ int Win32AToWAdapter::WideCharToMultiByteHook(UINT codePage, DWORD flags, LPCWCH
     }
 
     return numChars;
+}
+
+DWORD Win32AToWAdapter::GetModuleFileNameAHook(HMODULE hModule, LPSTR lpFilename, DWORD nSize)
+{
+    wstring fileNameW;
+    fileNameW.resize(nSize);
+    DWORD result = GetModuleFileNameW(hModule, fileNameW.data(), fileNameW.size());
+    if (result == 0)
+        return 0;
+
+    string fileNameA = SjisTunnelEncoding::Encode(fileNameW.c_str());
+    if (fileNameA.size() >= nSize)
+    {
+        memcpy(lpFilename, fileNameA.c_str(), nSize - 1);
+        lpFilename[nSize - 1] = '\0';
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return nSize;
+    }
+
+    memcpy(lpFilename, fileNameA.c_str(), fileNameA.size() + 1);
+    return fileNameA.size();
+}
+
+HANDLE Win32AToWAdapter::CreateFileAHook(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
+{
+    wstring fileNameW = SjisTunnelEncoding::Decode(lpFileName);
+    return CreateFileW(fileNameW.c_str(), dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+}
+
+BOOL Win32AToWAdapter::PeekMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
+{
+    static vector<MSG> pendingMessages;
+
+    BOOL messageAvailable = PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, PM_NOREMOVE | (wRemoveMsg & PM_NOYIELD));
+    if (messageAvailable && lpMsg->message == WM_CHAR)
+    {
+        string str = SjisTunnelEncoding::Encode((wchar_t*)&lpMsg->wParam, 1);
+        for (char c : str)
+        {
+            pendingMessages.push_back(*lpMsg);
+            pendingMessages[pendingMessages.size() - 1].wParam = (BYTE)c;
+        }
+        
+        if (wRemoveMsg & PM_REMOVE)
+            PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+    }
+
+    if (!pendingMessages.empty())
+    {
+        *lpMsg = pendingMessages[0];
+        if (wRemoveMsg & PM_REMOVE)
+            pendingMessages.erase(pendingMessages.begin());
+
+        return true;
+    }
+
+    return PeekMessageA(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
 }
 
 LRESULT Win32AToWAdapter::DefWindowProcAHook(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
