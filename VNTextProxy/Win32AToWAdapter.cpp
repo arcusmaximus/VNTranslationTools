@@ -108,12 +108,10 @@ BOOL Win32AToWAdapter::PeekMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterM
         string str = SjisTunnelEncoding::Encode((wchar_t*)&lpMsg->wParam, 1);
         for (char c : str)
         {
+            lpMsg->wParam = (BYTE)c;
             pendingMessages.push_back(*lpMsg);
-            pendingMessages[pendingMessages.size() - 1].wParam = (BYTE)c;
         }
-        
-        if (wRemoveMsg & PM_REMOVE)
-            PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+        PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, PM_REMOVE | (wRemoveMsg & PM_NOYIELD));
     }
 
     if (!pendingMessages.empty())
