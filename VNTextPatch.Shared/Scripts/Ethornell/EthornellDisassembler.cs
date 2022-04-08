@@ -98,6 +98,15 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
             _reader.SkipZeroTerminatedSjisString();
         }
 
+        protected bool IsEmptyString(int addr)
+        {
+            long prevPos = _reader.BaseStream.Position;
+            _reader.BaseStream.Position = CodeOffset + addr;
+            bool isEmpty = _reader.ReadByte() == 0;
+            _reader.BaseStream.Position = prevPos;
+            return isEmpty;
+        }
+
         protected string ReadStringAtAddress(int addr)
         {
             long prevPos = _reader.BaseStream.Position;

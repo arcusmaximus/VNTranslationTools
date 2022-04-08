@@ -505,6 +505,7 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
                     { 0x0003, ReadPushStringAddressOperand },
                     { 0x001C, HandleUserFunctionCall },
                     { 0x0140, HandleMessage },
+                    { 0x0143, HandleMessage },
                     { 0x0160, HandleChoiceScreen }
                 };
         }
@@ -560,10 +561,12 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
             if (_stringStack.Count > 0)
             {
                 StackItem name = _stringStack.Pop();
-                OnStringAddressEncountered(name.Offset, name.Value, ScriptStringType.CharacterName);
+                if (!IsEmptyString(name.Value))
+                    OnStringAddressEncountered(name.Offset, name.Value, ScriptStringType.CharacterName);
             }
 
-            OnStringAddressEncountered(message.Offset, message.Value, ScriptStringType.Message);
+            if (!IsEmptyString(message.Value))
+                OnStringAddressEncountered(message.Offset, message.Value, ScriptStringType.Message);
         }
 
         private void HandleChoiceScreen()
