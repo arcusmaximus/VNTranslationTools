@@ -548,8 +548,9 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
             if (_stringStack.Count == 0)
                 return;
 
-            int funcNameAddr = _stringStack.Pop().Value;
-            string funcName = ReadStringAtAddress(funcNameAddr);
+            StackItem item = _stringStack.Pop();
+            OnStringAddressEncountered(item.Offset, item.Value, ScriptStringType.Internal);
+            string funcName = ReadStringAtAddress(item.Value);
             if (funcName == "_SelectEx")
                 HandleChoiceScreen();
         }
