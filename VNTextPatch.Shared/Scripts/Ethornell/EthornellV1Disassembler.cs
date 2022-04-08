@@ -561,12 +561,10 @@ namespace VNTextPatch.Shared.Scripts.Ethornell
             if (_stringStack.Count > 0)
             {
                 StackItem name = _stringStack.Pop();
-                if (!IsEmptyString(name.Value))
-                    OnStringAddressEncountered(name.Offset, name.Value, ScriptStringType.CharacterName);
+                OnStringAddressEncountered(name.Offset, name.Value, !IsEmptyString(name.Value) ? ScriptStringType.CharacterName : ScriptStringType.Internal);
             }
 
-            if (!IsEmptyString(message.Value))
-                OnStringAddressEncountered(message.Offset, message.Value, ScriptStringType.Message);
+            OnStringAddressEncountered(message.Offset, message.Value, !IsEmptyString(message.Value) ? ScriptStringType.Message : ScriptStringType.Internal);
         }
 
         private void HandleChoiceScreen()
