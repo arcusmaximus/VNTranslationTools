@@ -4,22 +4,67 @@ using namespace std;
 
 void Win32AToWAdapter::Init()
 {
+    ImeListener::Init();
+    ImeListener::OnCompositionEnded = HandleImeCompositionEnded;
+
     ImportHooker::Hook(
         {
+            { "GetACP", GetACPHook },
+            { "IsDBCSLeadByte", IsDBCSLeadByteHook },
             { "MultiByteToWideChar", MultiByteToWideCharHook },
             { "WideCharToMultiByte", WideCharToMultiByteHook },
 
-            { "GetModuleFileNameA", GetModuleFileNameAHook },
-            { "CreateFileA", CreateFileAHook },
+            { "CreateEventA", CreateEventAHook },
+            { "OpenEventA", OpenEventAHook },
+            { "CreateMutexA", CreateMutexAHook },
+            { "OpenMutexA", OpenMutexAHook },
 
+            { "GetModuleFileNameA", GetModuleFileNameAHook },
+            { "LoadLibraryA", LoadLibraryAHook },
+            { "LoadLibraryExA", LoadLibraryExAHook },
+
+            { "GetFullPathNameA", GetFullPathNameAHook },
+            { "FindFirstFileA", FindFirstFileAHook },
+            { "FindNextFileA", FindNextFileAHook },
+            { "SearchPathA", SearchPathAHook },
+            { "GetFileAttributesA", GetFileAttributesAHook },
+            { "CreateFileA", CreateFileAHook },
+            { "DeleteFileA", DeleteFileAHook },
+            { "CreateDirectoryA", CreateDirectoryAHook },
+            { "RemoveDirectoryA", RemoveDirectoryA },
+            { "GetCurrentDirectoryA", GetCurrentDirectoryAHook },
+            { "GetTempPathA", GetTempPathAHook },
+
+            { "RegCreateKeyExA", RegCreateKeyExA },
+            { "RegOpenKeyExA", RegOpenKeyExA },
+            { "RegQueryValueExA", RegQueryValueExAHook },
+            { "RegSetValueExA", RegSetValueExAHook },
+
+            { "SetWindowLongA", SetWindowLongAHook },
+            { "DestroyWindow", DestroyWindowHook },
             { "PeekMessageA", PeekMessageAHook },
+            { "DispatchMessageA", DispatchMessageAHook },
             { "DefWindowProcA", DefWindowProcAHook },
             { "AppendMenuA", AppendMenuAHook },
             { "InsertMenuA", InsertMenuAHook },
             { "InsertMenuItemA", InsertMenuItemAHook },
-            { "MessageBoxA", MessageBoxAHook }
+            { "MessageBoxA", MessageBoxAHook },
+
+            { "GetMonitorInfoA", GetMonitorInfoAHook },
+            { "EnumDisplayDevicesA", EnumDisplayDevicesAHook },
+            { "DirectSoundEnumerateA", DirectSoundEnumerateAHook }
         }
     );
+}
+
+UINT Win32AToWAdapter::GetACPHook()
+{
+    return 932;
+}
+
+BOOL Win32AToWAdapter::IsDBCSLeadByteHook(BYTE TestChar)
+{
+    return (TestChar >= 0x81 && TestChar < 0xA0) || (TestChar >= 0xE0 && TestChar < 0xFD);
 }
 
 int Win32AToWAdapter::MultiByteToWideCharHook(UINT codePage, DWORD flags, LPCCH lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar)
@@ -71,6 +116,26 @@ int Win32AToWAdapter::WideCharToMultiByteHook(UINT codePage, DWORD flags, LPCWCH
     return numChars;
 }
 
+HANDLE Win32AToWAdapter::CreateEventAHook(LPSECURITY_ATTRIBUTES lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCSTR lpName)
+{
+    return CreateEventW(lpEventAttributes, bManualReset, bInitialState, lpName != nullptr ? SjisTunnelEncoding::Decode(lpName).c_str() : nullptr);
+}
+
+HANDLE Win32AToWAdapter::OpenEventAHook(DWORD dwDesiredAccess, BOOL bInheritHandle, LPCSTR lpName)
+{
+    return OpenEventW(dwDesiredAccess, bInheritHandle, SjisTunnelEncoding::Decode(lpName).c_str());
+}
+
+HANDLE Win32AToWAdapter::CreateMutexAHook(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCSTR lpName)
+{
+    return CreateMutexW(lpMutexAttributes, bInitialOwner, lpName != nullptr ? SjisTunnelEncoding::Decode(lpName).c_str() : nullptr);
+}
+
+HANDLE Win32AToWAdapter::OpenMutexAHook(DWORD dwDesiredAccess, BOOL bInheritHandle, LPCSTR lpName)
+{
+    return OpenMutexW(dwDesiredAccess, bInheritHandle, SjisTunnelEncoding::Decode(lpName).c_str());
+}
+
 DWORD Win32AToWAdapter::GetModuleFileNameAHook(HMODULE hModule, LPSTR lpFilename, DWORD nSize)
 {
     wstring fileNameW;
@@ -92,10 +157,269 @@ DWORD Win32AToWAdapter::GetModuleFileNameAHook(HMODULE hModule, LPSTR lpFilename
     return fileNameA.size();
 }
 
+HMODULE Win32AToWAdapter::LoadLibraryAHook(LPCSTR lpLibFileName)
+{
+    return LoadLibraryW(SjisTunnelEncoding::Decode(lpLibFileName).c_str());
+}
+
+HMODULE Win32AToWAdapter::LoadLibraryExAHook(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
+{
+    return LoadLibraryExW(SjisTunnelEncoding::Decode(lpLibFileName).c_str(), hFile, dwFlags);
+}
+
+DWORD Win32AToWAdapter::GetFullPathNameAHook(LPCSTR lpFileName, DWORD nBufferLength, LPSTR lpBuffer, LPSTR* lpFilePart)
+{
+    wstring bufferW;
+    bufferW.resize(nBufferLength);
+    DWORD result = GetFullPathNameW(SjisTunnelEncoding::Decode(lpFileName).c_str(), bufferW.size(), bufferW.data(), nullptr);
+    if (result == 0)
+        return 0;
+
+    if (result > bufferW.size())
+        return result * 2;
+
+    string bufferA = SjisTunnelEncoding::Encode(bufferW.c_str());
+    if (bufferA.size() + 1 > nBufferLength)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return bufferA.size() + 1;
+    }
+
+    memcpy(lpBuffer, bufferA.c_str(), bufferA.size() + 1);
+    if (lpFilePart != nullptr)
+    {
+        *lpFilePart = strrchr(lpBuffer, '\\');
+        if (*lpFilePart != nullptr)
+            (*lpFilePart)++;
+    }
+
+    return bufferA.size();
+}
+
+HANDLE Win32AToWAdapter::FindFirstFileAHook(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData)
+{
+    WIN32_FIND_DATAW findDataW;
+    HANDLE hFind = FindFirstFileW(SjisTunnelEncoding::Decode(lpFileName).c_str(), &findDataW);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return INVALID_HANDLE_VALUE;
+
+    *lpFindFileData = ConvertFindDataWToA(findDataW);
+    return hFind;
+}
+
+BOOL Win32AToWAdapter::FindNextFileAHook(HANDLE hFindFile, LPWIN32_FIND_DATAA lpFindFileData)
+{
+    WIN32_FIND_DATAW findDataW;
+    BOOL found = FindNextFileW(hFindFile, &findDataW);
+    if (!found)
+        return false;
+
+    *lpFindFileData = ConvertFindDataWToA(findDataW);
+    return true;
+}
+
+DWORD Win32AToWAdapter::SearchPathAHook(LPCSTR lpPath, LPCSTR lpFileName, LPCSTR lpExtension, DWORD nBufferLength, LPSTR lpBuffer, LPSTR* lpFilePart)
+{
+    wstring bufferW;
+    bufferW.resize(nBufferLength);
+    DWORD result = SearchPathW(
+        lpPath != nullptr ? SjisTunnelEncoding::Decode(lpPath).c_str() : nullptr,
+        SjisTunnelEncoding::Decode(lpFileName).c_str(),
+        lpExtension != nullptr ? SjisTunnelEncoding::Decode(lpExtension).c_str() : nullptr,
+        bufferW.size(),
+        bufferW.data(),
+        nullptr
+    );
+    if (result == 0)
+        return 0;
+
+    if (result > bufferW.size())
+        return result * 2;
+
+    string bufferA = SjisTunnelEncoding::Encode(bufferW.c_str());
+    if (bufferA.size() + 1 > nBufferLength)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return bufferA.size() + 1;
+    }
+
+    memcpy(lpBuffer, bufferA.c_str(), bufferA.size() + 1);
+    if (lpFilePart != nullptr)
+    {
+        *lpFilePart = strrchr(lpBuffer, '\\');
+        if (*lpFilePart != nullptr)
+            (*lpFilePart)++;
+    }
+
+    return bufferA.size();
+}
+
+DWORD Win32AToWAdapter::GetFileAttributesAHook(LPCSTR lpFileName)
+{
+    return GetFileAttributesW(SjisTunnelEncoding::Decode(lpFileName).c_str());
+}
+
 HANDLE Win32AToWAdapter::CreateFileAHook(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 {
-    wstring fileNameW = SjisTunnelEncoding::Decode(lpFileName);
-    return CreateFileW(fileNameW.c_str(), dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+    return CreateFileW(SjisTunnelEncoding::Decode(lpFileName).c_str(), dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+}
+
+HANDLE Win32AToWAdapter::CreateFileMappingAHook(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName)
+{
+    return CreateFileMappingW(hFile, lpFileMappingAttributes, flProtect, dwMaximumSizeHigh, dwMaximumSizeLow,
+        lpName != nullptr ? SjisTunnelEncoding::Decode(lpName).c_str() : nullptr);
+}
+
+BOOL Win32AToWAdapter::DeleteFileAHook(LPCSTR lpFileName)
+{
+    return DeleteFileW(SjisTunnelEncoding::Decode(lpFileName).c_str());
+}
+
+BOOL Win32AToWAdapter::CreateDirectoryAHook(LPCSTR lpPathName, LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+{
+    return CreateDirectoryW(SjisTunnelEncoding::Decode(lpPathName).c_str(), lpSecurityAttributes);
+}
+
+BOOL Win32AToWAdapter::RemoveDirectoryAHook(LPCSTR lpPathName)
+{
+    return RemoveDirectoryW(SjisTunnelEncoding::Decode(lpPathName).c_str());
+}
+
+DWORD Win32AToWAdapter::GetCurrentDirectoryAHook(DWORD nBufferLength, LPSTR lpBuffer)
+{
+    wstring currentDirW;
+    currentDirW.resize(nBufferLength);
+    DWORD result = GetCurrentDirectoryW(currentDirW.size(), currentDirW.data());
+    if (result == 0)
+        return 0;
+
+    if (result > currentDirW.size())
+        return result * 2;
+
+    string currentDirA = SjisTunnelEncoding::Encode(currentDirW.c_str());
+    if (currentDirA.size() + 1 > nBufferLength)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return currentDirA.size() + 1;
+    }
+
+    memcpy(lpBuffer, currentDirA.c_str(), currentDirA.size() + 1);
+    return currentDirA.size();
+}
+
+DWORD Win32AToWAdapter::GetTempPathAHook(DWORD nBufferLength, LPSTR lpBuffer)
+{
+    wstring tempPathW;
+    tempPathW.resize(nBufferLength);
+    DWORD result = GetTempPathW(tempPathW.size(), tempPathW.data());
+    if (result == 0)
+        return 0;
+
+    if (result > tempPathW.size())
+        return result * 2;
+
+    string tempPathA = SjisTunnelEncoding::Encode(tempPathW.c_str());
+    if (tempPathA.size() + 1 > nBufferLength)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return tempPathA.size() + 1;
+    }
+
+    memcpy(lpBuffer, tempPathA.c_str(), tempPathA.size() + 1);
+    return tempPathA.size();
+}
+
+LSTATUS Win32AToWAdapter::RegCreateKeyExAHook(HKEY hKey, LPCSTR lpSubKey, DWORD Reserved, LPSTR lpClass, DWORD dwOptions, REGSAM samDesired, const LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition)
+{
+    return RegCreateKeyExW(
+        hKey,
+        SjisTunnelEncoding::Decode(lpSubKey).c_str(),
+        0,
+        lpClass != nullptr ? const_cast<wchar_t*>(SjisTunnelEncoding::Decode(lpClass).c_str()) : nullptr,
+        dwOptions,
+        samDesired,
+        lpSecurityAttributes,
+        phkResult,
+        lpdwDisposition
+    );
+}
+
+LSTATUS Win32AToWAdapter::RegOpenKeyExAHook(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
+{
+    return RegOpenKeyExW(hKey, SjisTunnelEncoding::Decode(lpSubKey).c_str(), ulOptions, samDesired, phkResult);
+}
+
+LSTATUS Win32AToWAdapter::RegQueryValueExAHook(HKEY hKey, LPCSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+{
+    DWORD type;
+    DWORD sizeW;
+    LSTATUS status = RegQueryValueExW(hKey, lpValueName != nullptr ? SjisTunnelEncoding::Decode(lpValueName).c_str() : nullptr, nullptr, &type, nullptr, &sizeW);
+    if (status != ERROR_SUCCESS)
+        return status;
+
+    if (type != REG_SZ &&
+        type != REG_EXPAND_SZ &&
+        type != REG_MULTI_SZ)
+    {
+        return RegQueryValueExW(hKey, lpValueName != nullptr ? SjisTunnelEncoding::Decode(lpValueName).c_str() : nullptr, nullptr, lpType, lpData, lpcbData);
+    }
+
+    wstring dataW;
+    dataW.resize(sizeW / sizeof(wchar_t));
+    status = RegQueryValueExW(hKey, lpValueName != nullptr ? SjisTunnelEncoding::Decode(lpValueName).c_str() : nullptr, nullptr, lpType, (BYTE*)dataW.data(), &sizeW);
+    if (status != ERROR_SUCCESS)
+        return status;
+
+    string dataA = SjisTunnelEncoding::Encode(dataW.data(), dataW.size());
+    if (lpData == nullptr)
+    {
+        if (lpcbData != nullptr)
+            *lpcbData = dataA.size();
+
+        return ERROR_SUCCESS;
+    }
+
+    if (lpcbData == nullptr || *lpcbData < dataA.size())
+        return ERROR_MORE_DATA;
+
+    memcpy(lpData, dataA.data(), dataA.size());
+    *lpcbData = dataA.size();
+    return ERROR_SUCCESS;
+}
+
+LSTATUS Win32AToWAdapter::RegSetValueExAHook(HKEY hKey, LPCSTR lpValueName, DWORD Reserved, DWORD dwType, const BYTE* lpData, DWORD cbData)
+{
+    if (lpData == nullptr ||
+        dwType != REG_SZ &&
+        dwType != REG_EXPAND_SZ &&
+        dwType != REG_MULTI_SZ)
+    {
+        return RegSetValueExW(hKey, lpValueName != nullptr ? SjisTunnelEncoding::Decode(lpValueName).c_str() : nullptr, 0, dwType, lpData, cbData);
+    }
+
+    wstring dataW = SjisTunnelEncoding::Decode((const char*)lpData, cbData);
+    return RegSetValueExW(hKey, lpValueName != nullptr ? SjisTunnelEncoding::Decode(lpValueName).c_str() : nullptr, 0, dwType, (BYTE*)dataW.data(), dataW.size() * sizeof(wchar_t));
+}
+
+LONG Win32AToWAdapter::SetWindowLongAHook(HWND hWnd, int nIndex, LONG dwNewLong)
+{
+    // Manually keep track of window procedures as we can't rely on GetWindowLong() to give us the real one
+    // (may return a fake value for use with CallWindowProc)
+    if (nIndex == GWL_WNDPROC)
+        WindowProcs[hWnd] = (WNDPROC)dwNewLong;
+
+    return SetWindowLongA(hWnd, nIndex, dwNewLong);
+}
+
+BOOL Win32AToWAdapter::DestroyWindowHook(HWND hWnd)
+{
+    WindowProcs.erase(hWnd);
+    return DestroyWindow(hWnd);
+}
+
+void Win32AToWAdapter::HandleImeCompositionEnded(const std::wstring& text)
+{
+    PendingImeCompositionChars = text;
 }
 
 BOOL Win32AToWAdapter::PeekMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
@@ -105,7 +429,22 @@ BOOL Win32AToWAdapter::PeekMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterM
     BOOL messageAvailable = PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, PM_NOREMOVE | (wRemoveMsg & PM_NOYIELD));
     if (messageAvailable && lpMsg->message == WM_CHAR)
     {
-        string str = SjisTunnelEncoding::Encode((wchar_t*)&lpMsg->wParam, 1);
+        // For non-IME text input, we receive Unicode WM_CHARs - nice and easy. But IME input, for whatever reason,
+        // comes in as '?' for characters outside the codepage, despite us calling PeekMessageW().
+        // So, if the user completed an IME composition earlier, we should ignore the resulting WM_CHARs
+        // and use the text we got from TSF instead (see ImeListener.cpp).
+        wchar_t c;
+        if (!PendingImeCompositionChars.empty())
+        {
+            c = PendingImeCompositionChars[0];
+            PendingImeCompositionChars.erase(0, 1);
+        }
+        else
+        {
+            c = (wchar_t)lpMsg->wParam;
+        }
+
+        string str = SjisTunnelEncoding::Encode(&c, 1);
         for (char c : str)
         {
             lpMsg->wParam = (BYTE)c;
@@ -124,6 +463,20 @@ BOOL Win32AToWAdapter::PeekMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterM
     }
 
     return PeekMessageA(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+}
+
+LRESULT Win32AToWAdapter::DispatchMessageAHook(const MSG* lpMsg)
+{
+    if (lpMsg->message == WM_CHAR)
+    {
+        // Bypass all the "helpful" extra code that sits between calling DispatchMessageA() and the invocation of the window procedure
+        // so that our tunneled SJIS codepoints are preserved and not turned into question marks
+        auto it = WindowProcs.find(lpMsg->hwnd);
+        WNDPROC pWndProc = it != WindowProcs.end() ? it->second : (WNDPROC)GetClassLongPtrA(lpMsg->hwnd, GCLP_WNDPROC);
+        return pWndProc(lpMsg->hwnd, lpMsg->message, lpMsg->wParam, lpMsg->lParam);
+    }
+
+    return DispatchMessageA(lpMsg);
 }
 
 LRESULT Win32AToWAdapter::DefWindowProcAHook(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -201,4 +554,80 @@ BOOL Win32AToWAdapter::InsertMenuItemAHook(HMENU hmenu, UINT item, BOOL fByPosit
 int Win32AToWAdapter::MessageBoxAHook(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
 {
     return MessageBoxW(hWnd, SjisTunnelEncoding::Decode(lpText).c_str(), SjisTunnelEncoding::Decode(lpCaption).c_str(), uType);
+}
+
+BOOL Win32AToWAdapter::GetMonitorInfoAHook(HMONITOR hMonitor, LPMONITORINFO lpmi)
+{
+    if (lpmi == nullptr)
+        return false;
+
+    if (lpmi->cbSize == sizeof(MONITORINFO))
+        return GetMonitorInfoA(hMonitor, lpmi);
+
+    if (lpmi->cbSize != sizeof(MONITORINFOEXA))
+        return false;
+
+    MONITORINFOEXW infoW;
+    infoW.cbSize = sizeof(infoW);
+    if (!GetMonitorInfoW(hMonitor, &infoW))
+        return false;
+
+    lpmi->dwFlags = infoW.dwFlags;
+    lpmi->rcMonitor = infoW.rcMonitor;
+    lpmi->rcWork = infoW.rcWork;
+    strcpy_s(((LPMONITORINFOEXA)lpmi)->szDevice, SjisTunnelEncoding::Encode(infoW.szDevice).c_str());
+    return true;
+}
+
+BOOL Win32AToWAdapter::EnumDisplayDevicesAHook(LPCSTR lpDevice, DWORD iDevNum, PDISPLAY_DEVICEA lpDisplayDevice, DWORD dwFlags)
+{
+    if (lpDisplayDevice == nullptr || lpDisplayDevice->cb != sizeof(DISPLAY_DEVICEA))
+        return false;
+
+    DISPLAY_DEVICEW deviceW;
+    deviceW.cb = sizeof(deviceW);
+    if (!EnumDisplayDevicesW(lpDevice != nullptr ? SjisTunnelEncoding::Decode(lpDevice).c_str() : nullptr, iDevNum, &deviceW, dwFlags))
+        return false;
+
+    strcpy_s(lpDisplayDevice->DeviceID, SjisTunnelEncoding::Encode(deviceW.DeviceID).c_str());
+    strcpy_s(lpDisplayDevice->DeviceKey, SjisTunnelEncoding::Encode(deviceW.DeviceKey).c_str());
+    strcpy_s(lpDisplayDevice->DeviceName, SjisTunnelEncoding::Encode(deviceW.DeviceName).c_str());
+    strcpy_s(lpDisplayDevice->DeviceString, SjisTunnelEncoding::Encode(deviceW.DeviceString).c_str());
+    lpDisplayDevice->StateFlags = deviceW.StateFlags;
+    return true;
+}
+
+HRESULT Win32AToWAdapter::DirectSoundEnumerateAHook(LPDSENUMCALLBACKA pDSEnumCallback, LPVOID pContext)
+{
+    DirectSoundEnumerateContext origContext;
+    origContext.OriginalCallback = pDSEnumCallback;
+    origContext.OriginalContext = pContext;
+    return DirectSoundEnumerateW(&DirectSoundEnumerateCallback, &origContext);
+}
+
+BOOL Win32AToWAdapter::DirectSoundEnumerateCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR lpcstrModule, LPVOID lpContext)
+{
+    DirectSoundEnumerateContext* pOrigContext = (DirectSoundEnumerateContext*)lpContext;
+    return pOrigContext->OriginalCallback(
+        lpGuid,
+        SjisTunnelEncoding::Encode(lpcstrDescription).c_str(),
+        SjisTunnelEncoding::Encode(lpcstrModule).c_str(),
+        pOrigContext->OriginalContext
+    );
+}
+
+WIN32_FIND_DATAA Win32AToWAdapter::ConvertFindDataWToA(const WIN32_FIND_DATAW& findDataW)
+{
+    WIN32_FIND_DATAA findDataA;
+    strcpy_s(findDataA.cAlternateFileName, SjisTunnelEncoding::Encode(findDataW.cAlternateFileName).c_str());
+    strcpy_s(findDataA.cFileName, SjisTunnelEncoding::Encode(findDataW.cFileName).c_str());
+    findDataA.dwFileAttributes = findDataW.dwFileAttributes;
+    findDataA.dwReserved0 = findDataW.dwReserved0;
+    findDataA.dwReserved1 = findDataW.dwReserved1;
+    findDataA.ftCreationTime = findDataW.ftCreationTime;
+    findDataA.ftLastAccessTime = findDataW.ftLastAccessTime;
+    findDataA.ftLastWriteTime = findDataW.ftLastWriteTime;
+    findDataA.nFileSizeHigh = findDataW.nFileSizeHigh;
+    findDataA.nFileSizeLow = findDataW.nFileSizeLow;
+    return findDataA;
 }

@@ -4,8 +4,28 @@ using namespace std;
 
 void ImportHooker::Hook(const map<string, void*>& replacementFuncs)
 {
+    Init();
+
+    for (auto pair : replacementFuncs)
+    {
+        ReplacementFuncs.insert(pair);
+    }
+
     HMODULE hExe = GetModuleHandle(nullptr);
     DetourEnumerateImportsEx(hExe, (void*)&replacementFuncs, nullptr, PatchGameImport);
+}
+
+void ImportHooker::Init()
+{
+    if (Initialized)
+        return;
+
+    Initialized = true;
+    Hook(
+        {
+            { "GetProcAddress", GetProcAddressHook }
+        }
+    );
 }
 
 BOOL ImportHooker::PatchGameImport(void* pContext, DWORD nOrdinal, LPCSTR pszFunc, void** ppvFunc)
@@ -22,4 +42,13 @@ BOOL ImportHooker::PatchGameImport(void* pContext, DWORD nOrdinal, LPCSTR pszFun
     }
 
     return true;
+}
+
+FARPROC ImportHooker::GetProcAddressHook(HMODULE hModule, LPCSTR lpProcName)
+{
+    auto it = ReplacementFuncs.find(lpProcName);
+    if (it != ReplacementFuncs.end())
+        return (FARPROC)it->second;
+
+    return GetProcAddress(hModule, lpProcName);
 }

@@ -64,7 +64,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
-      <AdditionalDependencies>dwrite.lib;d3d11.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)d2d1.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
@@ -87,11 +87,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
-      <AdditionalDependencies>dwrite.lib;d3d11.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)d2d1.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ComPtr.h" />
     <ClInclude Include="D2DProportionalizer.h" />
     <ClInclude Include="EnginePatches.h" />
     <ClInclude Include="GdiProportionalizer.h" />
@@ -105,6 +106,7 @@
     <ClInclude Include="Proportionalizer.h" />
     <ClInclude Include="SjisTunnelEncoding.h" />
     <ClInclude Include="StringUtil.h" />
+    <ClInclude Include="ImeListener.h" />
     <ClInclude Include="Win32AToWAdapter.h" />
   </ItemGroup>
   <ItemGroup>
@@ -125,6 +127,7 @@
     <ClCompile Include="Proportionalizer.cpp" />
     <ClCompile Include="SjisTunnelEncoding.cpp" />
     <ClCompile Include="StringUtil.cpp" />
+    <ClCompile Include="ImeListener.cpp" />
     <ClCompile Include="Win32AToWAdapter.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -5,6 +5,10 @@
 #include <windows.h>
 #include <d2d1.h>
 #include <d2d1_3.h>
+#include <Mmreg.h>
+#include <msctf.h>
+#include <ctffunc.h>
+#include <dsound.h>
 #include <dwrite.h>
 #include <d3d11.h>
 #include <cstdlib>
@@ -14,6 +18,7 @@
 #include <ranges>
 #include <set>
 #include <string>
+#include <sstream>
 #include <vector>
 #include "../external/Detours/detours.h"
 
@@ -30,3 +35,6 @@
 #include "D2DProportionalizer.h"
 #include "EnginePatches.h"
 #include "LocaleEmulator.h"
+
+#include "ComPtr.h"
+#include "ImeListener.h"
