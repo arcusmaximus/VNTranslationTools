@@ -88,7 +88,7 @@ namespace VNTextPatch.Shared.Scripts.Yuris
             foreach (List<YurisAttribute> attrs in GetStringAttributeGroups())
             {
                 string str = string.Join("", attrs.Select(a => GetAttributeValue(a)));
-                Match dialogueMatch = Regex.Match(str, @"^(?<name>.+?)「(?<text>.+?)」$", RegexOptions.Singleline);
+                Match dialogueMatch = Regex.Match(str, @"^(?<name>.+?)(?:[「『](?<text>.+)[』」]|(?<text>（.+）))$", RegexOptions.Singleline);
                 if (dialogueMatch.Success)
                 {
                     yield return new ScriptString(dialogueMatch.Groups["name"].Value, ScriptStringType.CharacterName);
