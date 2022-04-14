@@ -47,23 +47,25 @@ Most visual novel engines do not support automatic word wrapping. While it's som
 ## Shift JIS extension
 Many visual novel engines use Shift JIS (more specifically Microsoft code page 932) to encode text, meaning they can't display characters not supported by this code page. Even in English, though, there are words such as "café" that contain such unsupported characters.
 
-VNTextPatch offers a facility for solving this problem. When patching a translation into a game file, it'll detect unsupported characters, replace them by unused Shift JIS code points (so they'll be accepted by the game), and store the mapping from the unused code point to the original character inside a separate file called "sjis_ext.bin". The proxy DLL (described in the section below) will then read this file, and whenever the game renders text on screen, replace any unused code points by their corresponding original character.
+VNTextPatch offers a facility called "SJIS tunneling" for solving this problem. When patching a translation into a game file, it'll detect unsupported characters, replace them by unused SJIS code points (so they'll be accepted by the game), and store the mapping from the unused code point to the original character inside a separate file called "sjis_ext.bin". The proxy DLL (described in the section below) will then read this file, and whenever the game renders text on screen, replace any unused code points by their corresponding original character.
 
-This approach makes it possible to have a large number of otherwise unsupported characters - enough to, say, translate a Shift JIS game to simplified Chinese.
+This approach makes it possible to have a large number of otherwise unsupported characters - enough to, say, translate a SJIS game to simplified Chinese.
 
 By default, sjis_ext.bin is created inside the output folder, next to the patched game files. You can pass a fourth argument to `insertlocal` and `insertgdocs` to specify an alternative path (which should include the file name). The proxy DLL expects the file to be in the same folder as the game .exe.
 
 # VNTextProxy
 A proxy d2d1.dll that hooks into the game and helps with making it display non-Japanese text. It can do the following:
-* Detect whether the user's machine is using the Japanese locale, and if not, relaunch the game using [Locale Emulator](https://github.com/xupefei/Locale-Emulator). This is useful for games that crash on non-Japanese systems. Note that you need to bundle LoaderDll.dll and LocaleEmulator.dll if you intend to use this feature.
-* Load a custom font (.ttf/.ttc/.otf) from the game's folder. The font file name should be the same as the font name.
-* Catch calls to CreateFontA(), CreateFontIndirectA() and IDWriteFactory::CreateTextFormat() and make them use this custom font instead.
-* Catch calls to TextOutA() and ID2D1RenderTarget::DrawText() to correctly position characters when using a proportional font (as many visual novel engines only do monospace).
-* Restore non-Shift JIS characters using sjis_ext.bin (see previous section).
+* Render non-SJIS text in SJIS-only games (see previous section).
+* Load a custom font (.ttf/.ttc/.otf) from the game's folder and force the game to use it. The font file name should match the font name.
+* Reposition rendered characters for correct text display with proportional fonts (as many visual novel engines only do monospace). This currently works for TextOutA() and ID2D1RenderTarget::DrawText().
+* To a certain degree, make SJIS-only games Unicode compatible. This allows them not only to run on non-Japanese systems without crashing, but also to work with non-SJIS file paths and accept non-SJIS keyboard input (including from IMEs).
+* If the above is not sufficient for preventing crashes, VNTextProxy can also automatically relaunch the game using [Locale Emulator](https://github.com/xupefei/Locale-Emulator) on non-Japanese systems. Users don't need to install the emulator for this; instead, you should bundle LoaderDll.dll and LocaleEmulator.dll with the game.
 
 If the game doesn't reference d2d1.dll, you can use the files from one of the "AlternateProxies" subfolders to turn the DLL into a proxy for, say, version.dll. If the game doesn't reference any of the provided proxies, you can use [DLLProxyGenerator](https://github.com/nitrog0d/DLLProxyGenerator/releases/tag/v1.0.0) to make your own.
 
-The source code comes with an empty "EnginePatches" class where you can add game-specific hooks. Microsoft's [Detours](https://github.com/microsoft/Detours) library is already included.
+Apart from this, chances are you'll need to make some changes to the source code.
+* In dllmain.cpp, you can uncomment the Locale Emulator relauncher and enable/disable GDI and Direct2D support as needed.
+* In EnginePatches.cpp, you can add any game-specific hooks you might need. Microsoft's [Detours](https://github.com/microsoft/Detours) library is already included.
 
 # Other VN tools
 Depending on your game's engine, you may also be interested in these other tools:
