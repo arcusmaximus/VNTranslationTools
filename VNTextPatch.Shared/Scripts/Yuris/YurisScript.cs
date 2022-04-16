@@ -283,7 +283,7 @@ namespace VNTextPatch.Shared.Scripts.Yuris
                 case YurisAttributeType.Raw:
                 {
                     YurisControlCodesToStandard(_script, attr.ValueOffset, attr.ValueLength);
-                    return StringUtil.SjisTunnelEncoding.GetString(_script, attr.ValueOffset, attr.ValueLength);
+                    return StringUtil.SjisEncoding.GetString(_script, attr.ValueOffset, attr.ValueLength);
                 }
 
                 case YurisAttributeType.Expression:
@@ -314,7 +314,7 @@ namespace VNTextPatch.Shared.Scripts.Yuris
             if (3 + argLength != attr.ValueLength)
                 return null;
 
-            string str = StringUtil.SjisTunnelEncoding.GetString(_script, attr.ValueOffset + 3, argLength);
+            string str = StringUtil.SjisEncoding.GetString(_script, attr.ValueOffset + 3, argLength);
             str = UnquoteString(str);
             str = Regex.Replace(str, @"(?<!\r)\n", "\r\n");
             return str;
