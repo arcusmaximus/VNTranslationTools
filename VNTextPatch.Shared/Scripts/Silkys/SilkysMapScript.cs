@@ -24,7 +24,8 @@ namespace VNTextPatch.Shared.Scripts.Silkys
             {
                 int messageIndex = reader.ReadInt32();
                 int messageOffset = reader.ReadInt32();
-                _messageOffsets.Add(messageOffset);
+                if (BitConverter.ToInt16(_data, messageOffset) != 0)
+                    _messageOffsets.Add(messageOffset);
             }
         }
 
