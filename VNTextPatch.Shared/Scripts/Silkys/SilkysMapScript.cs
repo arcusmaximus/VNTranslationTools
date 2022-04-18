@@ -23,9 +23,6 @@ namespace VNTextPatch.Shared.Scripts.Silkys
             for (int i = 0; i < numMessages; i++)
             {
                 int messageIndex = reader.ReadInt32();
-                if (messageIndex != i)
-                    throw new InvalidDataException("Unexpected message index");
-
                 int messageOffset = reader.ReadInt32();
                 _messageOffsets.Add(messageOffset);
             }
