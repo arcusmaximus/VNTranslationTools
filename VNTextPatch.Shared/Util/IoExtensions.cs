@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 
 namespace VNTextPatch.Shared.Util
 {
@@ -75,10 +76,34 @@ namespace VNTextPatch.Shared.Util
             return StringUtil.SjisEncoding.GetString(TextBuffer, 0, index);
         }
 
+        public static string ReadZeroTerminatedUtf16String(this BinaryReader reader)
+        {
+            int index = 0;
+            while (true)
+            {
+                byte low = reader.ReadByte();
+                byte high = reader.ReadByte();
+                if (low == 0 && high == 0)
+                    break;
+
+                TextBuffer[index++] = low;
+                TextBuffer[index++] = high;
+            }
+            return Encoding.Unicode.GetString(TextBuffer, 0, index);
+        }
+
         public static int SkipZeroTerminatedSjisString(this BinaryReader reader)
         {
             long startPos = reader.BaseStream.Position;
             while (reader.ReadByte() != 0)
+                ;
+            return (int)(reader.BaseStream.Position - startPos);
+        }
+
+        public static int SkipZeroTerminatedUtf16String(this BinaryReader reader)
+        {
+            long startPos = reader.BaseStream.Position;
+            while (reader.ReadUInt16() != 0)
                 ;
             return (int)(reader.BaseStream.Position - startPos);
         }
@@ -134,6 +159,14 @@ namespace VNTextPatch.Shared.Util
             writer.Write(TextBuffer, 0, length);
             writer.Write((byte)0);
             return length + 1;
+        }
+
+        public static int WriteZeroTerminatedUtf16String(this BinaryWriter writer, string str)
+        {
+            int length = Encoding.Unicode.GetBytes(str, 0, str.Length, TextBuffer, 0);
+            writer.Write(TextBuffer, 0, length);
+            writer.Write((ushort)0);
+            return length + 2;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace VNTextPatch.Shared.Util
@@ -91,6 +92,39 @@ namespace VNTextPatch.Shared.Util
                 }
             }
             return byteIdx;
+        }
+
+        public override string GetString(byte[] bytes, int index, int count)
+        {
+            StringBuilder result = new StringBuilder();
+            int i = index;
+            char[] decodedChars = new char[1];
+            while (i < index + count)
+            {
+                byte highByte = bytes[i++];
+
+                if ((highByte >= 0x81 && highByte < 0xA0) || (highByte >= 0xE0 && highByte < 0xFD))
+                {
+                    byte lowByte = bytes[i++];
+                    if (lowByte < 0x40)
+                    {
+                        char tunnelChar = (char)((highByte << 8) | lowByte);
+                        char origChar = _mappings.First(m => m.Value == tunnelChar).Key;
+                        result.Append(origChar);
+                    }
+                    else
+                    {
+                        StringUtil.SjisEncoding.GetChars(bytes, i - 2, 2, decodedChars, 0);
+                        result.Append(decodedChars[0]);
+                    }
+                }
+                else
+                {
+                    StringUtil.SjisEncoding.GetChars(bytes, i - 1, 1, decodedChars, 0);
+                    result.Append(decodedChars[0]);
+                }
+            }
+            return result.ToString();
         }
 
         private static bool TrySjisEncode(string str, int charIdx, int numChars, byte[] bytes, int byteIdx, out int numBytes)

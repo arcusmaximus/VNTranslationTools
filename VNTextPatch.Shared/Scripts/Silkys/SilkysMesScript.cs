@@ -8,7 +8,7 @@ using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts.Silkys
 {
-    internal class SilkysScript : IScript
+    internal class SilkysMesScript : IScript
     {
         public string Extension => ".mes";
 
