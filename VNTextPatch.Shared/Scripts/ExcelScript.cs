@@ -42,7 +42,7 @@ namespace VNTextPatch.Shared.Scripts
                                         StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.OriginalCharacter] as string);
                 if (characterNames != null)
                 {
-                    foreach (string characterName in characterNames.Split('/'))
+                    foreach (string characterName in SplitNames(characterNames))
                     {
                         yield return new ScriptString(characterName, ScriptStringType.CharacterName);
                     }
@@ -114,13 +114,13 @@ namespace VNTextPatch.Shared.Scripts
         private void FillRow(int row, List<string> characterNames, string message)
         {
             if (characterNames.Count > 0)
-                _values[row, (int)ExcelColumn.OriginalCharacter] = string.Join("/", characterNames);
+                _values[row, (int)ExcelColumn.OriginalCharacter] = JoinNames(characterNames);
 
             _values[row, (int)ExcelColumn.OriginalLine] = message;
 
             if (characterNames.Count > 0)
             {
-                string translatedNames = string.Join("/", characterNames.Select(CharacterNames.GetTranslation));
+                string translatedNames = JoinNames(characterNames.Select(CharacterNames.GetTranslation));
                 _values[row, (int)ExcelColumn.TranslatedCharacter] = translatedNames;
             }
         }
@@ -167,6 +167,38 @@ namespace VNTextPatch.Shared.Scripts
             Checked = 0;
             Edited = 0;
             Total = 0;
+        }
+
+        private static string JoinNames(IEnumerable<string> names)
+        {
+            return string.Join("/", names.Select(QuoteName));
+        }
+
+        private IEnumerable<string> SplitNames(string names)
+        {
+            return Regex.Matches(names, @"(?:""(?:\\.|[^""])+""|[^/]+)")
+                        .Cast<Match>()
+                        .Select(m => UnquoteName(m.Value));
+        }
+
+        private static string QuoteName(string name)
+        {
+            if (!name.Contains("/") && !name.Contains("\""))
+                return name;
+
+            name = name.Replace("\\", "\\\\");
+            name = name.Replace("\"", "\\\"");
+            return "\"" + name + "\"";
+        }
+
+        private static string UnquoteName(string name)
+        {
+            if (!name.StartsWith("\"") || !name.EndsWith("\""))
+                return name;
+
+            name = name.Substring(1, name.Length - 2);
+            name = Regex.Replace(name, @"\\(.)", "$1");
+            return name;
         }
     }
 }
