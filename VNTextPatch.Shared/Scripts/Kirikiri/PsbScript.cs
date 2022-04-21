@@ -58,7 +58,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
                 strings,
                 (psb, str) =>
                 {
-                    if (str.Type == ScriptStringType.Message && psb.TextIndex != null)
+                    if (str.Type == ScriptStringType.Message)
                     {
                         psb.Text.Value = ProportionalWordWrapper.Default.Wrap(StringUtil.FancifyQuotes(str.Text, @"\$.+?;"));
                     }
@@ -91,44 +91,46 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
 
         private IEnumerable<ScriptPsbString> GetTextStrings(PsbDictionary scene)
         {
-            PsbList lines = scene["lines"] as PsbList;
             PsbList texts = scene["texts"] as PsbList;
-            if (lines == null || texts == null)
+            if (texts == null)
                 yield break;
 
-            for (int lineIndex = 0; lineIndex < lines.Count; lineIndex++)
+            foreach (PsbList text in texts.OfType<PsbList>())
             {
-                PsbNumber textIndex = lines[lineIndex] as PsbNumber;
-                if (textIndex == null)
-                    continue;
-
-                PsbList text = (PsbList)texts[textIndex.IntValue - 1];
                 PsbString realCharacterName = GetIsolatedString(text, 0);
-                if (!string.IsNullOrEmpty(realCharacterName?.Value))
+                PsbString displayCharacterName;
+                IPsbValue message;
+                if (text[1] is PsbList)
                 {
-                    PsbString displayCharacterName = GetIsolatedString(text, 1);
+                    displayCharacterName = null;
+                    message = text[1];
+                }
+                else
+                {
+                    displayCharacterName = GetIsolatedString(text, 1);
                     if (displayCharacterName == null && realCharacterName.Value != "＠")
                     {
                         displayCharacterName = new PsbString(realCharacterName.Value);
                         text[1] = displayCharacterName;
                     }
-                    yield return new ScriptPsbString(displayCharacterName ?? realCharacterName, ScriptStringType.CharacterName);
+                    message = GetIsolatedString(text, 2) ?? text[2];
                 }
 
-                PsbString message;
-                if (text[2] is PsbList multiLanguageTexts && multiLanguageTexts.Count >= 1 &&
+                if (message is PsbList multiLanguageTexts && multiLanguageTexts.Count >= 1 &&
                     multiLanguageTexts[0] is PsbList japaneseText && japaneseText.Count >= 2)
                 {
                     // [name, text, speechtext, searchtext]
+                    displayCharacterName = GetIsolatedString(japaneseText, 0);
                     message = GetIsolatedString(japaneseText, 1);
                 }
-                else
-                {
-                    message = GetIsolatedString(text, 2);
-                }
 
-                if (message != null)
-                    yield return new ScriptPsbString(scene, lineIndex, textIndex, message, ScriptStringType.Message);
+                if (message is PsbString)
+                {
+                    if (!string.IsNullOrEmpty(realCharacterName?.Value))
+                        yield return new ScriptPsbString(displayCharacterName ?? realCharacterName, ScriptStringType.CharacterName);
+
+                    yield return new ScriptPsbString((PsbString)message, ScriptStringType.Message);
+                }
             }
         }
 
@@ -181,22 +183,11 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
         private struct ScriptPsbString
         {
             public ScriptPsbString(PsbString text, ScriptStringType type)
-                : this(null, -1, null, text, type)
             {
-            }
-
-            public ScriptPsbString(PsbDictionary scene, int lineIndex, PsbNumber textIndex, PsbString text, ScriptStringType type)
-            {
-                Scene = scene;
-                LineIndex = lineIndex;
-                TextIndex = textIndex;
                 Text = text;
                 Type = type;
             }
 
-            public readonly PsbDictionary Scene;
-            public readonly int LineIndex;
-            public readonly PsbNumber TextIndex;
             public readonly PsbString Text;
             public readonly ScriptStringType Type;
 
