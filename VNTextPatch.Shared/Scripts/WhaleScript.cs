@@ -47,7 +47,7 @@ namespace VNTextPatch.Shared.Scripts
 
         private static IEnumerable<Range> GetMessageRanges(string line, int lineStartPos)
         {
-            Match dialogueMatch = Regex.Match(line, @"^(?:【(?<name>.+?)(?:,\w+)?】)?「(?<message>.+)」$");
+            Match dialogueMatch = Regex.Match(line, @"^(?:【(?<name>.+?)(?:,\w+)?】)?(?:「(?<message>.+)」|(?<message>（(?:.+)）))$");
             if (dialogueMatch.Success)
             {
                 Group name = dialogueMatch.Groups["name"];
