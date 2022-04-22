@@ -1,5 +1,6 @@
 # VNTextPatch
 A tool for extracting original text from, and patching translated text into, a variety of visual novel formats. Currently the following engines are supported:
+* AdvHD (.ws2)
 * ArcGameEngine (.bin)
 * Artemis (.txt; append `--format=artemis` to command line)
 * Buriko General Interpreter/Ethornell (no file extension; rename to .bgi or append `--format=ethornell` to command line)
@@ -16,7 +17,6 @@ A tool for extracting original text from, and patching translated text into, a v
 * Qlie (.s)
 * SystemNNN (.nnn/.spt)
 * Whale (.txt; append `--format=whale` to command line)
-* WillPlus AdvHD (.ws2)
 * YU-RIS (.ybn)
 
 The tool can extract text into Excel spreadsheets (.xlsx), and reinsert text from Excel or Google Docs spreadsheets.
