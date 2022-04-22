@@ -50,7 +50,7 @@ namespace VNTextPatch.Shared.Scripts
                     if (!stringEnumerator.MoveNext())
                         throw new InvalidDataException($"Translation file is missing line {1 + lineIdx} ({GetTextForRead(range)})");
 
-                    writer.Write(GetTextForWrite(stringEnumerator.Current));
+                    writer.Write(GetTextForWrite(range, stringEnumerator.Current));
 
                     copyStart = range.Offset + range.Length;
                     lineIdx++;
@@ -116,7 +116,7 @@ namespace VNTextPatch.Shared.Scripts
             return _script.Substring(offset, length);
         }
 
-        protected virtual string GetTextForWrite(ScriptString str)
+        protected virtual string GetTextForWrite(Range range, ScriptString str)
         {
             return str.Text;
         }

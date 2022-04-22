@@ -94,7 +94,7 @@ namespace VNTextPatch.Shared.Scripts
             return text;
         }
 
-        protected override string GetTextForWrite(ScriptString str)
+        protected override string GetTextForWrite(Range range, ScriptString str)
         {
             string text = MonospaceWordWrapper.Default.Wrap(str.Text);
             return text.Replace(" ", "　")

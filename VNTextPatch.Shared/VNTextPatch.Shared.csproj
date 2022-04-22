@@ -99,6 +99,7 @@
     <Compile Include="Scripts\TextScript.cs" />
     <Compile Include="Scripts\Kirikiri\TjsScript.cs" />
     <Compile Include="CharacterNames.cs" />
+    <Compile Include="Scripts\WhaleScript.cs" />
     <Compile Include="Scripts\Yuris\YurisAttribute.cs" />
     <Compile Include="Scripts\Yuris\YurisCommand.cs" />
     <Compile Include="Scripts\Yuris\YurisCommandList.cs" />

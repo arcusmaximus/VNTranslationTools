@@ -116,7 +116,7 @@ namespace VNTextPatch.Shared.Scripts
             return null;
         }
 
-        protected override string GetTextForWrite(ScriptString str)
+        protected override string GetTextForWrite(Range range, ScriptString str)
         {
             string text = ProportionalWordWrapper.Default.Wrap(str.Text);
             if (_currentRangeIsUnquotedAttribute && text.Contains(" "))

@@ -213,7 +213,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
             return text;
         }
 
-        protected override string GetTextForWrite(ScriptString str)
+        protected override string GetTextForWrite(Range range, ScriptString str)
         {
             if (str.Type != ScriptStringType.Message)
                 return str.Text;

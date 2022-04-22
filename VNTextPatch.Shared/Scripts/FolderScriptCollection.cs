@@ -46,6 +46,7 @@ namespace VNTextPatch.Shared.Scripts
                     new SystemNnnReleaseScript(),
                     new TextScript(),
                     new TjsScript(),
+                    new WhaleScript(),
                     new YurisScript()
                 };
         }
@@ -92,7 +93,7 @@ namespace VNTextPatch.Shared.Scripts
             }
             else
             {
-                script = TemporaryScripts.FirstOrDefault(f => (f.Extension ?? string.Empty).Equals(Extension, StringComparison.InvariantCultureIgnoreCase));
+                script = TemporaryScripts.FirstOrDefault(f => !string.IsNullOrEmpty(f.Extension) && f.Extension.Equals(Extension, StringComparison.InvariantCultureIgnoreCase));
                 if (script == null)
                     throw new NotSupportedException($"Extension {Extension} is not supported");
             }
