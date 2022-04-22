@@ -50,13 +50,13 @@ Many visual novel engines use Shift JIS (more specifically Microsoft code page 9
 
 VNTextPatch offers a facility called "SJIS tunneling" for solving this problem. When patching a translation into a game file, it'll detect unsupported characters, replace them by unused SJIS code points (so they'll be accepted by the game), and store the mapping from the unused code point to the original character inside a separate file called "sjis_ext.bin". The proxy DLL (described in the section below) will then read this file, and whenever the game renders text on screen, replace any unused code points by their corresponding original character.
 
-This approach makes it possible to have a large number of otherwise unsupported characters - enough to, say, translate a SJIS game to simplified Chinese.
+This approach makes it possible to have a large number of otherwise unsupported characters - enough to, say, translate a SJIS game to simplified Chinese. There's no need for the classic approach of shipping a modified font with the glyphs of certain Japanese characters replaced by those of another language.
 
 By default, sjis_ext.bin is created inside the output folder, next to the patched game files. You can pass a fourth argument to `insertlocal` and `insertgdocs` to specify an alternative path (which should include the file name). The proxy DLL expects the file to be in the same folder as the game .exe.
 
 # VNTextProxy
 A proxy d2d1.dll that hooks into the game and helps with making it display non-Japanese text. It can do the following:
-* Render non-SJIS text in SJIS-only games (see previous section).
+* Render non-SJIS characters in SJIS-only games (see previous section).
 * Load a custom font (.ttf/.ttc/.otf) from the game's folder and force the game to use it. The font file name should match the font name.
 * Reposition rendered characters for correct text display with proportional fonts (as many visual novel engines only do monospace). This currently works for TextOutA() and ID2D1RenderTarget::DrawText().
 * To a certain degree, make SJIS-only games Unicode compatible. This allows them not only to run on non-Japanese systems without crashing, but also to work with non-SJIS file paths and accept non-SJIS keyboard input (including from IMEs).
