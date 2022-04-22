@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using VNTextPatch.Shared.Util;
 
@@ -9,14 +10,25 @@ namespace VNTextPatch.Shared.Scripts
     {
         public override string Extension => ".s";
 
+        private Encoding _writeEncoding;
+
         protected override Encoding GetReadEncoding(ArraySegment<byte> data)
         {
-            return Encoding.Unicode;
+            if (data.Contains((byte)0))
+            {
+                _writeEncoding = Encoding.Unicode;
+                return Encoding.Unicode;
+            }
+            else
+            {
+                _writeEncoding = StringUtil.SjisTunnelEncoding;
+                return StringUtil.SjisEncoding;
+            }
         }
 
         protected override Encoding GetWriteEncoding()
         {
-            return Encoding.Unicode;
+            return _writeEncoding;
         }
 
         protected override IEnumerable<Range> GetRanges(string script)
