@@ -15,6 +15,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * Silky's/AI6WIN (.mes/.map)
 * Qlie (.s)
 * SystemNNN (.nnn/.spt)
+* Whale (.txt; append `--format=whale` to command line)
 * WillPlus AdvHD (.ws2)
 * YU-RIS (.ybn)
 
