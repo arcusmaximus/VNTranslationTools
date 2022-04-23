@@ -54,7 +54,15 @@ HRESULT D2DProportionalizer::D3D11CreateDeviceHook(
     ID2D1Factory1* pD2DFactory;
     D2D1_FACTORY_OPTIONS options;
     options.debugLevel = D2D1_DEBUG_LEVEL_NONE;
+
+#ifdef VNTEXTPROXY_D2D1
     Proxy::OriginalD2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, IID_ID2D1Factory1, &options, (void**)&pD2DFactory);
+#else
+    HMODULE hD2D1 = LoadLibrary(L"d2d1.dll");
+    auto pD2D1CreateFactory =
+        (HRESULT (__stdcall*)(D2D1_FACTORY_TYPE factoryType, REFIID riid, D2D1_FACTORY_OPTIONS* pFactoryOptions, void** ppIFactory))GetProcAddress(hD2D1, "D2D1CreateFactory");
+    pD2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, IID_ID2D1Factory1, &options, (void**)&pD2DFactory);
+#endif
 
     ID2D1Device* pD2DDevice;
     pD2DFactory->CreateDevice(pDxgiDevice, &pD2DDevice);
