@@ -9,6 +9,8 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
 {
     public class PsbScript : IScript
     {
+        private const int LanguageIndex = 0;
+
         private static readonly Regex ControlCodeRegex = new Regex(
           @"    \\.        # Escape sequence
               | \[.+?\]    # Ruby text
@@ -116,12 +118,12 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
                     message = GetIsolatedString(text, 2) ?? text[2];
                 }
 
-                if (message is PsbList multiLanguageTexts && multiLanguageTexts.Count >= 1 &&
-                    multiLanguageTexts[0] is PsbList japaneseText && japaneseText.Count >= 2)
+                if (message is PsbList multiLanguageTexts && multiLanguageTexts.Count > LanguageIndex &&
+                    multiLanguageTexts[LanguageIndex] is PsbList languageText && languageText.Count >= 2)
                 {
                     // [name, text, speechtext, searchtext]
-                    displayCharacterName = GetIsolatedString(japaneseText, 0);
-                    message = GetIsolatedString(japaneseText, 1);
+                    displayCharacterName = GetIsolatedString(languageText, 0);
+                    message = GetIsolatedString(languageText, 1);
                 }
 
                 if (message is PsbString)
@@ -153,7 +155,17 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
 
             foreach (PsbDictionary select in selects.OfType<PsbDictionary>())
             {
-                PsbString text = select["text"] as PsbString;
+                PsbString text = null;
+                if (select["language"] is PsbList multiLanguageSelects &&
+                    multiLanguageSelects.Count > LanguageIndex &&
+                    multiLanguageSelects[LanguageIndex] is PsbDictionary languageSelect)
+                {
+                    text = languageSelect["text"] as PsbString;
+                }
+
+                if (text == null)
+                    text = select["text"] as PsbString;
+
                 if (text != null)
                     yield return new ScriptPsbString(text, ScriptStringType.Message);
             }
