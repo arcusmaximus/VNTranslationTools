@@ -1,0 +1,10 @@
+LIBRARY xinput1_3
+EXPORTS
+	DllMain=FakeDllMain @1
+	XInputEnable=FakeXInputEnable @2
+	XInputGetBatteryInformation=FakeXInputGetBatteryInformation @3
+	XInputGetCapabilities=FakeXInputGetCapabilities @4
+	XInputGetDSoundAudioDeviceGuids=FakeXInputGetDSoundAudioDeviceGuids @5
+	XInputGetKeystroke=FakeXInputGetKeystroke @6
+	XInputGetState=FakeXInputGetState @7
+	XInputSetState=FakeXInputSetState @8
