@@ -51,11 +51,32 @@ private:
 
     static BOOL __stdcall GetMonitorInfoAHook(HMONITOR hMonitor, LPMONITORINFO lpmi);
     static BOOL __stdcall EnumDisplayDevicesAHook(LPCSTR lpDevice, DWORD iDevNum, PDISPLAY_DEVICEA lpDisplayDevice, DWORD dwFlags);
+    static LONG __stdcall ChangeDisplaySettingsAHook(DEVMODEA* lpDevMode, DWORD dwFlags);
+    static LONG __stdcall ChangeDisplaySettingsExAHook(LPCSTR lpszDeviceName, DEVMODEA* lpDevMode, HWND hwnd, DWORD dwflags, LPVOID lParam);
+
+    static HRESULT __stdcall DirectDrawEnumerateAHook(LPDDENUMCALLBACKA lpCallback, LPVOID lpContext);
+    static BOOL __stdcall DirectDrawEnumerateCallback(GUID* pGuid, LPSTR pszDriverName, LPSTR pszDriverDescription, LPVOID pContext);
+
+    static HRESULT __stdcall DirectDrawEnumerateExAHook(LPDDENUMCALLBACKEXA lpCallback, LPVOID lpContext, DWORD dwFlags);
+    static BOOL __stdcall DirectDrawEnumerateExCallback(GUID* pGuid, LPSTR pszDriverName, LPSTR pszDriverDescription, LPVOID pContext, HMONITOR hMonitor);
 
     static HRESULT __stdcall DirectSoundEnumerateAHook(LPDSENUMCALLBACKA pDSEnumCallback, LPVOID pContext);
     static BOOL __stdcall DirectSoundEnumerateCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR lpcstrModule, LPVOID lpContext);
 
     static WIN32_FIND_DATAA ConvertFindDataWToA(const WIN32_FIND_DATAW& findDataW);
+    static std::vector<BYTE> ConvertDevModeAToW(const DEVMODEA& devModeA);
+
+    struct DirectDrawEnumerateContext
+    {
+        LPDDENUMCALLBACKA OriginalCallback;
+        LPVOID OriginalContext;
+    };
+
+    struct DirectDrawEnumerateExContext
+    {
+        LPDDENUMCALLBACKEXA OriginalCallback;
+        LPVOID OriginalContext;
+    };
 
     struct DirectSoundEnumerateContext
     {

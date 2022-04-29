@@ -55,6 +55,11 @@ wstring SjisTunnelEncoding::Decode(const char* pText, int count)
     return result;
 }
 
+wstring SjisTunnelEncoding::Decode(const string& str)
+{
+    return Decode(str.c_str());
+}
+
 string SjisTunnelEncoding::Encode(const wchar_t* pText, int count)
 {
     if (!Initialized)
@@ -109,6 +114,11 @@ string SjisTunnelEncoding::Encode(const wchar_t* pText, int count)
         result.append(multibyte, multibyteLength);
     }
     return result;
+}
+
+string SjisTunnelEncoding::Encode(const wstring& str)
+{
+    return Encode(str.c_str());
 }
 
 void SjisTunnelEncoding::Init()

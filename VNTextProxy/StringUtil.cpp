@@ -1,11 +1,13 @@
 #include "pch.h"
 
-std::wstring StringUtil::ToWString(const char* psz, int numBytes)
+using namespace std;
+
+wstring StringUtil::ToWString(const char* psz, int numBytes, int codepage)
 {
-    int numChars = MultiByteToWideChar(932, 0, psz, numBytes, nullptr, 0);
-    std::wstring wideString;
+    int numChars = MultiByteToWideChar(codepage, 0, psz, numBytes, nullptr, 0);
+    wstring wideString;
     wideString.resize(numChars);
-    MultiByteToWideChar(932, 0, psz, numBytes, const_cast<wchar_t*>(wideString.data()), numChars);
+    MultiByteToWideChar(codepage, 0, psz, numBytes, wideString.data(), numChars);
 
     if (!wideString.empty() && wideString[wideString.size() - 1] == L'\0')
         wideString.resize(wideString.size() - 1);
@@ -13,10 +15,10 @@ std::wstring StringUtil::ToWString(const char* psz, int numBytes)
     return wideString;
 }
 
-std::wstring StringUtil::ToHalfWidth(const std::wstring& fullWidth)
+wstring StringUtil::ToHalfWidth(const wstring& fullWidth)
 {
-    std::wstring halfWidth;
+    wstring halfWidth;
     halfWidth.resize(fullWidth.size());
-    LCMapStringEx(L"ja-JP", LCMAP_HALFWIDTH, fullWidth.data(), fullWidth.size(), const_cast<wchar_t*>(halfWidth.data()), halfWidth.size(), nullptr, nullptr, 0);
+    LCMapStringEx(L"ja-JP", LCMAP_HALFWIDTH, fullWidth.data(), fullWidth.size(), halfWidth.data(), halfWidth.size(), nullptr, nullptr, 0);
     return halfWidth;
 }
