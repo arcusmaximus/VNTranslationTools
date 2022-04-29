@@ -24,11 +24,11 @@ void Proxy::Init()
 #undef RESOLVE
 }
 
-__declspec(naked) void FakelDllMain()                                         { __asm { jmp [Proxy::OriginalDllMain] } }
+__declspec(naked) void FakelDllMain()                                        { __asm { jmp [Proxy::OriginalDllMain] } }
 __declspec(naked) void FakeXInputEnable()                                    { __asm { jmp [Proxy::OriginalXInputEnable] } }
 __declspec(naked) void FakeXInputGetBatteryInformation()                     { __asm { jmp [Proxy::OriginalXInputGetBatteryInformation] } }
 __declspec(naked) void FakeXInputGetCapabilities()                           { __asm { jmp [Proxy::OriginalXInputGetCapabilities] } }
 __declspec(naked) void FakeXInputGetDSoundAudioDeviceGuids()                 { __asm { jmp [Proxy::OriginalXInputGetDSoundAudioDeviceGuids] } }
-__declspec(naked) void FakeInputGetKeystroke()                              { __asm { jmp [Proxy::OriginalXInputGetKeystroke] } }
+__declspec(naked) void FakeInputGetKeystroke()                               { __asm { jmp [Proxy::OriginalXInputGetKeystroke] } }
 __declspec(naked) void FakeXInputGetState()                                  { __asm { jmp [Proxy::OriginalXInputGetState] } }
 __declspec(naked) void FakeXInputSetState()                                  { __asm { jmp [Proxy::OriginalXInputSetState] } }
