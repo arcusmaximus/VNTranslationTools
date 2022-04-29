@@ -64,7 +64,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
-      <AdditionalDependencies>dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ddraw.lib;dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)d2d1.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
@@ -87,7 +87,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
-      <AdditionalDependencies>dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ddraw.lib;dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)d2d1.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>

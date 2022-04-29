@@ -8,6 +8,7 @@
 #include <Mmreg.h>
 #include <msctf.h>
 #include <ctffunc.h>
+#include <ddraw.h>
 #include <dsound.h>
 #include <dwrite.h>
 #include <d3d11.h>

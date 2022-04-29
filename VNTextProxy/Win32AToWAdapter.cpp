@@ -52,6 +52,12 @@ void Win32AToWAdapter::Init()
 
             { "GetMonitorInfoA", GetMonitorInfoAHook },
             { "EnumDisplayDevicesA", EnumDisplayDevicesAHook },
+            { "ChangeDisplaySettingsA", ChangeDisplaySettingsAHook },
+            { "ChangeDisplaySettingsExA", ChangeDisplaySettingsExAHook },
+
+            { "DirectDrawEnumerateA", DirectDrawEnumerateAHook },
+            { "DirectDrawEnumerateExA", DirectDrawEnumerateExAHook },
+
             { "DirectSoundEnumerateA", DirectSoundEnumerateAHook }
         }
     );
@@ -144,7 +150,7 @@ DWORD Win32AToWAdapter::GetModuleFileNameAHook(HMODULE hModule, LPSTR lpFilename
     if (result == 0)
         return 0;
 
-    string fileNameA = SjisTunnelEncoding::Encode(fileNameW.c_str());
+    string fileNameA = SjisTunnelEncoding::Encode(fileNameW);
     if (fileNameA.size() >= nSize)
     {
         memcpy(lpFilename, fileNameA.c_str(), nSize - 1);
@@ -178,7 +184,7 @@ DWORD Win32AToWAdapter::GetFullPathNameAHook(LPCSTR lpFileName, DWORD nBufferLen
     if (result > bufferW.size())
         return result * 2;
 
-    string bufferA = SjisTunnelEncoding::Encode(bufferW.c_str());
+    string bufferA = SjisTunnelEncoding::Encode(bufferW);
     if (bufferA.size() + 1 > nBufferLength)
     {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -236,7 +242,7 @@ DWORD Win32AToWAdapter::SearchPathAHook(LPCSTR lpPath, LPCSTR lpFileName, LPCSTR
     if (result > bufferW.size())
         return result * 2;
 
-    string bufferA = SjisTunnelEncoding::Encode(bufferW.c_str());
+    string bufferA = SjisTunnelEncoding::Encode(bufferW);
     if (bufferA.size() + 1 > nBufferLength)
     {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -296,7 +302,7 @@ DWORD Win32AToWAdapter::GetCurrentDirectoryAHook(DWORD nBufferLength, LPSTR lpBu
     if (result > currentDirW.size())
         return result * 2;
 
-    string currentDirA = SjisTunnelEncoding::Encode(currentDirW.c_str());
+    string currentDirA = SjisTunnelEncoding::Encode(currentDirW);
     if (currentDirA.size() + 1 > nBufferLength)
     {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -318,7 +324,7 @@ DWORD Win32AToWAdapter::GetTempPathAHook(DWORD nBufferLength, LPSTR lpBuffer)
     if (result > tempPathW.size())
         return result * 2;
 
-    string tempPathA = SjisTunnelEncoding::Encode(tempPathW.c_str());
+    string tempPathA = SjisTunnelEncoding::Encode(tempPathW);
     if (tempPathA.size() + 1 > nBufferLength)
     {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -505,7 +511,7 @@ LRESULT Win32AToWAdapter::DefWindowProcAHook(HWND hWnd, UINT msg, WPARAM wParam,
             int wsize = DefWindowProcW(hWnd, msg, wParam, (LPARAM)wtext.data());
             wtext.resize(wsize);
 
-            string text = SjisTunnelEncoding::Encode(wtext.c_str());
+            string text = SjisTunnelEncoding::Encode(wtext);
             int size = min(text.size(), wParam - 1);
             memcpy((char*)lParam, text.data(), size);
             ((char*)lParam)[size] = '\0';
@@ -597,6 +603,64 @@ BOOL Win32AToWAdapter::EnumDisplayDevicesAHook(LPCSTR lpDevice, DWORD iDevNum, P
     return true;
 }
 
+LONG Win32AToWAdapter::ChangeDisplaySettingsAHook(DEVMODEA* lpDevMode, DWORD dwFlags)
+{
+    return ChangeDisplaySettingsW(
+        lpDevMode != nullptr ? (DEVMODEW*)ConvertDevModeAToW(*lpDevMode).data() : nullptr,
+        dwFlags
+    );
+}
+
+LONG Win32AToWAdapter::ChangeDisplaySettingsExAHook(LPCSTR lpszDeviceName, DEVMODEA* lpDevMode, HWND hwnd, DWORD dwflags, LPVOID lParam)
+{
+    return ChangeDisplaySettingsExW(
+        lpszDeviceName != nullptr ? SjisTunnelEncoding::Decode(lpszDeviceName).c_str() : nullptr,
+        lpDevMode != nullptr ? (DEVMODEW*)ConvertDevModeAToW(*lpDevMode).data() : nullptr,
+        hwnd,
+        dwflags,
+        lParam
+    );
+}
+
+HRESULT Win32AToWAdapter::DirectDrawEnumerateAHook(LPDDENUMCALLBACKA lpCallback, LPVOID lpContext)
+{
+    DirectDrawEnumerateContext context;
+    context.OriginalCallback = lpCallback;
+    context.OriginalContext = lpContext;
+    return DirectDrawEnumerateA(DirectDrawEnumerateCallback, &context);     // DirectDrawEnumerateW exists but doesn't actually work
+}
+
+BOOL Win32AToWAdapter::DirectDrawEnumerateCallback(GUID* pGuid, LPSTR pszDriverName, LPSTR pszDriverDescription, LPVOID pContext)
+{
+    DirectDrawEnumerateContext* pOrigContext = (DirectDrawEnumerateContext*)pContext;
+    return pOrigContext->OriginalCallback(
+        pGuid,
+        pszDriverName != nullptr ? const_cast<char*>(SjisTunnelEncoding::Encode(StringUtil::ToWString(pszDriverName, -1, CP_ACP)).c_str()) : nullptr,
+        pszDriverDescription != nullptr ? const_cast<char*>(SjisTunnelEncoding::Encode(StringUtil::ToWString(pszDriverDescription, -1, CP_ACP)).c_str()) : nullptr,
+        pOrigContext->OriginalContext
+    );
+}
+
+HRESULT Win32AToWAdapter::DirectDrawEnumerateExAHook(LPDDENUMCALLBACKEXA lpCallback, LPVOID lpContext, DWORD dwFlags)
+{
+    DirectDrawEnumerateExContext context;
+    context.OriginalCallback = lpCallback;
+    context.OriginalContext = lpContext;
+    return DirectDrawEnumerateExA(DirectDrawEnumerateExCallback, &context, dwFlags);        // DirectDrawEnumerateExW exists but doesn't actually work
+}
+
+BOOL Win32AToWAdapter::DirectDrawEnumerateExCallback(GUID* pGuid, LPSTR pszDriverName, LPSTR pszDriverDescription, LPVOID pContext, HMONITOR hMonitor)
+{
+    DirectDrawEnumerateExContext* pOrigContext = (DirectDrawEnumerateExContext*)pContext;
+    return pOrigContext->OriginalCallback(
+        pGuid,
+        pszDriverName != nullptr ? const_cast<char*>(SjisTunnelEncoding::Encode(StringUtil::ToWString(pszDriverName, -1, CP_ACP)).c_str()) : nullptr,
+        pszDriverDescription != nullptr ? const_cast<char*>(SjisTunnelEncoding::Encode(StringUtil::ToWString(pszDriverDescription, -1, CP_ACP)).c_str()) : nullptr,
+        pOrigContext->OriginalContext,
+        hMonitor
+    );
+}
+
 HRESULT Win32AToWAdapter::DirectSoundEnumerateAHook(LPDSENUMCALLBACKA pDSEnumCallback, LPVOID pContext)
 {
     DirectSoundEnumerateContext origContext;
@@ -630,4 +694,44 @@ WIN32_FIND_DATAA Win32AToWAdapter::ConvertFindDataWToA(const WIN32_FIND_DATAW& f
     findDataA.nFileSizeHigh = findDataW.nFileSizeHigh;
     findDataA.nFileSizeLow = findDataW.nFileSizeLow;
     return findDataA;
+}
+
+vector<BYTE> Win32AToWAdapter::ConvertDevModeAToW(const DEVMODEA& devModeA)
+{
+    vector<BYTE> devModeW;
+    devModeW.resize(sizeof(DEVMODEW) + devModeA.dmDriverExtra);
+
+    DEVMODEW* pDevModeW = (DEVMODEW*)devModeW.data();
+    wcscpy_s(pDevModeW->dmDeviceName, SjisTunnelEncoding::Decode((char*)devModeA.dmDeviceName).c_str());
+    pDevModeW->dmSpecVersion = devModeA.dmSpecVersion;
+    pDevModeW->dmDriverVersion = devModeA.dmDriverVersion;
+    pDevModeW->dmSize = sizeof(DEVMODEW);
+    pDevModeW->dmDriverExtra = devModeA.dmDriverExtra;
+    pDevModeW->dmFields = devModeA.dmFields;
+    pDevModeW->dmPosition = devModeA.dmPosition;
+    pDevModeW->dmDisplayOrientation = devModeA.dmDisplayOrientation;
+    pDevModeW->dmColor = devModeA.dmColor;
+    pDevModeW->dmDuplex = devModeA.dmDuplex;
+    pDevModeW->dmYResolution = devModeA.dmYResolution;
+    pDevModeW->dmTTOption = devModeA.dmTTOption;
+    pDevModeW->dmCollate = devModeA.dmCollate;
+    wcscpy_s(pDevModeW->dmFormName, SjisTunnelEncoding::Decode((char*)devModeA.dmFormName).c_str());
+    pDevModeW->dmLogPixels = devModeA.dmLogPixels;
+    pDevModeW->dmBitsPerPel = devModeA.dmBitsPerPel;
+    pDevModeW->dmPelsWidth = devModeA.dmPelsWidth;
+    pDevModeW->dmPelsHeight = devModeA.dmPelsHeight;
+    pDevModeW->dmDisplayFlags = devModeA.dmDisplayFlags;
+    pDevModeW->dmDisplayFrequency = devModeA.dmDisplayFrequency;
+    pDevModeW->dmICMMethod = devModeA.dmICMMethod;
+    pDevModeW->dmICMIntent = devModeA.dmICMIntent;
+    pDevModeW->dmMediaType = devModeA.dmMediaType;
+    pDevModeW->dmDitherType = devModeA.dmDitherType;
+    pDevModeW->dmReserved1 = devModeA.dmReserved1;
+    pDevModeW->dmReserved2 = devModeA.dmReserved2;
+    pDevModeW->dmPanningWidth = devModeA.dmPanningWidth;
+    pDevModeW->dmPanningHeight = devModeA.dmPanningHeight;
+
+    memcpy(pDevModeW + 1, &devModeA + 1, devModeA.dmDriverExtra);
+    
+    return devModeW;
 }
