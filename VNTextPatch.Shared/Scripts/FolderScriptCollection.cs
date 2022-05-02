@@ -31,6 +31,7 @@ namespace VNTextPatch.Shared.Scripts
                     new CatSystemScript(),
                     new CSystemScript(),
                     new EthornellScript(),
+                    new JsonScript(),
                     new KirikiriScript(),
                     new MajiroScript(),
                     new MusicaScript(),
@@ -44,7 +45,6 @@ namespace VNTextPatch.Shared.Scripts
                     new SilkysMesScript(),
                     new SystemNnnDevScript(),
                     new SystemNnnReleaseScript(),
-                    new TextScript(),
                     new TjsScript(),
                     new WhaleScript(),
                     new YurisScript()

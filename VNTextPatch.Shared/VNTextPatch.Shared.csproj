@@ -70,6 +70,7 @@
     <Compile Include="Scripts\Ethornell\EthornellScript.cs" />
     <Compile Include="Scripts\Ethornell\EthornellV1Disassembler.cs" />
     <Compile Include="Scripts\ExcelScriptCollection.cs" />
+    <Compile Include="Scripts\JsonScript.cs" />
     <Compile Include="Scripts\Kirikiri\KirikiriDescrambler.cs" />
     <Compile Include="Scripts\Kirikiri\PsbScript.cs" />
     <Compile Include="Scripts\Majiro\MajiroAssembler.cs" />
@@ -96,7 +97,6 @@
     <Compile Include="Scripts\SystemNnn\SystemNnnBaseScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnDevScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnReleaseScript.cs" />
-    <Compile Include="Scripts\TextScript.cs" />
     <Compile Include="Scripts\Kirikiri\TjsScript.cs" />
     <Compile Include="CharacterNames.cs" />
     <Compile Include="Scripts\WhaleScript.cs" />
