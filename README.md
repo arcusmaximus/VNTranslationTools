@@ -24,8 +24,15 @@ The tool can extract text into Excel spreadsheets (.xlsx), and reinsert text fro
 The command line syntax is as follows:
 
 ```
+Excel:
 VNTextPatch extractlocal <folder containing original game files> script.xlsx
 VNTextPatch insertlocal <folder containing original game files> script.xlsx <folder to receive patched game files>
+
+JSON:
+VNTextPatch extractlocal <folder containing original game files> <folder to receive .json files>
+VNTextPatch insertlocal <folder containing original game files> <folder containing .json files> <folder to receive patched game files>
+
+Google Documents:
 VNTextPatch insertgdocs <folder containing original game files> <Google Docs spreadsheet identifier> <folder to receive patched game files>
 ```
 
