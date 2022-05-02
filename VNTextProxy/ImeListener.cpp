@@ -17,22 +17,26 @@ void ImeListener::Init()
 {
     CoInitialize(nullptr);
 
-    ComPtr<ITfThreadMgr> pThreadMgr;
-    CoCreateInstance(CLSID_TF_ThreadMgr, nullptr, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)&pThreadMgr);
-    
-    TfClientId clientId;
-    pThreadMgr->Activate(&clientId);
-
-    ComPtr<ITfDocumentMgr> pDummyDocumentMgr;
-    pThreadMgr->CreateDocumentMgr(&pDummyDocumentMgr);
-    void** pVtable = *(void***)pDummyDocumentMgr.Get();
-    OriginalCreateContext = (decltype(OriginalCreateContext))pVtable[3];
     {
-        MemoryUnprotector unprotector(pVtable, sizeof(void*) * 9);
-        pVtable[3] = CreateContextHook;
-    }
+        ComPtr<ITfThreadMgr> pThreadMgr;
+        CoCreateInstance(CLSID_TF_ThreadMgr, nullptr, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)&pThreadMgr);
 
-    pThreadMgr->Deactivate();
+        TfClientId clientId;
+        pThreadMgr->Activate(&clientId);
+
+        {
+            ComPtr<ITfDocumentMgr> pDocumentMgr;
+            pThreadMgr->CreateDocumentMgr(&pDocumentMgr);
+            void** pVtable = *(void***)pDocumentMgr.Get();
+            OriginalCreateContext = (decltype(OriginalCreateContext))pVtable[3];
+            {
+                MemoryUnprotector unprotector(pVtable, sizeof(void*) * 9);
+                pVtable[3] = CreateContextHook;
+            }
+        }
+
+        pThreadMgr->Deactivate();
+    }
 
     CoUninitialize();
 }
