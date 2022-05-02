@@ -19,13 +19,20 @@ A tool for extracting original text from, and patching translated text into, a v
 * Whale (.txt; append `--format=whale` to command line)
 * YU-RIS (.ybn)
 
-The tool can extract text into Excel spreadsheets (.xlsx), and reinsert text from Excel or Google Docs spreadsheets.
+The tool can extract text into Excel spreadsheets (.xlsx) or JSON files (.json), and reinsert text from Excel, JSON, or Google Docs spreadsheets.
 
 The command line syntax is as follows:
 
 ```
+Excel:
 VNTextPatch extractlocal <folder containing original game files> script.xlsx
 VNTextPatch insertlocal <folder containing original game files> script.xlsx <folder to receive patched game files>
+
+JSON:
+VNTextPatch extractlocal <folder containing original game files> <folder to receive .json files>
+VNTextPatch insertlocal <folder containing original game files> <folder containing .json files> <folder to receive patched game files>
+
+Google Documents:
 VNTextPatch insertgdocs <folder containing original game files> <Google Docs spreadsheet identifier> <folder to receive patched game files>
 ```
 
