@@ -4,8 +4,7 @@ using namespace std;
 
 wstring SjisTunnelEncoding::Decode(const char* pText, int count)
 {
-    if (!Initialized)
-        Init();
+    Init();
 
     wstring result;
     if (pText == nullptr)
@@ -17,32 +16,16 @@ wstring SjisTunnelEncoding::Decode(const char* pText, int count)
         BYTE highByte = pText[i++];
         BYTE lowByte = 0;
 
-        if ((highByte >= 0x81 && highByte < 0xA0) || (highByte >= 0xE0 && highByte < 0xFD))
+        if (IsSjisHighByte(highByte))
         {
-            int highIdx = highByte < 0xA0 ? highByte - 0x81 : 0x1F + (highByte - 0xE0);
-
             lowByte = pText[i++];
             if (lowByte == 0)
                 break;
 
-            if (lowByte < 0x40)
+            int mappingIdx = TunnelCharToMappingIndex((WORD)((highByte << 8) | lowByte));
+            if (mappingIdx >= 0)
             {
-                int lowIdx = lowByte;
-                if (lowIdx > ',')
-                    lowIdx--;
-                if (lowIdx > ' ')
-                    lowIdx--;
-                if (lowIdx > '\r')
-                    lowIdx--;
-                if (lowIdx > '\n')
-                    lowIdx--;
-                if (lowIdx > '\t')
-                    lowIdx--;
-
-                lowIdx--;
-
-                int index = highIdx * 0x3A + lowIdx;
-                result += Mappings[index];
+                result += Mappings[mappingIdx];
                 continue;
             }
         }
@@ -62,8 +45,7 @@ wstring SjisTunnelEncoding::Decode(const string& str)
 
 string SjisTunnelEncoding::Encode(const wchar_t* pText, int count)
 {
-    if (!Initialized)
-        Init();
+    Init();
 
     string result;
     if (pText == nullptr)
@@ -84,7 +66,7 @@ string SjisTunnelEncoding::Encode(const wchar_t* pText, int count)
             {
                 Mappings.push_back(widechar);
                 mappingIdx = Mappings.size() - 1;
-                if (mappingIdx == 0x3B * 0x3A)
+                if (mappingIdx == 0x3B * (0x40 - sizeof(LowBytesToAvoid) - 1))
                     throw exception("SJIS tunnel limit exceeded");
             }
             else
@@ -92,23 +74,9 @@ string SjisTunnelEncoding::Encode(const wchar_t* pText, int count)
                 mappingIdx = distance(Mappings.begin(), it);
             }
 
-            int highIdx = mappingIdx / 0x3A;
-            int lowIdx = mappingIdx % 0x3A;
-            BYTE highByte = highIdx < 0x1F ? 0x81 + highIdx : 0xE0 + (highIdx - 0x1F);
-            BYTE lowByte = 1 + lowIdx;
-            if (lowByte >= '\t')
-                lowByte++;
-            if (lowByte >= '\n')
-                lowByte++;
-            if (lowByte >= '\r')
-                lowByte++;
-            if (lowByte >= ' ')
-                lowByte++;
-            if (lowByte >= ',')
-                lowByte++;
-            
-            multibyte[0] = highByte;
-            multibyte[1] = lowByte;
+            WORD tunnelChar = MappingIndexToTunnelChar(mappingIdx);
+            multibyte[0] = (char)(tunnelChar >> 8);
+            multibyte[1] = (char)(tunnelChar);
             multibyteLength = 2;
         }
         result.append(multibyte, multibyteLength);
@@ -121,20 +89,45 @@ string SjisTunnelEncoding::Encode(const wstring& str)
     return Encode(str.c_str());
 }
 
-void SjisTunnelEncoding::Init()
+void SjisTunnelEncoding::PatchGameLookupTable()
 {
-    Initialized = true;
-
-    HMODULE hExe = GetModuleHandle(nullptr);
-    wchar_t folderPath[MAX_PATH];
-    GetModuleFileName(hExe, folderPath, sizeof(folderPath) / sizeof(folderPath[0]));
-    wchar_t* pLastSlash = wcsrchr(folderPath, L'\\');
-    if (pLastSlash == nullptr)
+    Init();
+    if (Mappings.empty())
         return;
 
-    wcsncpy_s(pLastSlash + 1, sizeof(folderPath) / sizeof(folderPath[0]) - (pLastSlash + 1 - folderPath), L"sjis_ext.bin", 100);
+    void* pImageStart = GetModuleHandle(nullptr);
+    DWORD imageSize = DetourGetModuleSize(nullptr);
+    wchar_t* pLookupTable = (wchar_t*)MemoryUtil::FindData(pImageStart, imageSize, LookupTableSearchPattern, sizeof(LookupTableSearchPattern));
+    if (pLookupTable == nullptr)
+        return;
+
+    // The pattern we found corresponds to the first multibyte SJIS characters (0x8140, 0x8141, ...).
+    // Subtract 0x8140 to get to the addressing base
+    pLookupTable -= 0x8140;
+
+    map<void*, MemoryUnprotector> unprotectors;
+    for (int mappingIdx = 0; mappingIdx < Mappings.size(); mappingIdx++)
+    {
+        WORD tunnelChar = MappingIndexToTunnelChar(mappingIdx);
+        wchar_t* pLookupEntry = &pLookupTable[tunnelChar];
+
+        void* pLookupEntryPage = (void*)((DWORD)pLookupEntry & ~0xFFF);
+        unprotectors.try_emplace(pLookupEntryPage, pLookupEntryPage, 0x1000);
+
+        *pLookupEntry = Mappings[mappingIdx];
+    }
+}
+
+void SjisTunnelEncoding::Init()
+{
+    if (Initialized)
+        return;
+
+    Initialized = true;
+
+    wstring filePath = Path::Combine(Path::GetModuleFolderPath(nullptr), L"sjis_ext.bin");
     FILE* pFile;
-    _wfopen_s(&pFile, folderPath, L"rb");
+    _wfopen_s(&pFile, filePath.c_str(), L"rb");
     if (pFile == nullptr)
         return;
 
@@ -142,6 +135,47 @@ void SjisTunnelEncoding::Init()
     int fileSize = ftell(pFile);
     fseek(pFile, 0, SEEK_SET);
     Mappings.resize(fileSize / sizeof(wchar_t));
-    fread(Mappings.data(), sizeof(wchar_t), fileSize / sizeof(wchar_t), pFile);
+    fread(Mappings.data(), sizeof(wchar_t), Mappings.size(), pFile);
     fclose(pFile);
+}
+
+WORD SjisTunnelEncoding::MappingIndexToTunnelChar(int index)
+{
+    int highIdx = index / (0x40 - sizeof(LowBytesToAvoid) - 1);
+    int lowIdx = index % (0x40 - sizeof(LowBytesToAvoid) - 1);
+    BYTE highByte = highIdx < 0x1F ? 0x81 + highIdx : 0xE0 + (highIdx - 0x1F);
+    BYTE lowByte = 1 + lowIdx;
+    for (int i = 0; i < sizeof(LowBytesToAvoid); i++)
+    {
+        if (lowByte >= LowBytesToAvoid[i])
+            lowByte++;
+    }
+
+    return (WORD)((highByte << 8) | lowByte);
+}
+
+int SjisTunnelEncoding::TunnelCharToMappingIndex(WORD tunnelChar)
+{
+    BYTE highByte = (BYTE)(tunnelChar >> 8);
+    BYTE lowByte = (BYTE)tunnelChar;
+
+    if (!IsSjisHighByte(highByte) || lowByte == 0 || lowByte >= 0x40)
+        return -1;
+
+    int highIdx = highByte < 0xA0 ? highByte - 0x81 : 0x1F + (highByte - 0xE0);
+
+    int lowIdx = lowByte;
+    for (int i = sizeof(LowBytesToAvoid) - 1; i >= 0; i--)
+    {
+        if (lowIdx > LowBytesToAvoid[i])
+            lowIdx--;
+    }
+    lowIdx--;
+    
+    return highIdx * (0x40 - sizeof(LowBytesToAvoid) - 1) + lowIdx;
+}
+
+bool SjisTunnelEncoding::IsSjisHighByte(BYTE byte)
+{
+    return (byte >= 0x81 && byte < 0xA0) || (byte >= 0xE0 && byte < 0xFD);
 }

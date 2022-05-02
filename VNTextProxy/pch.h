@@ -23,9 +23,13 @@
 #include <vector>
 #include "../external/Detours/detours.h"
 
+#include "Util/ComPtr.h"
+#include "Util/Path.h"
+#include "Util/MemoryUtil.h"
+#include "Util/MemoryUnprotector.h"
+#include "Util/StringUtil.h"
+
 #include "Proxy.h"
-#include "StringUtil.h"
-#include "MemoryUnprotector.h"
 #include "ImportHooker.h"
 #include "Font.h"
 #include "FontManager.h"
@@ -37,5 +41,4 @@
 #include "EnginePatches.h"
 #include "LocaleEmulator.h"
 
-#include "ComPtr.h"
 #include "ImeListener.h"

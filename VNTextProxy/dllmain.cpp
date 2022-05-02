@@ -29,12 +29,15 @@ void Initialize()
     //*/
 
     Win32AToWAdapter::Init();
+    SjisTunnelEncoding::PatchGameLookupTable();
 
     // Uncomment one of these depending on what the game uses
     GdiProportionalizer::Init();
     //D2DProportionalizer::Init();
 
     EnginePatches::Init();
+
+    SetCurrentDirectoryW(Path::GetModuleFolderPath(nullptr).c_str());
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)

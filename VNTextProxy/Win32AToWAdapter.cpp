@@ -52,6 +52,7 @@ void Win32AToWAdapter::Init()
 
             { "GetMonitorInfoA", GetMonitorInfoAHook },
             { "EnumDisplayDevicesA", EnumDisplayDevicesAHook },
+            { "EnumDisplaySettingsA", EnumDisplaySettingsAHook },
             { "ChangeDisplaySettingsA", ChangeDisplaySettingsAHook },
             { "ChangeDisplaySettingsExA", ChangeDisplaySettingsExAHook },
 
@@ -603,6 +604,25 @@ BOOL Win32AToWAdapter::EnumDisplayDevicesAHook(LPCSTR lpDevice, DWORD iDevNum, P
     return true;
 }
 
+BOOL Win32AToWAdapter::EnumDisplaySettingsAHook(LPCSTR lpszDeviceName, DWORD iModeNum, DEVMODEA* lpDevMode)
+{
+    if (lpDevMode == nullptr)
+        return false;
+
+    vector<BYTE> devModeW;
+    devModeW.resize(sizeof(DEVMODEW) + lpDevMode->dmDriverExtra);
+    DEVMODEW* pDevModeW = (DEVMODEW*)devModeW.data();
+    pDevModeW->dmSize = sizeof(DEVMODEW);
+    pDevModeW->dmDriverExtra = lpDevMode->dmDriverExtra;
+
+    if (!EnumDisplaySettingsW(lpszDeviceName != nullptr ? SjisTunnelEncoding::Decode(lpszDeviceName).c_str() : nullptr, iModeNum, pDevModeW))
+        return false;
+
+    vector<BYTE> devModeA = ConvertDevModeWToA(*pDevModeW);
+    memcpy(lpDevMode, devModeA.data(), lpDevMode->dmSize + lpDevMode->dmDriverExtra);
+    return true;
+}
+
 LONG Win32AToWAdapter::ChangeDisplaySettingsAHook(DEVMODEA* lpDevMode, DWORD dwFlags)
 {
     return ChangeDisplaySettingsW(
@@ -694,6 +714,46 @@ WIN32_FIND_DATAA Win32AToWAdapter::ConvertFindDataWToA(const WIN32_FIND_DATAW& f
     findDataA.nFileSizeHigh = findDataW.nFileSizeHigh;
     findDataA.nFileSizeLow = findDataW.nFileSizeLow;
     return findDataA;
+}
+
+vector<BYTE> Win32AToWAdapter::ConvertDevModeWToA(const DEVMODEW& devModeW)
+{
+    vector<BYTE> devModeA;
+    devModeA.resize(sizeof(DEVMODEA) + devModeW.dmDriverExtra);
+
+    DEVMODEA* pDevModeA = (DEVMODEA*)devModeA.data();
+    strcpy_s((char*)pDevModeA->dmDeviceName, sizeof(pDevModeA->dmDeviceName), SjisTunnelEncoding::Encode(devModeW.dmDeviceName).c_str());
+    pDevModeA->dmSpecVersion = devModeW.dmSpecVersion;
+    pDevModeA->dmDriverVersion = devModeW.dmDriverVersion;
+    pDevModeA->dmSize = sizeof(DEVMODEA);
+    pDevModeA->dmDriverExtra = devModeW.dmDriverExtra;
+    pDevModeA->dmFields = devModeW.dmFields;
+    pDevModeA->dmPosition = devModeW.dmPosition;
+    pDevModeA->dmDisplayOrientation = devModeW.dmDisplayOrientation;
+    pDevModeA->dmColor = devModeW.dmColor;
+    pDevModeA->dmDuplex = devModeW.dmDuplex;
+    pDevModeA->dmYResolution = devModeW.dmYResolution;
+    pDevModeA->dmTTOption = devModeW.dmTTOption;
+    pDevModeA->dmCollate = devModeW.dmCollate;
+    strcpy_s((char*)pDevModeA->dmFormName, sizeof(pDevModeA->dmFormName), SjisTunnelEncoding::Encode(devModeW.dmFormName).c_str());
+    pDevModeA->dmLogPixels = devModeW.dmLogPixels;
+    pDevModeA->dmBitsPerPel = devModeW.dmBitsPerPel;
+    pDevModeA->dmPelsWidth = devModeW.dmPelsWidth;
+    pDevModeA->dmPelsHeight = devModeW.dmPelsHeight;
+    pDevModeA->dmDisplayFlags = devModeW.dmDisplayFlags;
+    pDevModeA->dmDisplayFrequency = devModeW.dmDisplayFrequency;
+    pDevModeA->dmICMMethod = devModeW.dmICMMethod;
+    pDevModeA->dmICMIntent = devModeW.dmICMIntent;
+    pDevModeA->dmMediaType = devModeW.dmMediaType;
+    pDevModeA->dmDitherType = devModeW.dmDitherType;
+    pDevModeA->dmReserved1 = devModeW.dmReserved1;
+    pDevModeA->dmReserved2 = devModeW.dmReserved2;
+    pDevModeA->dmPanningWidth = devModeW.dmPanningWidth;
+    pDevModeA->dmPanningHeight = devModeW.dmPanningHeight;
+
+    memcpy(pDevModeA + 1, &devModeW + 1, devModeW.dmDriverExtra);
+
+    return devModeA;
 }
 
 vector<BYTE> Win32AToWAdapter::ConvertDevModeAToW(const DEVMODEA& devModeA)

@@ -58,6 +58,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -79,6 +80,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -92,7 +94,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ComPtr.h" />
     <ClInclude Include="D2DProportionalizer.h" />
     <ClInclude Include="EnginePatches.h" />
     <ClInclude Include="GdiProportionalizer.h" />
@@ -101,12 +102,15 @@
     <ClInclude Include="Proxy.h" />
     <ClInclude Include="Font.h" />
     <ClInclude Include="FontManager.h" />
-    <ClInclude Include="MemoryUnprotector.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Proportionalizer.h" />
     <ClInclude Include="SjisTunnelEncoding.h" />
-    <ClInclude Include="StringUtil.h" />
     <ClInclude Include="ImeListener.h" />
+    <ClInclude Include="Util\ComPtr.h" />
+    <ClInclude Include="Util\MemoryUnprotector.h" />
+    <ClInclude Include="Util\MemoryUtil.h" />
+    <ClInclude Include="Util\Path.h" />
+    <ClInclude Include="Util\StringUtil.h" />
     <ClInclude Include="Win32AToWAdapter.h" />
   </ItemGroup>
   <ItemGroup>
@@ -119,15 +123,17 @@
     <ClCompile Include="Proxy.cpp" />
     <ClCompile Include="Font.cpp" />
     <ClCompile Include="FontManager.cpp" />
-    <ClCompile Include="MemoryUnprotector.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Proportionalizer.cpp" />
     <ClCompile Include="SjisTunnelEncoding.cpp" />
-    <ClCompile Include="StringUtil.cpp" />
     <ClCompile Include="ImeListener.cpp" />
+    <ClCompile Include="Util\MemoryUnprotector.cpp" />
+    <ClCompile Include="Util\MemoryUtil.cpp" />
+    <ClCompile Include="Util\Path.cpp" />
+    <ClCompile Include="Util\StringUtil.cpp" />
     <ClCompile Include="Win32AToWAdapter.cpp" />
   </ItemGroup>
   <ItemGroup>

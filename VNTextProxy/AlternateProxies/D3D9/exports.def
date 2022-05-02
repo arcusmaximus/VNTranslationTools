@@ -1,3 +1,19 @@
 LIBRARY d3d9
 EXPORTS
-    Direct3DCreate9=FakeDirect3DCreate9 @9
+	D3DPERF_BeginEvent=FakeD3DPERF_BeginEvent @1
+	D3DPERF_EndEvent=FakeD3DPERF_EndEvent @2
+	D3DPERF_GetStatus=FakeD3DPERF_GetStatus @3
+	D3DPERF_QueryRepeatFrame=FakeD3DPERF_QueryRepeatFrame @4
+	D3DPERF_SetMarker=FakeD3DPERF_SetMarker @5
+	D3DPERF_SetOptions=FakeD3DPERF_SetOptions @6
+	D3DPERF_SetRegion=FakeD3DPERF_SetRegion @7
+	DebugSetLevel=FakeDebugSetLevel @8
+	DebugSetMute=FakeDebugSetMute @9
+	Direct3D9EnableMaximizedWindowedModeShim=FakeDirect3D9EnableMaximizedWindowedModeShim @10
+	Direct3DCreate9=FakeDirect3DCreate9 @11
+	Direct3DCreate9Ex=FakeDirect3DCreate9Ex @12
+	Direct3DCreate9On12=FakeDirect3DCreate9On12 @13
+	Direct3DCreate9On12Ex=FakeDirect3DCreate9On12Ex @14
+	Direct3DShaderValidatorCreate9=FakeDirect3DShaderValidatorCreate9 @15
+	PSGPError=FakePSGPError @16
+	PSGPSampleTexture=FakePSGPSampleTexture @17

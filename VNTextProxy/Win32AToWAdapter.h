@@ -51,6 +51,7 @@ private:
 
     static BOOL __stdcall GetMonitorInfoAHook(HMONITOR hMonitor, LPMONITORINFO lpmi);
     static BOOL __stdcall EnumDisplayDevicesAHook(LPCSTR lpDevice, DWORD iDevNum, PDISPLAY_DEVICEA lpDisplayDevice, DWORD dwFlags);
+    static BOOL __stdcall EnumDisplaySettingsAHook(LPCSTR lpszDeviceName, DWORD iModeNum, DEVMODEA* lpDevMode);
     static LONG __stdcall ChangeDisplaySettingsAHook(DEVMODEA* lpDevMode, DWORD dwFlags);
     static LONG __stdcall ChangeDisplaySettingsExAHook(LPCSTR lpszDeviceName, DEVMODEA* lpDevMode, HWND hwnd, DWORD dwflags, LPVOID lParam);
 
@@ -64,6 +65,7 @@ private:
     static BOOL __stdcall DirectSoundEnumerateCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR lpcstrModule, LPVOID lpContext);
 
     static WIN32_FIND_DATAA ConvertFindDataWToA(const WIN32_FIND_DATAW& findDataW);
+    static std::vector<BYTE> ConvertDevModeWToA(const DEVMODEW& devModeW);
     static std::vector<BYTE> ConvertDevModeAToW(const DEVMODEA& devModeA);
 
     struct DirectDrawEnumerateContext

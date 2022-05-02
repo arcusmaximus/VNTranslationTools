@@ -33,6 +33,8 @@ void ImeListener::Init()
     }
 
     pThreadMgr->Deactivate();
+
+    CoUninitialize();
 }
 
 HRESULT ImeListener::CreateContextHook(ITfDocumentMgr* pDocumentMgr, TfClientId tidOwner, DWORD dwFlags, IUnknown* punk, ITfContext** ppic, TfEditCookie* pecTextStore)
