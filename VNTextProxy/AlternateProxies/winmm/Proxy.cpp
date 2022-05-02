@@ -4,11 +4,11 @@ void Proxy::Init()
 {
     wchar_t realDllPath[MAX_PATH];
     GetSystemDirectory(realDllPath, MAX_PATH);
-    wcscat_s(realDllPath, L"\\xinput1_3.dll");
+    wcscat_s(realDllPath, L"\\winmm.dll");
     HMODULE hDll = LoadLibrary(realDllPath);
     if (hDll == nullptr)
     {
-        MessageBox(nullptr, L"Cannot load original xinput1_3.dll library", L"Proxy", MB_ICONERROR);
+        MessageBox(nullptr, L"Cannot load original winmm.dll library", L"Proxy", MB_ICONERROR);
         ExitProcess(0);
     }
 
