@@ -231,13 +231,13 @@ namespace VNTextPatch
                 if (inputLocation.ScriptName != null)
                     throw new ArgumentException("Input path and script path must be of the same type (file or folder).");
 
-                FolderScriptCollection collection = new FolderScriptCollection(textPath, ".txt");
+                FolderScriptCollection collection = new FolderScriptCollection(textPath, ".json");
                 return new ScriptLocation(collection, null);
             }
 
             switch (Path.GetExtension(textPath)?.ToLower())
             {
-                case ".txt":
+                case ".json":
                     if (inputLocation.ScriptName == null)
                         throw new ArgumentException("Input path and script path must be of the same type (file or folder).");
 
@@ -249,7 +249,7 @@ namespace VNTextPatch
                     return new ScriptLocation(collection, scriptName);
 
                 default:
-                    throw new ArgumentException("Script path must be a .txt or .xlsx file or an existing folder");
+                    throw new ArgumentException("Script path must be a .json or .xlsx file or an existing folder");
             }
         }
 
