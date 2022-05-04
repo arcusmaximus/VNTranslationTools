@@ -76,7 +76,7 @@ BOOL Win32AToWAdapter::IsDBCSLeadByteHook(BYTE TestChar)
 
 int Win32AToWAdapter::MultiByteToWideCharHook(UINT codePage, DWORD flags, LPCCH lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar)
 {
-    if (codePage != CP_ACP && codePage != 932)
+    if (codePage != CP_ACP && codePage != CP_THREAD_ACP && codePage != 932)
         return MultiByteToWideChar(codePage, flags, lpMultiByteStr, cbMultiByte, lpWideCharStr, cchWideChar);
 
     wstring wstr = SjisTunnelEncoding::Decode(lpMultiByteStr, cbMultiByte);
