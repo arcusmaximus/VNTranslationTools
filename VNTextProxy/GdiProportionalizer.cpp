@@ -11,6 +11,8 @@ void GdiProportionalizer::Init()
             { "EnumFontFamiliesExA", EnumFontFamiliesExAHook },
             { "CreateFontA", CreateFontAHook },
             { "CreateFontIndirectA", CreateFontIndirectAHook },
+            { "CreateFontW", CreateFontWHook },
+            { "CreateFontIndirectW", CreateFontIndirectWHook },
             { "SelectObject", SelectObjectHook },
             { "DeleteObject", DeleteObjectHook },
             { "GetTextExtentPointA", GetTextExtentPointAHook },
@@ -49,16 +51,27 @@ HFONT GdiProportionalizer::CreateFontAHook(int cHeight, int cWidth, int cEscapem
     DWORD bItalic, DWORD bUnderline, DWORD bStrikeOut, DWORD iCharSet, DWORD iOutPrecision, DWORD iClipPrecision,
     DWORD iQuality, DWORD iPitchAndFamily, LPCSTR pszFaceName)
 {
-    if (FontName.empty())
-        FontName = StringUtil::ToWString(pszFaceName);
-
-    Font* pFont = FontManager.FetchFont(FontName, cHeight, Bold, Italic, Underline);
-    return pFont->GetGdiHandle();
+    return CreateFontWHook(
+        cHeight,
+        cWidth,
+        cEscapement,
+        cOrientation,
+        cWeight,
+        bItalic,
+        bUnderline,
+        bStrikeOut,
+        iCharSet,
+        iOutPrecision,
+        iClipPrecision,
+        iQuality,
+        iPitchAndFamily,
+        StringUtil::ToWString(pszFaceName).c_str()
+    );
 }
 
 HFONT GdiProportionalizer::CreateFontIndirectAHook(LOGFONTA* pFontInfo)
 {
-    return CreateFontAHook(
+    return CreateFontWHook(
         pFontInfo->lfHeight,
         pFontInfo->lfWidth,
         pFontInfo->lfEscapement,
@@ -72,8 +85,42 @@ HFONT GdiProportionalizer::CreateFontIndirectAHook(LOGFONTA* pFontInfo)
         pFontInfo->lfClipPrecision,
         pFontInfo->lfQuality,
         pFontInfo->lfPitchAndFamily,
-        pFontInfo->lfFaceName
+        StringUtil::ToWString(pFontInfo->lfFaceName).c_str()
     );
+}
+
+HFONT GdiProportionalizer::CreateFontWHook(int cHeight, int cWidth, int cEscapement, int cOrientation, int cWeight,
+    DWORD bItalic, DWORD bUnderline, DWORD bStrikeOut, DWORD iCharSet, DWORD iOutPrecision, DWORD iClipPrecision,
+    DWORD iQuality, DWORD iPitchAndFamily, LPCWSTR pszFaceName)
+{
+    LOGFONTW fontInfo;
+    fontInfo.lfHeight = cHeight;
+    fontInfo.lfWidth = cWidth;
+    fontInfo.lfEscapement = cEscapement;
+    fontInfo.lfOrientation = cOrientation;
+    fontInfo.lfWeight = cWeight;
+    fontInfo.lfItalic = bItalic;
+    fontInfo.lfUnderline = bUnderline;
+    fontInfo.lfStrikeOut = bStrikeOut;
+    fontInfo.lfCharSet = iCharSet;
+    fontInfo.lfOutPrecision = iOutPrecision;
+    fontInfo.lfClipPrecision = iClipPrecision;
+    fontInfo.lfQuality = iQuality;
+    fontInfo.lfPitchAndFamily = iPitchAndFamily;
+    wcscpy_s(fontInfo.lfFaceName, pszFaceName);
+    return CreateFontIndirectWHook(&fontInfo);
+}
+
+HFONT GdiProportionalizer::CreateFontIndirectWHook(LOGFONTW* pFontInfo)
+{
+    if (CustomFontName.empty())
+    {
+        LastFontName = pFontInfo->lfFaceName;
+        return FontManager.FetchFont(*pFontInfo)->GetGdiHandle();
+    }
+
+    LastFontName = CustomFontName;
+    return FontManager.FetchFont(CustomFontName, pFontInfo->lfHeight, Bold, Italic, Underline)->GetGdiHandle();
 }
 
 HGDIOBJ GdiProportionalizer::SelectObjectHook(HDC hdc, HGDIOBJ obj)
@@ -113,9 +160,9 @@ BOOL GdiProportionalizer::TextOutAHook(HDC dc, int x, int y, LPCSTR pString, int
     if (!AdaptRenderArgs(text.c_str(), text.size(), pFont->GetHeight(), x, y))
         return false;
 
-    if (pFont->IsBold() != Bold || pFont->IsItalic() != Italic || pFont->IsUnderline() != Underline)
+    if (!CustomFontName.empty() && pFont->IsBold() != Bold || pFont->IsItalic() != Italic || pFont->IsUnderline() != Underline)
     {
-        pFont = FontManager.FetchFont(FontName, pFont->GetHeight(), Bold, Italic, Underline);
+        pFont = FontManager.FetchFont(CustomFontName, pFont->GetHeight(), Bold, Italic, Underline);
         SelectObjectHook(dc, pFont->GetGdiHandle());
     }
 

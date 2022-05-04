@@ -11,7 +11,8 @@ public:
 protected:
     static bool AdaptRenderArgs(const wchar_t* pText, int length, int fontSize, int& x, int& y);
     
-    static inline std::wstring FontName{};
+    static inline std::wstring CustomFontName{};
+    static inline std::wstring LastFontName{};
     static inline FontManager FontManager{};
     static inline bool Bold{};
     static inline bool Italic{};

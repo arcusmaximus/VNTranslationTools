@@ -1,17 +1,15 @@
 ﻿#include "pch.h"
 
-#define PROPORTIONALIZER_CHARACTER_SPACING 5
-
 using namespace std;
 
 void Proportionalizer::Init()
 {
-    FontName = LoadCustomFont();
+    CustomFontName = LoadCustomFont();
 }
 
 int Proportionalizer::MeasureStringWidth(const wstring& str, int fontSize)
 {
-    Font* pFont = FontManager.FetchFont(FontName, fontSize, false, false, false);
+    Font* pFont = FontManager.FetchFont(LastFontName, fontSize, false, false, false);
     return pFont->MeasureStringWidth(str);
 }
 
@@ -31,7 +29,7 @@ bool Proportionalizer::AdaptRenderArgs(const wchar_t* pText, int length, int fon
     if (HandleFormattingCode(currentChar))
         return false;
 
-    Font* pFont = FontManager.FetchFont(FontName, fontSize, Bold, Italic, Underline);
+    Font* pFont = FontManager.FetchFont(LastFontName, fontSize, Bold, Italic, Underline);
 
     if (x == 0 || x < lastMonospaceX - 4 || abs(y - lastMonospaceY) > 4)
     {
@@ -42,7 +40,7 @@ bool Proportionalizer::AdaptRenderArgs(const wchar_t* pText, int length, int fon
         lastProportionalX = x;
 
         lastChar = currentChar;
-        nextProportionalX = x + pFont->MeasureCharWidth(currentChar) + PROPORTIONALIZER_CHARACTER_SPACING;
+        nextProportionalX = x + pFont->MeasureCharWidth(currentChar);
     }
     else if (x <= lastMonospaceX + 4)
     {
@@ -58,7 +56,7 @@ bool Proportionalizer::AdaptRenderArgs(const wchar_t* pText, int length, int fon
         x = nextProportionalX + pFont->GetKernAmount(lastChar, currentChar);
         lastProportionalX = x;
         lastChar = currentChar;
-        nextProportionalX = x + pFont->MeasureCharWidth(currentChar) + PROPORTIONALIZER_CHARACTER_SPACING;
+        nextProportionalX = x + pFont->MeasureCharWidth(currentChar);
     }
 
     LastLineEnd = nextProportionalX;

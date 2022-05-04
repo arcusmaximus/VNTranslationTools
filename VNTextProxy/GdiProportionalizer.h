@@ -14,6 +14,10 @@ private:
         DWORD bUnderline, DWORD bStrikeOut, DWORD iCharSet, DWORD iOutPrecision, DWORD iClipPrecision,
         DWORD iQuality, DWORD iPitchAndFamily, LPCSTR pszFaceName);
     static HFONT __stdcall CreateFontIndirectAHook(LOGFONTA* pFontInfo);
+    static HFONT __stdcall CreateFontWHook(int cHeight, int cWidth, int cEscapement, int cOrientation, int cWeight, DWORD bItalic,
+        DWORD bUnderline, DWORD bStrikeOut, DWORD iCharSet, DWORD iOutPrecision, DWORD iClipPrecision,
+        DWORD iQuality, DWORD iPitchAndFamily, LPCWSTR pszFaceName);
+    static HFONT __stdcall CreateFontIndirectWHook(LOGFONTW* pFontInfo);
     static HGDIOBJ __stdcall SelectObjectHook(HDC hdc, HGDIOBJ obj);
     static BOOL __stdcall DeleteObjectHook(HGDIOBJ obj);
     static BOOL __stdcall GetTextExtentPointAHook(HDC hdc, LPCSTR lpString, int c, LPSIZE lpsz);

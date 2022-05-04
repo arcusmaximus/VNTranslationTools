@@ -95,9 +95,10 @@ HRESULT D2DProportionalizer::D2DCreateTextFormatHook(
     const WCHAR* pLocaleName,
     IDWriteTextFormat** ppTextFormat)
 {
+    LastFontName = !CustomFontName.empty() ? CustomFontName.c_str() : pFontFamilyName;
     return OriginalD2DCreateTextFormat(
         pFactory,
-        FontName.c_str(),
+        LastFontName.c_str(),
         pFontCollection,
         fontWeight,
         fontStyle,
@@ -127,7 +128,8 @@ void D2DProportionalizer::D2DDrawTextHook(
     if (!AdaptRenderArgs(pString, stringLength, fontSize, x, y))
         return;
 
-    Font* pFont = FontManager.FetchFont(FontName, fontSize, Bold, Italic, Underline);
+    if (!CustomFontName.empty())
+        pTextFormat = FontManager.FetchFont(CustomFontName, fontSize, Bold, Italic, Underline)->GetDWriteTextFormat();
 
     D2D1_RECT_F rect;
     rect.left = x;
@@ -139,7 +141,7 @@ void D2DProportionalizer::D2DDrawTextHook(
         pDeviceContext,
         pString,
         stringLength,
-        pFont->GetDWriteTextFormat(),
+        pTextFormat,
         &rect,
         pDefaultFillBrush,
         options,
