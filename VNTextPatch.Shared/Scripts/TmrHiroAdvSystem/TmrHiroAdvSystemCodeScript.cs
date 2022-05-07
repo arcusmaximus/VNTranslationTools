@@ -126,7 +126,7 @@ namespace VNTextPatch.Shared.Scripts.TmrHiroAdvSystem
             }
             else
             {
-                return GetNextString(stringEnumerator, ScriptStringType.Message);
+                return MonospaceWordWrapper.Default.Wrap(GetNextString(stringEnumerator, ScriptStringType.Message), null, "\\n");
             }
         }
 
