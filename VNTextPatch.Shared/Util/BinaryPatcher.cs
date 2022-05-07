@@ -149,6 +149,19 @@ namespace VNTextPatch.Shared.Util
             return newOffset;
         }
 
+        public void PatchInt16(int originalOffset, short value)
+        {
+            if (originalOffset < 0 || originalOffset + 2 > _inputStream.Length)
+                throw new ArgumentOutOfRangeException(nameof(originalOffset));
+
+            if (_inputStream.Position < originalOffset + 2)
+                throw new InvalidOperationException();
+
+            _outputStream.Position = MapOffset(originalOffset);
+            _writer.Write(value);
+            _outputStream.Position = _outputStream.Length;
+        }
+
         public void PatchInt32(int originalOffset, int value)
         {
             if (originalOffset < 0 || originalOffset + 4 > _inputStream.Length)

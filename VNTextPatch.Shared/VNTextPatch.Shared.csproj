@@ -99,6 +99,8 @@
     <Compile Include="Scripts\SystemNnn\SystemNnnReleaseScript.cs" />
     <Compile Include="Scripts\Kirikiri\TjsScript.cs" />
     <Compile Include="CharacterNames.cs" />
+    <Compile Include="Scripts\TmrHiroAdvSystem\TmrHiroAdvSystemCodeScript.cs" />
+    <Compile Include="Scripts\TmrHiroAdvSystem\TmrHiroAdvSystemTextScript.cs" />
     <Compile Include="Scripts\WhaleScript.cs" />
     <Compile Include="Scripts\Yuris\YurisAttribute.cs" />
     <Compile Include="Scripts\Yuris\YurisCommand.cs" />
