@@ -121,7 +121,7 @@ namespace VNTextPatch.Shared.Scripts.TmrHiroAdvSystem
             if (parts.Length > 1)
             {
                 parts[0] = GetNextString(stringEnumerator, ScriptStringType.CharacterName);
-                parts[1] = GetNextString(stringEnumerator, ScriptStringType.Message);
+                parts[1] = MonospaceWordWrapper.Default.Wrap(GetNextString(stringEnumerator, ScriptStringType.Message), null, "\\n");
                 return string.Join(",", parts);
             }
             else
