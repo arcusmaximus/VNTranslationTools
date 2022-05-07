@@ -16,6 +16,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * Silky's/AI6WIN (.mes/.map)
 * Qlie (.s)
 * SystemNNN (.nnn/.spt)
+* TmrHiroAdvSystem (.srp/extensionless - append `--format=tmrhiroadvsystemtext` to command line for the latter)
 * Whale (.txt; append `--format=whale` to command line)
 * YU-RIS (.ybn)
 
