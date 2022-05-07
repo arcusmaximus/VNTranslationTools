@@ -67,11 +67,11 @@ namespace VNTextPatch.Shared.Scripts.TmrHiroAdvSystem
             if (parts.Length > 1)
             {
                 yield return new ScriptString(parts[0], ScriptStringType.CharacterName);
-                yield return new ScriptString(parts[1], ScriptStringType.Message);
+                yield return new ScriptString(parts[1].Replace("\\n", "\r\n"), ScriptStringType.Message);
             }
             else
             {
-                yield return new ScriptString(text, ScriptStringType.Message);
+                yield return new ScriptString(text.Replace("\\n", "\r\n"), ScriptStringType.Message);
             }
         }
 
@@ -121,12 +121,12 @@ namespace VNTextPatch.Shared.Scripts.TmrHiroAdvSystem
             if (parts.Length > 1)
             {
                 parts[0] = GetNextString(stringEnumerator, ScriptStringType.CharacterName);
-                parts[1] = MonospaceWordWrapper.Default.Wrap(GetNextString(stringEnumerator, ScriptStringType.Message), null, "\\n");
+                parts[1] = MonospaceWordWrapper.Default.Wrap(GetNextString(stringEnumerator, ScriptStringType.Message)).Replace("\r\n", "\\n");
                 return string.Join(",", parts);
             }
             else
             {
-                return MonospaceWordWrapper.Default.Wrap(GetNextString(stringEnumerator, ScriptStringType.Message), null, "\\n");
+                return MonospaceWordWrapper.Default.Wrap(GetNextString(stringEnumerator, ScriptStringType.Message)).Replace("\r\n", "\\n");
             }
         }
 
