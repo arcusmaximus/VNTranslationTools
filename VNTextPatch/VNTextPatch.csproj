@@ -24,6 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>8</LangVersion>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -59,14 +60,6 @@
       <Project>{8ee55bd1-ab95-4528-bf36-b9962dc54166}</Project>
       <Name>VNTextPatch.Shared</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Office.Interop.Excel">
-      <Version>15.0.4795.1000</Version>
-    </PackageReference>
-    <PackageReference Include="MSOffice.Object.Library">
-      <Version>15.0.4420.1018</Version>
-    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

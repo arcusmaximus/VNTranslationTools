@@ -3,36 +3,30 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using MsExcel = Microsoft.Office.Interop.Excel;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 
 namespace VNTextPatch.Shared.Scripts
 {
     public class ExcelScriptCollection : IScriptCollection, IDisposable
     {
-        private MsExcel.Application _application;
-        private MsExcel.Workbook _workbook;
+        private XSSFWorkbook _workbook;
         private ExcelScript _script;
         private bool _isEmpty;
 
         public ExcelScriptCollection(string filePath)
         {
-            _application = new MsExcel.Application { DisplayAlerts = false };
+            Name = filePath;
 
-            if (File.Exists(filePath))
-            {
-                _workbook = _application.Workbooks.Open(filePath);
-            }
-            else
+            if (!File.Exists(filePath))
             {
                 string folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 string templateFilePath = Path.Combine(folderPath, "template.xlsx");
-                _workbook = _application.Workbooks.Open(templateFilePath);
-                _workbook.SaveAs(filePath);
+                File.Copy(templateFilePath, filePath);
                 _isEmpty = true;
             }
 
-            Name = filePath;
+            _workbook = new XSSFWorkbook(filePath);
             _script = new ExcelScript(this, _workbook);
         }
 
@@ -48,40 +42,29 @@ namespace VNTextPatch.Shared.Scripts
 
         public IEnumerable<string> Scripts
         {
-            get { return _workbook.Worksheets.Cast<MsExcel.Worksheet>().Select(s => s.Name); }
+            get { return Enumerable.Range(0, _workbook.NumberOfSheets).Select(_workbook.GetSheetName); }
         }
 
         public bool Exists(string scriptName)
         {
-            try
-            {
-                _ = _workbook.Worksheets[scriptName];
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return _workbook.GetSheet(scriptName) != null;
         }
 
         public void Add(string scriptName)
         {
-            if (!_isEmpty)
+            if (_isEmpty)
             {
-                MsExcel.Worksheet lastSheet = (MsExcel.Worksheet)_workbook.Worksheets[_workbook.Worksheets.Count];
-                lastSheet.Copy(After: lastSheet);
+                _workbook.SetSheetName(0, scriptName);
+                _isEmpty = false;
             }
             else
             {
-                _isEmpty = false;
+                ISheet sheet = _workbook.CloneSheet(0, scriptName);
+                for (int i = sheet.LastRowNum; i > 0; i--)
+                {
+                    sheet.RemoveRow(sheet.GetRow(i));
+                }
             }
-
-            MsExcel.Worksheet sheet = (MsExcel.Worksheet)_workbook.Worksheets[_workbook.Worksheets.Count];
-            sheet.Name = scriptName;
-
-            int bottomRow = sheet.UsedRange.Rows.Count;
-            if (bottomRow >= 2)
-                sheet.Range[$"A2:A{bottomRow}"].EntireRow.Delete(MsExcel.XlDeleteShiftDirection.xlShiftUp);
         }
 
         public void Add(string scriptName, ScriptLocation copyFrom)
@@ -96,19 +79,19 @@ namespace VNTextPatch.Shared.Scripts
 
         public void Dispose()
         {
-            if (_application == null)
-                return;
-
             _script = null;
 
-            ((MsExcel.Worksheet)_workbook.Worksheets[1]).Activate();
-            _workbook.Save();
-            _workbook.Close();
-            _workbook = null;
-
-            _application.Quit();
-            Marshal.FinalReleaseComObject(_application);
-            _application = null;
+            if (_workbook != null)
+            {
+                using (Stream stream = File.Open(Name + ".temp", FileMode.Create))
+                {
+                    _workbook.Write(stream);
+                    _workbook.Close();
+                    _workbook = null;
+                }
+                File.Delete(Name);
+                File.Move(Name + ".temp", Name);
+            }
         }
     }
 }

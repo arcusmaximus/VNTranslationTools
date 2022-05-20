@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using NPOI.SS.UserModel;
 using VNTextPatch.Shared.Util;
-using MsExcel = Microsoft.Office.Interop.Excel;
 
 namespace VNTextPatch.Shared.Scripts
 {
     public class ExcelScript : IScript, ILineStatistics
     {
         private readonly ExcelScriptCollection _collection;
-        private readonly MsExcel.Workbook _workbook;
-        private object[,] _values;
+        private readonly IWorkbook _workbook;
+        private ISheet _sheet;
 
-        public ExcelScript(ExcelScriptCollection collection, MsExcel.Workbook workbook)
+        public ExcelScript(ExcelScriptCollection collection, IWorkbook workbook)
         {
             _collection = collection;
             _workbook = workbook;
@@ -29,17 +29,18 @@ namespace VNTextPatch.Shared.Scripts
             if (location.Collection != _collection)
                 throw new InvalidOperationException();
 
-            MsExcel.Worksheet sheet = (MsExcel.Worksheet)_workbook.Worksheets[location.ScriptName];
-            _values = (object[,])sheet.UsedRange.Value;
+            _sheet = _workbook.GetSheet(location.ScriptName);
         }
 
         public IEnumerable<ScriptString> GetStrings()
         {
-            int lastRow = _values.GetUpperBound(0);
-            for (int rowNumber = 2; rowNumber <= lastRow; rowNumber++)
+            foreach (IRow row in _sheet)
             {
-                string characterNames = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.TranslatedCharacter] as string) ??
-                                        StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.OriginalCharacter] as string);
+                if (row.RowNum == 0)
+                    continue;
+
+                string characterNames = StringUtil.NullIfEmpty(row.GetCell((int)ExcelColumn.TranslatedCharacter)?.StringCellValue) ??
+                                        StringUtil.NullIfEmpty(row.GetCell((int)ExcelColumn.OriginalCharacter)?.StringCellValue);
                 if (characterNames != null)
                 {
                     foreach (string characterName in SplitNames(characterNames))
@@ -48,7 +49,7 @@ namespace VNTextPatch.Shared.Scripts
                     }
                 }
 
-                string text = GetText(rowNumber);
+                string text = GetText(row);
                 if (text != null)
                 {
                     text = Regex.Replace(text, @"(?<!\r)\n", "\r\n");
@@ -57,21 +58,21 @@ namespace VNTextPatch.Shared.Scripts
             }
         }
 
-        private string GetText(int rowNumber)
+        private string GetText(IRow row)
         {
-            string originalText = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.OriginalLine] as string);
+            string originalText = StringUtil.NullIfEmpty(row.GetCell((int)ExcelColumn.OriginalLine)?.StringCellValue);
             if (originalText != null)
                 Total++;
 
-            string translatedText = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.TranslatedLine] as string);
+            string translatedText = StringUtil.NullIfEmpty(row.GetCell((int)ExcelColumn.TranslatedLine)?.StringCellValue);
             if (translatedText != null)
                 Translated++;
 
-            string checkedText = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.CheckedLine] as string);
+            string checkedText = StringUtil.NullIfEmpty(row.GetCell((int)ExcelColumn.CheckedLine)?.StringCellValue);
             if (checkedText != null)
                 Checked++;
 
-            string editedText = StringUtil.NullIfEmpty(_values[rowNumber, (int)ExcelColumn.EditedLine] as string);
+            string editedText = StringUtil.NullIfEmpty(row.GetCell((int)ExcelColumn.EditedLine)?.StringCellValue);
             if (editedText != null)
                 Edited++;
 
@@ -83,20 +84,11 @@ namespace VNTextPatch.Shared.Scripts
 
         public void WritePatched(IEnumerable<ScriptString> strings, ScriptLocation location)
         {
-            FillTable(strings);
-            WriteTable(location);
-        }
+            _sheet = _workbook.GetSheet(location.ScriptName);
 
-        private void FillTable(IEnumerable<ScriptString> strings)
-        {
-            IList<ScriptString> stringList = strings.AsList();
-            int numRows = stringList.Count(s => s.Type == ScriptStringType.Message);
-            int numColumns = Enum.GetValues(typeof(ExcelColumn)).Cast<int>().Max();
-            _values = (object[,])Array.CreateInstance(typeof(object), new[] { numRows, numColumns }, new[] { 2, 1 });
-
-            int row = 2;
+            int rowNum = 1;
             List<string> pendingCharacterNames = new List<string>();
-            foreach (ScriptString str in stringList)
+            foreach (ScriptString str in strings)
             {
                 if (str.Type == ScriptStringType.CharacterName)
                 {
@@ -104,37 +96,33 @@ namespace VNTextPatch.Shared.Scripts
                 }
                 else
                 {
+                    IRow row = _sheet.CreateRow(rowNum);
                     FillRow(row, pendingCharacterNames, str.Text);
                     pendingCharacterNames.Clear();
-                    row++;
+                    rowNum++;
                 }
             }
         }
 
-        private void FillRow(int row, List<string> characterNames, string message)
+        private void FillRow(IRow row, List<string> characterNames, string message)
         {
             if (characterNames.Count > 0)
-                _values[row, (int)ExcelColumn.OriginalCharacter] = JoinNames(characterNames);
+                FillCell(row, ExcelColumn.OriginalCharacter, JoinNames(characterNames));
 
-            _values[row, (int)ExcelColumn.OriginalLine] = message;
+            FillCell(row, ExcelColumn.OriginalLine, message);
 
             if (characterNames.Count > 0)
             {
                 string translatedNames = JoinNames(characterNames.Select(CharacterNames.GetTranslation));
-                _values[row, (int)ExcelColumn.TranslatedCharacter] = translatedNames;
+                FillCell(row, ExcelColumn.TranslatedCharacter, translatedNames);
             }
         }
 
-        private void WriteTable(ScriptLocation location)
+        private void FillCell(IRow row, ExcelColumn column, string value)
         {
-            if (location.Collection != _collection)
-                throw new InvalidOperationException();
-
-            MsExcel.Worksheet sheet = (MsExcel.Worksheet)_workbook.Worksheets[location.ScriptName];
-            int bottomRow = _values.GetUpperBound(0);
-            char rightColumn = (char)(0x40 + _values.GetUpperBound(1));
-            string address = $"A2:{rightColumn}{bottomRow}";
-            sheet.Range[address].Value = _values;
+            ICell cell = row.CreateCell((int)column);
+            cell.SetCellValue(value);
+            cell.CellStyle = _sheet.GetColumnStyle((int)column);
         }
 
         public int Translated
