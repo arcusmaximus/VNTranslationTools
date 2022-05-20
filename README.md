@@ -20,7 +20,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * Whale (.txt; append `--format=whale` to command line)
 * YU-RIS (.ybn)
 
-The tool can extract text into Excel spreadsheets (.xlsx) or JSON files (.json), and reinsert text from Excel, JSON, or Google Docs spreadsheets.
+The tool can extract text into Excel workbooks (.xlsx) or JSON files (.json), and reinsert text from Excel, JSON, or Google Docs Spreadsheets. Working with .xlsx files does not require Microsoft Excel to be installed.
 
 The command line syntax is as follows:
 
