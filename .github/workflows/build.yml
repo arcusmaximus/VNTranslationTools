@@ -10,6 +10,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: recursive
     - uses: ilammy/msvc-dev-cmd@v1
     - uses: microsoft/setup-msbuild@v1.1
     - run: build.bat
