@@ -91,6 +91,9 @@ string SjisTunnelEncoding::Encode(const wstring& str)
 
 void SjisTunnelEncoding::PatchGameLookupTable()
 {
+    // Certain SJIS engines actually convert text to UTF16 before rendering it, but do so using an internal lookup table
+    // rather than calling MultiByteToWideChar(). Find the table and patch it to support tunneling there as well.
+
     Init();
     if (Mappings.empty())
         return;
@@ -101,8 +104,8 @@ void SjisTunnelEncoding::PatchGameLookupTable()
     if (pLookupTable == nullptr)
         return;
 
-    // The pattern we found corresponds to the first multibyte SJIS characters (0x8140, 0x8141, ...).
-    // Subtract 0x8140 to get to the addressing base
+    // The pattern we found corresponds to the first valid entries in the lookup table (0x8140, 0x8141, ...).
+    // Subtract 0x8140 to get its base.
     pLookupTable -= 0x8140;
 
     map<void*, MemoryUnprotector> unprotectors;

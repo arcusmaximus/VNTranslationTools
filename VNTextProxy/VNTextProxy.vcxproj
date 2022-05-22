@@ -48,6 +48,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>d2d1</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -66,7 +67,6 @@
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
       <AdditionalDependencies>ddraw.lib;dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)d2d1.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -90,7 +90,6 @@
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
       <AdditionalDependencies>ddraw.lib;dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)d2d1.dll</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
