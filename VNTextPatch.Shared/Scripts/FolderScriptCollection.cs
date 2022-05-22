@@ -44,6 +44,7 @@ namespace VNTextPatch.Shared.Scripts
                     new ShSystemScript(),
                     new SilkysMapScript(),
                     new SilkysMesScript(),
+                    new SoftpalScript(),
                     new SystemNnnDevScript(),
                     new SystemNnnReleaseScript(),
                     new TjsScript(),

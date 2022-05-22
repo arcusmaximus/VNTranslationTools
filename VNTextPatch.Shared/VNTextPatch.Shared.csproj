@@ -94,6 +94,7 @@
     <Compile Include="Scripts\Silkys\SilkysPlusDisassembler.cs" />
     <Compile Include="Scripts\Silkys\SilkysDisassemblerBase.cs" />
     <Compile Include="Scripts\Silkys\SilkysSyscalls.cs" />
+    <Compile Include="Scripts\SoftpalScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnBaseScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnDevScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnReleaseScript.cs" />
@@ -147,7 +148,6 @@
     <Content Include="template.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\external\FreeMote\FreeMote.Psb\FreeMote.Psb.csproj">
