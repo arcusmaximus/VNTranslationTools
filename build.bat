@@ -13,7 +13,7 @@ mkdir Build\VNTextPatch
 mkdir Build\VNTextProxy
 
 dotnet restore VNTextPatch\VNTextPatch.csproj /p:RuntimeIdentifiers=win
-msbuild VNTextPatch\VNTextPatch.csproj /p:LangVersion=9 /p:AllowUnsafeBlocks=true /p:Configuration=Release /p:OutputPath=..\Build\VNTextPatch\
+msbuild VNTextPatch\VNTextPatch.csproj /p:LangVersion=9 /p:AllowUnsafeBlocks=true /p:Platform=AnyCPU /p:Configuration=Release /p:OutputPath=..\Build\VNTextPatch\
 del Build\VNTextPatch\FreeMote*.xml
 del Build\VNTextPatch\*.pdb
 del Build\VNTextPatch\*.txt
