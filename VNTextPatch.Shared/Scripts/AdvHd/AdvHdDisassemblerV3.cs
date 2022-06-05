@@ -3,7 +3,7 @@ using System.IO;
 
 namespace VNTextPatch.Shared.Scripts.AdvHd
 {
-    internal class AdvHdDisassemblerV2 : AdvHdDisassemblerBase
+    internal class AdvHdDisassemblerV3 : AdvHdDisassemblerBase
     {
         private static readonly Dictionary<byte, string> OperandTemplates =
             new Dictionary<byte, string>
@@ -23,12 +23,12 @@ namespace VNTextPatch.Shared.Scripts.AdvHd
                 { 0x0D, "hhf" },
                 { 0x0E, "hhb" },
                 { 0x0F, "b" },      // Choice screen
-                { 0x11, "sf" },
+                { 0x11, "sbf" },
                 { 0x12, "sbs" },
                 { 0x13, "" },
-                { 0x14, "iss" },    // Message
-                { 0x15, "s" },      // Character name
-                { 0x16, "b" },
+                { 0x14, "issb" },   // Message
+                { 0x15, "sb" },     // Character name
+                { 0x16, "bb" },
                 { 0x17, "" },
                 { 0x18, "bs" },
                 { 0x19, "" },
@@ -36,12 +36,12 @@ namespace VNTextPatch.Shared.Scripts.AdvHd
                 { 0x1B, "b" },
                 { 0x1C, "sshb" },
                 { 0x1D, "h" },
-                { 0x1E, "ssffhhb" },
+                { 0x1E, "ssffhhbf" },
                 { 0x1F, "sf" },
                 { 0x20, "sfh" },
                 { 0x21, "shhh" },
                 { 0x22, "sb" },
-                { 0x28, "ssffhhbhhb" },
+                { 0x28, "ssffhhbhhbf" },
                 { 0x29, "sf" },
                 { 0x2A, "sfh" },
                 { 0x2B, "s" },
@@ -106,6 +106,8 @@ namespace VNTextPatch.Shared.Scripts.AdvHd
                 { 0x68, "b" },
                 { 0x69, "sbbfffffhf" },
                 { 0x6A, "shbbs" },
+                { 0x6B, "ss" },
+                { 0x6C, "sff" },
                 { 0x6E, "ss" },
                 { 0x6F, "s" },
                 { 0x70, "sh" },
@@ -114,15 +116,40 @@ namespace VNTextPatch.Shared.Scripts.AdvHd
                 { 0x73, "ssh" },
                 { 0x74, "ss" },
                 { 0x75, "ss" },
-                { 0x78, "ssbb" },
+                { 0x78, "ssbbb" },
                 { 0x79, "ssf" },
                 { 0x7A, "ssfbbs" },
                 { 0x7B, "ss" },
                 { 0x7C, "ssf" },
                 { 0x7D, "sf" },
                 { 0x7E, "s" },
+                { 0x7F, "sfffff" },
+                { 0x80, "s" },
+                { 0x81, "sbsffb" },
+                { 0x82, "ssf" },
+                { 0x83, "ssff" },
+                { 0x84, "sssfhf" },
+                { 0x85, "ssbf" },
+                { 0x86, "sfff" },
+                { 0x87, "sf" },
+                { 0x88, "sssfhf" },
+                { 0x8C, "sssbb" },
+                { 0x8D, "issbbs" },
+                { 0x8E, "issbbs" },
+                { 0x8F, "ss" },
+                { 0x90, "s" },
+                { 0x96, "hffff" },
+                { 0x97, "hbffff" },
+                { 0x98, "shbbfffffhf" },
+                { 0x99, "shbbs" },
+                { 0x9A, "" },
+                { 0x9B, "s" },
+                { 0x9C, "ss" },
+                { 0x9D, "s" },
+                { 0x9E, "sb" },
+                { 0x9F, "sb" },
                 { 0xC8, "" },
-                { 0xC9, "sshhh" },
+                { 0xC9, "sshhhh" },
                 { 0xCA, "ss" },
                 { 0xCB, "sbb" },
                 { 0xCC, "" },
@@ -134,6 +161,10 @@ namespace VNTextPatch.Shared.Scripts.AdvHd
                 { 0xD2, "s" },
                 { 0xD3, "s" },
                 { 0xD4, "shh" },
+                { 0xE6, "ii" },
+                { 0xE7, "" },
+                { 0xE8, "" },
+                { 0xF0, "b" },
                 { 0xF8, "" },
                 { 0xF9, "bs" },
                 { 0xFA, "" },
@@ -142,9 +173,9 @@ namespace VNTextPatch.Shared.Scripts.AdvHd
                 { 0xFD, "" },
                 { 0xFE, "s" },
                 { 0xFF, "" }
-        };
+            };
 
-        public AdvHdDisassemblerV2(Stream stream)
+        public AdvHdDisassemblerV3(Stream stream)
             : base(stream, OperandTemplates)
         {
         }

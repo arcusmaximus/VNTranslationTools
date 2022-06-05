@@ -23,7 +23,8 @@ namespace VNTextPatch.Shared.Scripts.AdvHd
             AdvHdDisassemblerBase[] disassemblers =
                 {
                     new AdvHdDisassemblerV1(stream),
-                    new AdvHdDisassemblerV2(stream)
+                    new AdvHdDisassemblerV2(stream),
+                    new AdvHdDisassemblerV3(stream)
                 };
             foreach (AdvHdDisassemblerBase disassembler in disassemblers)
             {

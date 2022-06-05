@@ -59,6 +59,7 @@
     <Compile Include="Scripts\AdvHd\AdvHdDisassemblerBase.cs" />
     <Compile Include="Scripts\AdvHd\AdvHdDisassemblerV1.cs" />
     <Compile Include="Scripts\AdvHd\AdvHdDisassemblerV2.cs" />
+    <Compile Include="Scripts\AdvHd\AdvHdDisassemblerV3.cs" />
     <Compile Include="Scripts\AdvHd\AdvHdScript.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeScript.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeDisassembler.cs" />
