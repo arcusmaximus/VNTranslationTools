@@ -18,6 +18,10 @@ del Build\VNTextPatch\FreeMote*.xml
 del Build\VNTextPatch\*.pdb
 del Build\VNTextPatch\*.txt
 
+msbuild VNTextProxy\VNTextProxy.vcxproj /p:Platform=Win32 /p:Configuration=Release /p:TargetName=d2d1
+copy /Y VNTextProxy\Release\d2d1.dll Build\VNTextProxy
+rmdir /S /Q VNTextProxy\Release
+
 for /D %%p in (VNTextProxy\AlternateProxies\*) do (
     copy /Y VNTextProxy\AlternateProxies\%%~np\*.* VNTextProxy
     msbuild VNTextProxy\VNTextProxy.vcxproj /p:Platform=Win32 /p:Configuration=Release /p:TargetName=%%~np
