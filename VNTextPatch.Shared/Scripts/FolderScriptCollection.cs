@@ -11,6 +11,7 @@ using VNTextPatch.Shared.Scripts.Propeller;
 using VNTextPatch.Shared.Scripts.RealLive;
 using VNTextPatch.Shared.Scripts.ShSystem;
 using VNTextPatch.Shared.Scripts.Silkys;
+using VNTextPatch.Shared.Scripts.Softpal;
 using VNTextPatch.Shared.Scripts.SystemNnn;
 using VNTextPatch.Shared.Scripts.TmrHiroAdvSystem;
 using VNTextPatch.Shared.Scripts.Yuris;

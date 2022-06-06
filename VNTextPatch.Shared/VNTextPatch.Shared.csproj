@@ -95,7 +95,8 @@
     <Compile Include="Scripts\Silkys\SilkysPlusDisassembler.cs" />
     <Compile Include="Scripts\Silkys\SilkysDisassemblerBase.cs" />
     <Compile Include="Scripts\Silkys\SilkysSyscalls.cs" />
-    <Compile Include="Scripts\SoftpalScript.cs" />
+    <Compile Include="Scripts\Softpal\SoftpalDisassembler.cs" />
+    <Compile Include="Scripts\Softpal\SoftpalScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnBaseScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnDevScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnReleaseScript.cs" />
