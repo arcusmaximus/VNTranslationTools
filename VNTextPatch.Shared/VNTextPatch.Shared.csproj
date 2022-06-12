@@ -63,7 +63,8 @@
     <Compile Include="Scripts\AdvHd\AdvHdScript.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeScript.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeDisassembler.cs" />
-    <Compile Include="Scripts\ArtemisScript.cs" />
+    <Compile Include="Scripts\Artemis\ArtemisBinaryScript.cs" />
+    <Compile Include="Scripts\Artemis\ArtemisTextScript.cs" />
     <Compile Include="Scripts\CatSystemScript.cs" />
     <Compile Include="Scripts\CSystemScript.cs" />
     <Compile Include="Scripts\Ethornell\EthornellDisassembler.cs" />

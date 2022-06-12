@@ -3,9 +3,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using VNTextPatch.Shared.Util;
 
-namespace VNTextPatch.Shared.Scripts
+namespace VNTextPatch.Shared.Scripts.Artemis
 {
-    internal class ArtemisScript : PlainTextScript
+    internal class ArtemisTextScript : PlainTextScript
     {
         public override string Extension => ".art";
         

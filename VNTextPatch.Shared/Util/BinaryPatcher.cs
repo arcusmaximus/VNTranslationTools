@@ -102,6 +102,18 @@ namespace VNTextPatch.Shared.Util
                 _rangeMappings.Add(new RangeMapping(originalOffset, originalOffset + originalLength, newOffset, newOffset + newLength));
         }
 
+        public void ReplaceZeroTerminatedUtf8String(string newString)
+        {
+            int originalOffset = (int)_inputStream.Position;
+            int originalLength = _reader.SkipZeroTerminatedUtf8String();
+
+            int newOffset = (int)_outputStream.Position;
+            int newLength = _writer.WriteZeroTerminatedUtf8String(newString);
+
+            if (newLength != originalLength)
+                _rangeMappings.Add(new RangeMapping(originalOffset, originalOffset + originalLength, newOffset, newOffset + newLength));
+        }
+
         public void ReplaceZeroTerminatedUtf16String(string newString)
         {
             int originalOffset = (int)_inputStream.Position;

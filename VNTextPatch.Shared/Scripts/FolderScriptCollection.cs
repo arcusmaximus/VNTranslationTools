@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using VNTextPatch.Shared.Scripts.AdvHd;
 using VNTextPatch.Shared.Scripts.ArcGameEngine;
+using VNTextPatch.Shared.Scripts.Artemis;
 using VNTextPatch.Shared.Scripts.Ethornell;
 using VNTextPatch.Shared.Scripts.Kirikiri;
 using VNTextPatch.Shared.Scripts.Majiro;
@@ -28,7 +29,8 @@ namespace VNTextPatch.Shared.Scripts
                 new IScript[]
                 {
                     new AdvHdScript(),
-                    new ArtemisScript(),
+                    new ArtemisBinaryScript(),
+                    new ArtemisTextScript(),
                     new AgeScript(),
                     new CatSystemScript(),
                     new CSystemScript(),
