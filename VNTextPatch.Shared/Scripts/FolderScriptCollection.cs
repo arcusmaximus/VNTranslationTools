@@ -8,6 +8,7 @@ using VNTextPatch.Shared.Scripts.Artemis;
 using VNTextPatch.Shared.Scripts.Ethornell;
 using VNTextPatch.Shared.Scripts.Kirikiri;
 using VNTextPatch.Shared.Scripts.Majiro;
+using VNTextPatch.Shared.Scripts.Mware;
 using VNTextPatch.Shared.Scripts.Propeller;
 using VNTextPatch.Shared.Scripts.RealLive;
 using VNTextPatch.Shared.Scripts.ShSystem;
@@ -39,6 +40,7 @@ namespace VNTextPatch.Shared.Scripts
                     new KirikiriScript(),
                     new MajiroScript(),
                     new MusicaScript(),
+                    new MwareScript(),
                     new PropellerScript(),
                     new PsbScript(),
                     new QlieScript(),

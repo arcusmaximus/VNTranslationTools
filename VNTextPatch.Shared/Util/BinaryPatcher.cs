@@ -71,8 +71,17 @@ namespace VNTextPatch.Shared.Util
 
         public void ReplaceBytes(int originalLength, byte[] newData, int newDataOffset, int newDataLength)
         {
+            ReplaceBytes(originalLength, _ => _outputStream.Write(newData, newDataOffset, newDataLength));
+        }
+
+        public void ReplaceBytes(int originalLength, Action<BinaryWriter> writeNewData)
+        {
             if (originalLength <= 0 || _inputStream.Position + originalLength > _inputStream.Length)
                 throw new ArgumentException(nameof(originalLength));
+
+            int newDataOffset = (int)_outputStream.Position;
+            writeNewData(_writer);
+            int newDataLength = (int)_outputStream.Position - newDataOffset;
 
             if (newDataLength != originalLength)
             {
@@ -80,14 +89,13 @@ namespace VNTextPatch.Shared.Util
                     new RangeMapping(
                         (int)_inputStream.Position,
                         (int)_inputStream.Position + originalLength,
-                        (int)_outputStream.Position,
-                        (int)_outputStream.Position + newDataLength
+                        newDataOffset,
+                        newDataOffset + newDataLength
                     )
                 );
             }
 
             _inputStream.Seek(originalLength, SeekOrigin.Current);
-            _outputStream.Write(newData, newDataOffset, newDataLength);
         }
 
         public void ReplaceZeroTerminatedSjisString(string newString)
@@ -159,6 +167,19 @@ namespace VNTextPatch.Shared.Util
                 throw new InvalidOperationException();
 
             return newOffset;
+        }
+
+        public void PatchByte(int originalOffset, byte value)
+        {
+            if (originalOffset < 0 || originalOffset + 1 > _inputStream.Length)
+                throw new ArgumentOutOfRangeException(nameof(originalOffset));
+
+            if (_inputStream.Position < originalOffset + 1)
+                throw new InvalidOperationException();
+
+            _outputStream.Position = MapOffset(originalOffset);
+            _writer.Write(value);
+            _outputStream.Position = _outputStream.Length;
         }
 
         public void PatchInt16(int originalOffset, short value)

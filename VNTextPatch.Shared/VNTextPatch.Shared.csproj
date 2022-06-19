@@ -81,6 +81,11 @@
     <Compile Include="Scripts\Majiro\MajiroScript.cs" />
     <Compile Include="Scripts\Majiro\MajiroSyscalls.cs" />
     <Compile Include="Scripts\MusicaScript.cs" />
+    <Compile Include="Scripts\Mware\MwareScript.cs" />
+    <Compile Include="Scripts\Mware\SquirrelLiteralPool.cs" />
+    <Compile Include="Scripts\Mware\SquirrelLiteralReference.cs" />
+    <Compile Include="Scripts\Mware\SquirrelObject.cs" />
+    <Compile Include="Scripts\Mware\SquirrelV2Disassembler.cs" />
     <Compile Include="Scripts\Propeller\PropellerV1Disassembler.cs" />
     <Compile Include="Scripts\Propeller\PropellerScript.cs" />
     <Compile Include="Scripts\QlieScript.cs" />
