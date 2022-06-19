@@ -237,7 +237,12 @@ namespace VNTextPatch.Shared.Scripts.Softpal
                                   { 0x0017, HandleSyscallInstruction },
                                   { 0x001F, HandlePushInstruction },
                                   { 0x003A, HandleSelectChoiceInstruction },
-                                  { 0x0088, HandleMessageInstruction }
+                                  { 0x0088, HandleMessageInstruction },
+                                  { 0x0095, HandleMessageInstruction },
+                                  { 0x0096, HandleMessageInstruction },
+                                  { 0x0097, HandleMessageInstruction },
+                                  { 0x0098, HandleMessageInstruction },
+                                  { 0x0099, HandleMessageInstruction }
                               };
 
             if (Encoding.ASCII.GetString(_reader.ReadBytes(4)) != "Sv20")
@@ -294,6 +299,11 @@ namespace VNTextPatch.Shared.Scripts.Softpal
             switch (operands[0].Value)
             {
                 case 0x20002:
+                case 0x2000F:
+                case 0x20010:
+                case 0x20011:
+                case 0x20012:
+                case 0x20013:
                     HandleMessageInstruction(null);
                     break;
 
