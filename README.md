@@ -2,7 +2,7 @@
 A tool for extracting original text from, and patching translated text into, a variety of visual novel formats. Currently the following engines are supported:
 * AdvHD (.ws2)
 * ArcGameEngine (.bin)
-* Artemis (.txt; append `--format=artemis` to command line)
+* Artemis (.asb/.txt; append `--format=artemistext` to command line for .txt)
 * Buriko General Interpreter/Ethornell (no file extension; rename to .bgi or append `--format=ethornell` to command line)
 * CatSystem2 (.cst)
 * Cyberworks C,system (no file extension; rename to .csa or append `--format=csystem` to command line)
