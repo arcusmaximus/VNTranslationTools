@@ -9,6 +9,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * Kirikiri (.ks/.scn)
 * Majiro (.mjo)
 * Musica (.sc)
+* Mware (.nut)
 * Propeller/Stuff Script Engine (.msc)
 * RealLive (.rl)
 * Ren'Py (.rpy)
