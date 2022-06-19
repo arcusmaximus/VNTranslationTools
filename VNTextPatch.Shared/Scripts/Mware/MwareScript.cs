@@ -70,7 +70,7 @@ namespace VNTextPatch.Shared.Scripts.Mware
             using IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator();
             foreach (SquirrelLiteralReference reference in _literalRefs)
             {
-                string newText = PatchText((string)reference.Value, stringEnumerator);
+                string newText = MergeIntoText((string)reference.Value, stringEnumerator);
                 if (reference.Pool != currentPool)
                 {
                     currentPool = reference.Pool;
@@ -94,6 +94,29 @@ namespace VNTextPatch.Shared.Scripts.Mware
                 throw new Exception("Too many lines in translation");
 
             return referencesToPatch;
+        }
+
+        private static string MergeIntoText(string origValue, IEnumerator<ScriptString> stringEnumerator)
+        {
+            StringBuilder newValue = new StringBuilder();
+            int origStart = 0;
+            foreach (Range range in GetTextRanges(origValue))
+            {
+                if (!stringEnumerator.MoveNext())
+                    throw new Exception("Too few lines in translation");
+
+                if (origStart < range.Offset)
+                    newValue.Append(origValue, origStart, range.Offset - origStart);
+
+                string newText = ProportionalWordWrapper.Default.Wrap(stringEnumerator.Current.Text);
+                newValue.Append(newText);
+                origStart = range.Offset + range.Length;
+            }
+
+            if (origStart < origValue.Length)
+                newValue.Append(origValue, origStart, origValue.Length - origStart);
+
+            return newValue.ToString();
         }
 
         private void PatchLiteralPools(BinaryPatcher patcher)
@@ -131,29 +154,6 @@ namespace VNTextPatch.Shared.Scripts.Mware
                         break;
                 }
             }
-        }
-
-        private static string PatchText(string origValue, IEnumerator<ScriptString> stringEnumerator)
-        {
-            StringBuilder newValue = new StringBuilder();
-            int origStart = 0;
-            foreach (Range range in GetTextRanges(origValue))
-            {
-                if (!stringEnumerator.MoveNext())
-                    throw new Exception("Too few lines in translation");
-
-                if (origStart < range.Offset)
-                    newValue.Append(origValue, origStart, range.Offset - origStart);
-
-                string newText = ProportionalWordWrapper.Default.Wrap(stringEnumerator.Current.Text);
-                newValue.Append(newText);
-                origStart = range.Offset + range.Length;
-            }
-
-            if (origStart < origValue.Length)
-                newValue.Append(origValue, origStart, origValue.Length - origStart);
-
-            return newValue.ToString();
         }
 
         private static IEnumerable<Range> GetTextRanges(string value)
