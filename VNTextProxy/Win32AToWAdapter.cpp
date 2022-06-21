@@ -609,37 +609,53 @@ BOOL Win32AToWAdapter::EnumDisplaySettingsAHook(LPCSTR lpszDeviceName, DWORD iMo
     if (lpDevMode == nullptr)
         return false;
 
-    vector<BYTE> devModeW;
-    devModeW.resize(sizeof(DEVMODEW) + lpDevMode->dmDriverExtra);
-    DEVMODEW* pDevModeW = (DEVMODEW*)devModeW.data();
-    pDevModeW->dmSize = sizeof(DEVMODEW);
-    pDevModeW->dmDriverExtra = lpDevMode->dmDriverExtra;
+    DEVMODEW devModeW;
+    devModeW.dmSize = sizeof(DEVMODEW);
+    devModeW.dmDriverExtra = 0;
 
-    if (!EnumDisplaySettingsW(lpszDeviceName != nullptr ? SjisTunnelEncoding::Decode(lpszDeviceName).c_str() : nullptr, iModeNum, pDevModeW))
+    if (!EnumDisplaySettingsW(lpszDeviceName != nullptr ? SjisTunnelEncoding::Decode(lpszDeviceName).c_str() : nullptr, iModeNum, &devModeW))
         return false;
 
-    vector<BYTE> devModeA = ConvertDevModeWToA(*pDevModeW);
-    memcpy(lpDevMode, devModeA.data(), lpDevMode->dmSize + lpDevMode->dmDriverExtra);
+    *lpDevMode = ConvertDevModeWToA(devModeW);
     return true;
 }
 
 LONG Win32AToWAdapter::ChangeDisplaySettingsAHook(DEVMODEA* lpDevMode, DWORD dwFlags)
 {
-    return ChangeDisplaySettingsW(
-        lpDevMode != nullptr ? (DEVMODEW*)ConvertDevModeAToW(*lpDevMode).data() : nullptr,
-        dwFlags
-    );
+    if (lpDevMode != nullptr)
+    {
+        DEVMODEW devModeW = ConvertDevModeAToW(*lpDevMode);
+        return ChangeDisplaySettingsW(&devModeW, dwFlags);
+    }
+    else
+    {
+        return ChangeDisplaySettingsW(nullptr, dwFlags);
+    }
 }
 
 LONG Win32AToWAdapter::ChangeDisplaySettingsExAHook(LPCSTR lpszDeviceName, DEVMODEA* lpDevMode, HWND hwnd, DWORD dwflags, LPVOID lParam)
 {
-    return ChangeDisplaySettingsExW(
-        lpszDeviceName != nullptr ? SjisTunnelEncoding::Decode(lpszDeviceName).c_str() : nullptr,
-        lpDevMode != nullptr ? (DEVMODEW*)ConvertDevModeAToW(*lpDevMode).data() : nullptr,
-        hwnd,
-        dwflags,
-        lParam
-    );
+    if (lpDevMode != nullptr)
+    {
+        DEVMODEW devModeW = ConvertDevModeAToW(*lpDevMode);
+        return ChangeDisplaySettingsExW(
+            lpszDeviceName != nullptr ? SjisTunnelEncoding::Decode(lpszDeviceName).c_str() : nullptr,
+            &devModeW,
+            hwnd,
+            dwflags,
+            lParam
+        );
+    }
+    else
+    {
+        return ChangeDisplaySettingsExW(
+            lpszDeviceName != nullptr ? SjisTunnelEncoding::Decode(lpszDeviceName).c_str() : nullptr,
+            nullptr,
+            hwnd,
+            dwflags,
+            lParam
+        );
+    }
 }
 
 HRESULT Win32AToWAdapter::DirectDrawEnumerateAHook(LPDDENUMCALLBACKA lpCallback, LPVOID lpContext)
@@ -716,82 +732,74 @@ WIN32_FIND_DATAA Win32AToWAdapter::ConvertFindDataWToA(const WIN32_FIND_DATAW& f
     return findDataA;
 }
 
-vector<BYTE> Win32AToWAdapter::ConvertDevModeWToA(const DEVMODEW& devModeW)
+DEVMODEA Win32AToWAdapter::ConvertDevModeWToA(const DEVMODEW& devModeW)
 {
-    vector<BYTE> devModeA;
-    devModeA.resize(sizeof(DEVMODEA) + devModeW.dmDriverExtra);
+    DEVMODEA devModeA;
 
-    DEVMODEA* pDevModeA = (DEVMODEA*)devModeA.data();
-    strcpy_s((char*)pDevModeA->dmDeviceName, sizeof(pDevModeA->dmDeviceName), SjisTunnelEncoding::Encode(devModeW.dmDeviceName).c_str());
-    pDevModeA->dmSpecVersion = devModeW.dmSpecVersion;
-    pDevModeA->dmDriverVersion = devModeW.dmDriverVersion;
-    pDevModeA->dmSize = sizeof(DEVMODEA);
-    pDevModeA->dmDriverExtra = devModeW.dmDriverExtra;
-    pDevModeA->dmFields = devModeW.dmFields;
-    pDevModeA->dmPosition = devModeW.dmPosition;
-    pDevModeA->dmDisplayOrientation = devModeW.dmDisplayOrientation;
-    pDevModeA->dmColor = devModeW.dmColor;
-    pDevModeA->dmDuplex = devModeW.dmDuplex;
-    pDevModeA->dmYResolution = devModeW.dmYResolution;
-    pDevModeA->dmTTOption = devModeW.dmTTOption;
-    pDevModeA->dmCollate = devModeW.dmCollate;
-    strcpy_s((char*)pDevModeA->dmFormName, sizeof(pDevModeA->dmFormName), SjisTunnelEncoding::Encode(devModeW.dmFormName).c_str());
-    pDevModeA->dmLogPixels = devModeW.dmLogPixels;
-    pDevModeA->dmBitsPerPel = devModeW.dmBitsPerPel;
-    pDevModeA->dmPelsWidth = devModeW.dmPelsWidth;
-    pDevModeA->dmPelsHeight = devModeW.dmPelsHeight;
-    pDevModeA->dmDisplayFlags = devModeW.dmDisplayFlags;
-    pDevModeA->dmDisplayFrequency = devModeW.dmDisplayFrequency;
-    pDevModeA->dmICMMethod = devModeW.dmICMMethod;
-    pDevModeA->dmICMIntent = devModeW.dmICMIntent;
-    pDevModeA->dmMediaType = devModeW.dmMediaType;
-    pDevModeA->dmDitherType = devModeW.dmDitherType;
-    pDevModeA->dmReserved1 = devModeW.dmReserved1;
-    pDevModeA->dmReserved2 = devModeW.dmReserved2;
-    pDevModeA->dmPanningWidth = devModeW.dmPanningWidth;
-    pDevModeA->dmPanningHeight = devModeW.dmPanningHeight;
-
-    memcpy(pDevModeA + 1, &devModeW + 1, devModeW.dmDriverExtra);
+    strcpy_s((char*)devModeA.dmDeviceName, sizeof(devModeA.dmDeviceName), SjisTunnelEncoding::Encode(devModeW.dmDeviceName).c_str());
+    devModeA.dmSpecVersion = devModeW.dmSpecVersion;
+    devModeA.dmDriverVersion = devModeW.dmDriverVersion;
+    devModeA.dmSize = sizeof(DEVMODEA);
+    devModeA.dmDriverExtra = devModeW.dmDriverExtra;
+    devModeA.dmFields = devModeW.dmFields;
+    devModeA.dmPosition = devModeW.dmPosition;
+    devModeA.dmDisplayOrientation = devModeW.dmDisplayOrientation;
+    devModeA.dmColor = devModeW.dmColor;
+    devModeA.dmDuplex = devModeW.dmDuplex;
+    devModeA.dmYResolution = devModeW.dmYResolution;
+    devModeA.dmTTOption = devModeW.dmTTOption;
+    devModeA.dmCollate = devModeW.dmCollate;
+    strcpy_s((char*)devModeA.dmFormName, sizeof(devModeA.dmFormName), SjisTunnelEncoding::Encode(devModeW.dmFormName).c_str());
+    devModeA.dmLogPixels = devModeW.dmLogPixels;
+    devModeA.dmBitsPerPel = devModeW.dmBitsPerPel;
+    devModeA.dmPelsWidth = devModeW.dmPelsWidth;
+    devModeA.dmPelsHeight = devModeW.dmPelsHeight;
+    devModeA.dmDisplayFlags = devModeW.dmDisplayFlags;
+    devModeA.dmDisplayFrequency = devModeW.dmDisplayFrequency;
+    devModeA.dmICMMethod = devModeW.dmICMMethod;
+    devModeA.dmICMIntent = devModeW.dmICMIntent;
+    devModeA.dmMediaType = devModeW.dmMediaType;
+    devModeA.dmDitherType = devModeW.dmDitherType;
+    devModeA.dmReserved1 = devModeW.dmReserved1;
+    devModeA.dmReserved2 = devModeW.dmReserved2;
+    devModeA.dmPanningWidth = devModeW.dmPanningWidth;
+    devModeA.dmPanningHeight = devModeW.dmPanningHeight;
 
     return devModeA;
 }
 
-vector<BYTE> Win32AToWAdapter::ConvertDevModeAToW(const DEVMODEA& devModeA)
+DEVMODEW Win32AToWAdapter::ConvertDevModeAToW(const DEVMODEA& devModeA)
 {
-    vector<BYTE> devModeW;
-    devModeW.resize(sizeof(DEVMODEW) + devModeA.dmDriverExtra);
+    DEVMODEW devModeW;
 
-    DEVMODEW* pDevModeW = (DEVMODEW*)devModeW.data();
-    wcscpy_s(pDevModeW->dmDeviceName, SjisTunnelEncoding::Decode((char*)devModeA.dmDeviceName).c_str());
-    pDevModeW->dmSpecVersion = devModeA.dmSpecVersion;
-    pDevModeW->dmDriverVersion = devModeA.dmDriverVersion;
-    pDevModeW->dmSize = sizeof(DEVMODEW);
-    pDevModeW->dmDriverExtra = devModeA.dmDriverExtra;
-    pDevModeW->dmFields = devModeA.dmFields;
-    pDevModeW->dmPosition = devModeA.dmPosition;
-    pDevModeW->dmDisplayOrientation = devModeA.dmDisplayOrientation;
-    pDevModeW->dmColor = devModeA.dmColor;
-    pDevModeW->dmDuplex = devModeA.dmDuplex;
-    pDevModeW->dmYResolution = devModeA.dmYResolution;
-    pDevModeW->dmTTOption = devModeA.dmTTOption;
-    pDevModeW->dmCollate = devModeA.dmCollate;
-    wcscpy_s(pDevModeW->dmFormName, SjisTunnelEncoding::Decode((char*)devModeA.dmFormName).c_str());
-    pDevModeW->dmLogPixels = devModeA.dmLogPixels;
-    pDevModeW->dmBitsPerPel = devModeA.dmBitsPerPel;
-    pDevModeW->dmPelsWidth = devModeA.dmPelsWidth;
-    pDevModeW->dmPelsHeight = devModeA.dmPelsHeight;
-    pDevModeW->dmDisplayFlags = devModeA.dmDisplayFlags;
-    pDevModeW->dmDisplayFrequency = devModeA.dmDisplayFrequency;
-    pDevModeW->dmICMMethod = devModeA.dmICMMethod;
-    pDevModeW->dmICMIntent = devModeA.dmICMIntent;
-    pDevModeW->dmMediaType = devModeA.dmMediaType;
-    pDevModeW->dmDitherType = devModeA.dmDitherType;
-    pDevModeW->dmReserved1 = devModeA.dmReserved1;
-    pDevModeW->dmReserved2 = devModeA.dmReserved2;
-    pDevModeW->dmPanningWidth = devModeA.dmPanningWidth;
-    pDevModeW->dmPanningHeight = devModeA.dmPanningHeight;
-
-    memcpy(pDevModeW + 1, &devModeA + 1, devModeA.dmDriverExtra);
+    wcscpy_s(devModeW.dmDeviceName, SjisTunnelEncoding::Decode((char*)devModeA.dmDeviceName).c_str());
+    devModeW.dmSpecVersion = devModeA.dmSpecVersion;
+    devModeW.dmDriverVersion = devModeA.dmDriverVersion;
+    devModeW.dmSize = sizeof(DEVMODEW);
+    devModeW.dmDriverExtra = devModeA.dmDriverExtra;
+    devModeW.dmFields = devModeA.dmFields;
+    devModeW.dmPosition = devModeA.dmPosition;
+    devModeW.dmDisplayOrientation = devModeA.dmDisplayOrientation;
+    devModeW.dmColor = devModeA.dmColor;
+    devModeW.dmDuplex = devModeA.dmDuplex;
+    devModeW.dmYResolution = devModeA.dmYResolution;
+    devModeW.dmTTOption = devModeA.dmTTOption;
+    devModeW.dmCollate = devModeA.dmCollate;
+    wcscpy_s(devModeW.dmFormName, SjisTunnelEncoding::Decode((char*)devModeA.dmFormName).c_str());
+    devModeW.dmLogPixels = devModeA.dmLogPixels;
+    devModeW.dmBitsPerPel = devModeA.dmBitsPerPel;
+    devModeW.dmPelsWidth = devModeA.dmPelsWidth;
+    devModeW.dmPelsHeight = devModeA.dmPelsHeight;
+    devModeW.dmDisplayFlags = devModeA.dmDisplayFlags;
+    devModeW.dmDisplayFrequency = devModeA.dmDisplayFrequency;
+    devModeW.dmICMMethod = devModeA.dmICMMethod;
+    devModeW.dmICMIntent = devModeA.dmICMIntent;
+    devModeW.dmMediaType = devModeA.dmMediaType;
+    devModeW.dmDitherType = devModeA.dmDitherType;
+    devModeW.dmReserved1 = devModeA.dmReserved1;
+    devModeW.dmReserved2 = devModeA.dmReserved2;
+    devModeW.dmPanningWidth = devModeA.dmPanningWidth;
+    devModeW.dmPanningHeight = devModeA.dmPanningHeight;
     
     return devModeW;
 }

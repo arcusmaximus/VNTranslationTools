@@ -65,8 +65,8 @@ private:
     static BOOL __stdcall DirectSoundEnumerateCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR lpcstrModule, LPVOID lpContext);
 
     static WIN32_FIND_DATAA ConvertFindDataWToA(const WIN32_FIND_DATAW& findDataW);
-    static std::vector<BYTE> ConvertDevModeWToA(const DEVMODEW& devModeW);
-    static std::vector<BYTE> ConvertDevModeAToW(const DEVMODEA& devModeA);
+    static DEVMODEA ConvertDevModeWToA(const DEVMODEW& devModeW);
+    static DEVMODEW ConvertDevModeAToW(const DEVMODEA& devModeA);
 
     struct DirectDrawEnumerateContext
     {
