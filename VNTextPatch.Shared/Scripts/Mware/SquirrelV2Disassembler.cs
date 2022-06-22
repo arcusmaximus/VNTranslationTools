@@ -11,15 +11,15 @@ namespace VNTextPatch.Shared.Scripts.Mware
         private readonly BinaryReader _reader;
         private readonly Encoding _encoding;
 
-        //private readonly StreamWriter _writer;
+        private readonly StreamWriter _writer;
 
-        public SquirrelV2Disassembler(Stream stream, Encoding encoding) //, StreamWriter writer)
+        public SquirrelV2Disassembler(Stream stream, Encoding encoding, StreamWriter writer = null)
         {
             _stream = stream;
             _reader = new BinaryReader(stream);
             _encoding = encoding;
 
-            //_writer = writer;
+            _writer = writer;
         }
 
         public event Action<SquirrelLiteralPool> LiteralPoolEncountered;
@@ -65,8 +65,8 @@ namespace VNTextPatch.Shared.Scripts.Mware
             string sourceName = (string)ReadObject();
             string funcName = (string)ReadObject();
 
-            //_writer.WriteLine();
-            //_writer.WriteLine($"function {funcName}()");
+            _writer?.WriteLine();
+            _writer?.WriteLine($"function {funcName}()");
 
             FunctionCounts counts = ReadCounts();
             SquirrelLiteralPool literals = ReadLiterals(counts);
@@ -170,9 +170,22 @@ namespace VNTextPatch.Shared.Scripts.Mware
             ReadTag("PART");
             for (int i = 0; i < counts.NumInstructions; i++)
             {
+                long writePos = _writer?.BaseStream.Position ?? 0;
                 Instruction instr = ReadInstruction();
                 switch (instr.Opcode)
                 {
+                    case Opcode.GETK:
+                        string fieldName = (string)literals.Values[instr.Arg1];
+                        if (fieldName == "TransText" ||
+                            fieldName == "TransLog" ||
+                            fieldName == "TransChoice")
+                        {
+                            emitLiterals = true;
+                        }
+
+                        _writer?.WriteLine($"GETK({instr.Arg0}, \"{literals.Values[instr.Arg1]}, {instr.Arg2})");
+                        break;
+
                     case Opcode.PREPCALLK:
                         string funcName = (string)literals.Values[instr.Arg1];
                         if (funcName == "Print" ||
@@ -181,14 +194,14 @@ namespace VNTextPatch.Shared.Scripts.Mware
                             emitLiterals = true;
                         }
 
-                        //_writer.WriteLine($"PREPCALLK({instr.Arg0}, \"{literals[instr.Arg1]}\", {instr.Arg2}, {instr.Arg3})");
+                        _writer?.WriteLine($"PREPCALLK({instr.Arg0}, \"{literals.Values[instr.Arg1]}\", {instr.Arg2}, {instr.Arg3})");
                         break;
 
                     case Opcode.LOAD:
                         if (emitLiterals)
                             EmitArg1(instr, literals);
 
-                        //_writer.WriteLine($"LOAD({instr.Arg0}, \"{literals[instr.Arg1]}\")");
+                        _writer?.WriteLine($"LOAD({instr.Arg0}, \"{literals.Values[instr.Arg1]}\")");
                         break;
 
                     case Opcode.DLOAD:
@@ -198,17 +211,17 @@ namespace VNTextPatch.Shared.Scripts.Mware
                             EmitArg3(instr, literals);
                         }
 
-                        //_writer.WriteLine($"DLOAD({instr.Arg0}, \"{literals[instr.Arg1]}\", {instr.Arg2}, \"{literals[instr.Arg3]}\")");
+                        _writer?.WriteLine($"DLOAD({instr.Arg0}, \"{literals.Values[instr.Arg1]}\", {instr.Arg2}, \"{literals.Values[instr.Arg3]}\")");
                         break;
-                    
+
+                    case Opcode.NEWSLOT:
                     case Opcode.CALL:
                         emitLiterals = false;
                         break;
-
-                    default:
-                        //_writer.WriteLine($"{instr.Opcode}({instr.Arg0}, {instr.Arg1}, {instr.Arg2}, {instr.Arg3})");
-                        break;
                 }
+
+                if (_writer != null && writePos == _writer.BaseStream.Position)
+                    _writer?.WriteLine($"{instr.Opcode}({instr.Arg0}, {instr.Arg1}, {instr.Arg2}, {instr.Arg3})");
             }
         }
 
