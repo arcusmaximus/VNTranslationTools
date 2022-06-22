@@ -11,7 +11,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * Musica (.sc)
 * Mware (.nut)
 * Propeller/Stuff Script Engine (.msc)
-* RealLive (.rl)
+* RealLive (.txt; rename to .rl or append `--format=reallive` to command line)
 * Ren'Py (.rpy)
 * ShSystem (.hst)
 * Silky's/AI6WIN (.mes/.map)
