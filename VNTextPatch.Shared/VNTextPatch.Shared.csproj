@@ -137,6 +137,7 @@
     <Compile Include="Util\EnumerableExtensions.cs" />
     <Compile Include="Util\EnumeratorList.cs" />
     <Compile Include="Util\GoogleExtensions.cs" />
+    <Compile Include="Util\GuessedEncoding.cs" />
     <Compile Include="Util\IoExtensions.cs" />
     <Compile Include="Util\BinaryPatcher.cs" />
     <Compile Include="Util\MonospaceWordWrapper.cs" />

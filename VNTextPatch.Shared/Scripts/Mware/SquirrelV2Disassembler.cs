@@ -27,7 +27,7 @@ namespace VNTextPatch.Shared.Scripts.Mware
 
         public void Disassemble()
         {
-            ReadHeader();
+            HasHeader = TryReadHeader();
 
             ushort bytecodeTag = _reader.ReadUInt16();
             if (bytecodeTag != 0xFAFA)
@@ -43,9 +43,17 @@ namespace VNTextPatch.Shared.Scripts.Mware
             ReadTag("TAIL");
         }
 
-        private void ReadHeader()
+        public bool HasHeader
         {
-            ReadTag("PRCS");
+            get;
+            private set;
+        }
+
+        private bool TryReadHeader()
+        {
+            if (!TryReadTag("PRCS"))
+                return false;
+
             int headerSize = _reader.ReadInt32();
             if (headerSize != 0x10)
                 throw new InvalidDataException();
@@ -57,6 +65,8 @@ namespace VNTextPatch.Shared.Scripts.Mware
             int fileSize2 = _reader.ReadInt32();
             if (fileSize2 != _stream.Length - 4)
                 throw new InvalidDataException();
+
+            return true;
         }
 
         private void ReadFunction()
@@ -165,22 +175,23 @@ namespace VNTextPatch.Shared.Scripts.Mware
 
         private void ReadInstructions(in FunctionCounts counts, SquirrelLiteralPool literals)
         {
-            bool emitLiterals = false;
+            ScriptStringType? emitType = null;
 
             ReadTag("PART");
             for (int i = 0; i < counts.NumInstructions; i++)
             {
-                long writePos = _writer?.BaseStream.Position ?? 0;
                 Instruction instr = ReadInstruction();
                 switch (instr.Opcode)
                 {
                     case Opcode.GETK:
                         string fieldName = (string)literals.Values[instr.Arg1];
-                        if (fieldName == "TransText" ||
-                            fieldName == "TransLog" ||
-                            fieldName == "TransChoice")
+                        switch (fieldName)
                         {
-                            emitLiterals = true;
+                            case "TransText":
+                            case "TransLog":
+                            case "TransChoice":
+                                emitType = ScriptStringType.Message;
+                                break;
                         }
 
                         _writer?.WriteLine($"GETK({instr.Arg0}, \"{literals.Values[instr.Arg1]}\", {instr.Arg2})");
@@ -188,27 +199,34 @@ namespace VNTextPatch.Shared.Scripts.Mware
 
                     case Opcode.PREPCALLK:
                         string funcName = (string)literals.Values[instr.Arg1];
-                        if (funcName == "Print" ||
-                            funcName == "SetChoice")
+                        switch (funcName)
                         {
-                            emitLiterals = true;
+                            case "Print":
+                            case "SetChoice":
+                            case "maintxt_print":
+                                emitType = ScriptStringType.Message;
+                                break;
+
+                            case "speaker_name":
+                                emitType = ScriptStringType.CharacterName;
+                                break;
                         }
 
                         _writer?.WriteLine($"PREPCALLK({instr.Arg0}, \"{literals.Values[instr.Arg1]}\", {instr.Arg2}, {instr.Arg3})");
                         break;
 
                     case Opcode.LOAD:
-                        if (emitLiterals)
-                            EmitArg1(instr, literals);
+                        if (emitType != null)
+                            EmitArg1(instr, literals, emitType.Value);
 
                         _writer?.WriteLine($"LOAD({instr.Arg0}, \"{literals.Values[instr.Arg1]}\")");
                         break;
 
                     case Opcode.DLOAD:
-                        if (emitLiterals)
+                        if (emitType != null)
                         {
-                            EmitArg1(instr, literals);
-                            EmitArg3(instr, literals);
+                            EmitArg1(instr, literals, emitType.Value);
+                            EmitArg3(instr, literals, emitType.Value);
                         }
 
                         _writer?.WriteLine($"DLOAD({instr.Arg0}, \"{literals.Values[instr.Arg1]}\", {instr.Arg2}, \"{literals.Values[instr.Arg3]}\")");
@@ -216,23 +234,25 @@ namespace VNTextPatch.Shared.Scripts.Mware
 
                     case Opcode.NEWSLOT:
                     case Opcode.CALL:
-                        emitLiterals = false;
+                        emitType = null;
+                        _writer?.WriteLine($"{instr.Opcode}({instr.Arg0}, {instr.Arg1}, {instr.Arg2}, {instr.Arg3})");
+                        break;
+
+                    default:
+                        _writer?.WriteLine($"{instr.Opcode}({instr.Arg0}, {instr.Arg1}, {instr.Arg2}, {instr.Arg3})");
                         break;
                 }
-
-                if (_writer != null && writePos == _writer.BaseStream.Position)
-                    _writer?.WriteLine($"{instr.Opcode}({instr.Arg0}, {instr.Arg1}, {instr.Arg2}, {instr.Arg3})");
             }
         }
 
-        private void EmitArg1(Instruction instr, SquirrelLiteralPool literals)
+        private void EmitArg1(Instruction instr, SquirrelLiteralPool literals, ScriptStringType type)
         {
-            TextReferenceEncountered?.Invoke(new SquirrelLiteralReference(instr.Offset + 0, 4, literals, instr.Arg1));
+            TextReferenceEncountered?.Invoke(new SquirrelLiteralReference(instr.Offset + 0, 4, literals, instr.Arg1, type));
         }
 
-        private void EmitArg3(Instruction instr, SquirrelLiteralPool literals)
+        private void EmitArg3(Instruction instr, SquirrelLiteralPool literals, ScriptStringType type)
         {
-            TextReferenceEncountered?.Invoke(new SquirrelLiteralReference(instr.Offset + 7, 1, literals, instr.Arg3));
+            TextReferenceEncountered?.Invoke(new SquirrelLiteralReference(instr.Offset + 7, 1, literals, instr.Arg3, type));
         }
 
         private Instruction ReadInstruction()
@@ -259,11 +279,21 @@ namespace VNTextPatch.Shared.Scripts.Mware
 
         private void ReadTag(string tag)
         {
+            if (!TryReadTag(tag))
+                throw new InvalidDataException();
+        }
+
+        private bool TryReadTag(string tag)
+        {
             for (int i = 0; i < 4; i++)
             {
                 if (_reader.ReadByte() != tag[3 - i])
-                    throw new InvalidDataException();
+                {
+                    _reader.BaseStream.Position -= i + 1;
+                    return false;
+                }
             }
+            return true;
         }
 
         private object ReadObject()

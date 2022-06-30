@@ -5,12 +5,13 @@ namespace VNTextPatch.Shared.Scripts.Mware
 {
     internal class SquirrelLiteralReference
     {
-        public SquirrelLiteralReference(int offset, int length, SquirrelLiteralPool pool, int index)
+        public SquirrelLiteralReference(int offset, int length, SquirrelLiteralPool pool, int index, ScriptStringType type)
         {
             Offset = offset;
             Length = length;
             Pool = pool;
             Index = index;
+            Type = type;
         }
 
         public int Offset
@@ -35,6 +36,11 @@ namespace VNTextPatch.Shared.Scripts.Mware
         }
 
         public object Value => Pool.Values[Index];
+
+        public ScriptStringType Type
+        {
+            get;
+        }
 
         public override string ToString() => Convert.ToString(Value, CultureInfo.InvariantCulture) ?? "null";
     }

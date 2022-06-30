@@ -10,26 +10,29 @@ namespace VNTextPatch.Shared.Scripts.Mware
 {
     public class MwareScript : IScript
     {
-        private static readonly Encoding Encoding = Encoding.UTF8;
-
         public string Extension => ".nut";
 
         private byte[] _data;
+        private bool _hasHeader;
         private List<SquirrelLiteralPool> _literalPools;
         private List<SquirrelLiteralReference> _literalRefs;
+        private GuessedEncoding _encoding;
 
         public void Load(ScriptLocation location)
         {
             _data = File.ReadAllBytes(location.ToFilePath());
             _literalPools = new List<SquirrelLiteralPool>();
             _literalRefs = new List<SquirrelLiteralReference>();
+            _encoding = new GuessedEncoding();
 
             MemoryStream stream = new MemoryStream(_data);
             //using StreamWriter writer = new StreamWriter(Path.ChangeExtension(location.ToFilePath(), ".txt"));
-            SquirrelV2Disassembler disassembler = new SquirrelV2Disassembler(stream, Encoding);
+            SquirrelV2Disassembler disassembler = new SquirrelV2Disassembler(stream, _encoding);
             disassembler.LiteralPoolEncountered += p => _literalPools.Add(p);
             disassembler.TextReferenceEncountered += r => _literalRefs.Add(r);
             disassembler.Disassemble();
+
+            _hasHeader = disassembler.HasHeader;
         }
 
         public IEnumerable<ScriptString> GetStrings()
@@ -37,7 +40,7 @@ namespace VNTextPatch.Shared.Scripts.Mware
             foreach (SquirrelLiteralReference reference in _literalRefs)
             {
                 string value = (string)reference.Value;
-                foreach (Range range in GetTextRanges(value))
+                foreach (Range range in GetTextRanges(value, reference.Type))
                 {
                     yield return new ScriptString(value.Substring(range.Offset, range.Length), range.Type);
                 }
@@ -55,8 +58,11 @@ namespace VNTextPatch.Shared.Scripts.Mware
             PatchLiteralPools(patcher);
             
             patcher.CopyUpTo((int)inputStream.Length);
-            patcher.PatchInt32(8, (int)outputStream.Length - 0x14);
-            patcher.PatchInt32(0xC, (int)outputStream.Length - 4);
+            if (_hasHeader)
+            {
+                patcher.PatchInt32(8, (int)outputStream.Length - 0x14);
+                patcher.PatchInt32(0xC, (int)outputStream.Length - 4);
+            }
 
             PatchLiteralReferences(patcher, referencesToPatch);
         }
@@ -70,7 +76,7 @@ namespace VNTextPatch.Shared.Scripts.Mware
             using IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator();
             foreach (SquirrelLiteralReference reference in _literalRefs)
             {
-                string newText = MergeIntoText((string)reference.Value, stringEnumerator);
+                string newText = MergeIntoText((string)reference.Value, reference.Type, stringEnumerator);
                 if (reference.Pool != currentPool)
                 {
                     currentPool = reference.Pool;
@@ -96,11 +102,11 @@ namespace VNTextPatch.Shared.Scripts.Mware
             return referencesToPatch;
         }
 
-        private static string MergeIntoText(string origValue, IEnumerator<ScriptString> stringEnumerator)
+        private static string MergeIntoText(string origValue, ScriptStringType origType, IEnumerator<ScriptString> stringEnumerator)
         {
             StringBuilder newValue = new StringBuilder();
             int origStart = 0;
-            foreach (Range range in GetTextRanges(origValue))
+            foreach (Range range in GetTextRanges(origValue, origType))
             {
                 if (!stringEnumerator.MoveNext())
                     throw new Exception("Too few lines in translation");
@@ -132,7 +138,7 @@ namespace VNTextPatch.Shared.Scripts.Mware
                     {
                         foreach (object value in pool.Values)
                         {
-                            SquirrelObject.Write(writer, value, Encoding);
+                            SquirrelObject.Write(writer, value, _encoding);
                         }
                     }
                 );
@@ -156,8 +162,14 @@ namespace VNTextPatch.Shared.Scripts.Mware
             }
         }
 
-        private static IEnumerable<Range> GetTextRanges(string value)
+        private static IEnumerable<Range> GetTextRanges(string value, ScriptStringType type)
         {
+            if (type == ScriptStringType.CharacterName)
+            {
+                yield return new Range(0, value.Length, ScriptStringType.CharacterName);
+                yield break;
+            }
+
             TrackingStringReader reader = new TrackingStringReader(value);
             int paragraphStart = -1;
             while (true)
