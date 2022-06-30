@@ -37,6 +37,7 @@ namespace VNTextPatch.Shared.Scripts
                     new CSystemScript(),
                     new EthornellScript(),
                     new JsonScript(),
+                    new KaguyaScript(),
                     new KirikiriScript(),
                     new MajiroScript(),
                     new MusicaScript(),

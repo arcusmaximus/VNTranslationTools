@@ -183,7 +183,7 @@ namespace VNTextPatch.Shared.Scripts.Mware
                             emitLiterals = true;
                         }
 
-                        _writer?.WriteLine($"GETK({instr.Arg0}, \"{literals.Values[instr.Arg1]}, {instr.Arg2})");
+                        _writer?.WriteLine($"GETK({instr.Arg0}, \"{literals.Values[instr.Arg1]}\", {instr.Arg2})");
                         break;
 
                     case Opcode.PREPCALLK:

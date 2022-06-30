@@ -121,6 +121,18 @@ namespace VNTextPatch.Shared.Util
             return outputStream.ToArray();
         }
 
+        public static void ReplaceSjisCodepoint(byte[] data, int offset, int length, ushort origChar, ushort newChar)
+        {
+            for (int i = offset; i < offset + length; i += StringUtil.IsShiftJisLeadByte(data[i]) ? 2 : 1)
+            {
+                if (data[i] == (byte)(origChar >> 8) && data[i + 1] == (byte)origChar)
+                {
+                    data[i] = (byte)(newChar >> 8);
+                    data[i + 1] = (byte)newChar;
+                }
+            }
+        }
+
         public static int FlipEndianness(int value)
         {
             return ((value >> 24) & 0xFF) |

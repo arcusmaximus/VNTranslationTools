@@ -73,6 +73,7 @@
     <Compile Include="Scripts\Ethornell\EthornellV1Disassembler.cs" />
     <Compile Include="Scripts\ExcelScriptCollection.cs" />
     <Compile Include="Scripts\JsonScript.cs" />
+    <Compile Include="Scripts\KaguyaScript.cs" />
     <Compile Include="Scripts\Kirikiri\KirikiriDescrambler.cs" />
     <Compile Include="Scripts\Kirikiri\PsbScript.cs" />
     <Compile Include="Scripts\Majiro\MajiroAssembler.cs" />
