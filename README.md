@@ -5,7 +5,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * Artemis (.asb/.txt; append `--format=artemistext` to command line for .txt)
 * Buriko General Interpreter/Ethornell (no file extension; rename to .bgi or append `--format=ethornell` to command line)
 * CatSystem2 (.cst)
-* Cyberworks C,system (no file extension; rename to .csa or append `--format=csystem` to command line)
+* Cyberworks C,system (.a0)
 * KaGuYa (message.dat)
 * Kirikiri (.ks/.scn)
 * Majiro (.mjo)

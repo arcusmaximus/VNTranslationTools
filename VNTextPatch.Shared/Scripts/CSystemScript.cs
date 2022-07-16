@@ -10,7 +10,7 @@ namespace VNTextPatch.Shared.Scripts
         private byte[] _data;
         private List<CSystemStringRange> _stringRanges;
 
-        public string Extension => ".csa";
+        public string Extension => ".a0";
 
         public void Load(ScriptLocation location)
         {
@@ -25,7 +25,12 @@ namespace VNTextPatch.Shared.Scripts
                 char type = (char)_data[offset + 4];
                 if (type == 'S')
                 {
-                    _stringRanges.Add(new CSystemStringRange(offset, length, append));
+                    int xorKeyOffset = offset + 4 + 1;
+                    bool hasXorKey = xorKeyOffset + 4 < _data.Length &&
+                                     _data[xorKeyOffset + 1] == 0 &&
+                                     _data[xorKeyOffset + 2] == 0 &&
+                                     _data[xorKeyOffset + 3] == 0;
+                    _stringRanges.Add(new CSystemStringRange(offset, length, hasXorKey, append));
                     append = true;  
                 }
                 else
@@ -61,7 +66,7 @@ namespace VNTextPatch.Shared.Scripts
 
         private string DecodeString(CSystemStringRange range)
         {
-            byte xorKey = (byte)BitConverter.ToInt32(_data, range.XorKeyOffset);
+            byte xorKey = range.HasXorKey ? (byte)BitConverter.ToInt32(_data, range.XorKeyOffset) : (byte)0;
             if (xorKey != 0)
             {
                 BinaryUtil.Xor(_data, range.TextOffset, range.TextLength, xorKey);
@@ -125,10 +130,12 @@ namespace VNTextPatch.Shared.Scripts
 
                 int startOffset = _stringRanges[rangeIdx].Offset;
                 int endOffset;
+                bool hasXorKey = false;
                 do
                 {
                     CSystemStringRange range = _stringRanges[rangeIdx];
                     endOffset = range.Offset + range.Length;
+                    hasXorKey |= range.HasXorKey;
                     rangeIdx++;
                 } while (stringEnumerator.Current.Type != ScriptStringType.CharacterName && rangeIdx < _stringRanges.Count && _stringRanges[rangeIdx].Append);
 
@@ -147,7 +154,7 @@ namespace VNTextPatch.Shared.Scripts
 
                 text = StringUtil.ToFullWidth(text);
 
-                ArraySegment<byte> textBytes = EncodeString(text);
+                ArraySegment<byte> textBytes = EncodeString(text, hasXorKey);
                 patcher.CopyUpTo(startOffset);
                 patcher.ReplaceBytes(endOffset - startOffset, textBytes);
             }
@@ -158,7 +165,7 @@ namespace VNTextPatch.Shared.Scripts
             patcher.CopyUpTo(_data.Length);
         }
 
-        private static ArraySegment<byte> EncodeString(string text)
+        private static ArraySegment<byte> EncodeString(string text, bool withXorKey)
         {
             MemoryStream stream = new MemoryStream();
             BinaryWriter writer = new BinaryWriter(stream);
@@ -167,7 +174,9 @@ namespace VNTextPatch.Shared.Scripts
                 byte[] textBytes = StringUtil.SjisTunnelEncoding.GetBytes(line);
                 writer.Write(1 + 4 + textBytes.Length);     // Length
                 writer.Write((byte)'S');                    // Type (string)
-                writer.Write(0);                            // XOR key
+                if (withXorKey)
+                    writer.Write(0);                        // XOR key
+
                 writer.Write(textBytes);                    // Text
             }
 
@@ -177,10 +186,11 @@ namespace VNTextPatch.Shared.Scripts
 
         private struct CSystemStringRange
         {
-            public CSystemStringRange(int offset, int length, bool append)
+            public CSystemStringRange(int offset, int length, bool hasXorKey, bool append)
             {
                 Offset = offset;
                 Length = length;
+                HasXorKey = hasXorKey;
                 Append = append;
             }
 
@@ -194,6 +204,11 @@ namespace VNTextPatch.Shared.Scripts
                 get;
             }
 
+            public bool HasXorKey
+            {
+                get;
+            }
+
             public bool Append
             {
                 get;
@@ -203,9 +218,9 @@ namespace VNTextPatch.Shared.Scripts
 
             public int TypeOffset => Offset + 4;
 
-            public int XorKeyOffset => TypeOffset + 1;
+            public int XorKeyOffset => HasXorKey ? TypeOffset + 1 : -1;
 
-            public int TextOffset => XorKeyOffset + 4;
+            public int TextOffset => HasXorKey ? XorKeyOffset + 4 : TypeOffset + 1;
 
             public int TextLength => Offset + Length - TextOffset;
         }
