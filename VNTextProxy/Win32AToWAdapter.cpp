@@ -43,6 +43,7 @@ void Win32AToWAdapter::Init()
             { "SetWindowLongA", SetWindowLongAHook },
             { "DestroyWindow", DestroyWindowHook },
             { "PeekMessageA", PeekMessageAHook },
+            { "GetMessageA", GetMessageAHook },
             { "DispatchMessageA", DispatchMessageAHook },
             { "DefWindowProcA", DefWindowProcAHook },
             { "AppendMenuA", AppendMenuAHook },
@@ -431,8 +432,6 @@ void Win32AToWAdapter::HandleImeCompositionEnded(const std::wstring& text)
 
 BOOL Win32AToWAdapter::PeekMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
 {
-    static vector<MSG> pendingMessages;
-
     BOOL messageAvailable = PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, PM_NOREMOVE | (wRemoveMsg & PM_NOYIELD));
     if (messageAvailable && lpMsg->message == WM_CHAR)
     {
@@ -455,21 +454,33 @@ BOOL Win32AToWAdapter::PeekMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterM
         for (char c : str)
         {
             lpMsg->wParam = (BYTE)c;
-            pendingMessages.push_back(*lpMsg);
+            PendingWindowMessages.push_back(*lpMsg);
         }
         PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, PM_REMOVE | (wRemoveMsg & PM_NOYIELD));
     }
 
-    if (!pendingMessages.empty())
+    if (!PendingWindowMessages.empty())
     {
-        *lpMsg = pendingMessages[0];
+        *lpMsg = PendingWindowMessages[0];
         if (wRemoveMsg & PM_REMOVE)
-            pendingMessages.erase(pendingMessages.begin());
+            PendingWindowMessages.erase(PendingWindowMessages.begin());
 
         return true;
     }
 
     return PeekMessageA(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+}
+
+BOOL Win32AToWAdapter::GetMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax)
+{
+    if (!PendingWindowMessages.empty())
+    {
+        *lpMsg = PendingWindowMessages[0];
+        PendingWindowMessages.erase(PendingWindowMessages.begin());
+        return true;
+    }
+
+    return GetMessageA(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
 }
 
 LRESULT Win32AToWAdapter::DispatchMessageAHook(const MSG* lpMsg)

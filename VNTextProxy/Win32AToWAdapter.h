@@ -42,6 +42,7 @@ private:
     static BOOL __stdcall DestroyWindowHook(HWND hWnd);
     static void __stdcall HandleImeCompositionEnded(const std::wstring& text);
     static BOOL __stdcall PeekMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
+    static BOOL __stdcall GetMessageAHook(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax);
     static LRESULT __stdcall DispatchMessageAHook(const MSG* lpMsg);
     static LRESULT __stdcall DefWindowProcAHook(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
     static BOOL __stdcall AppendMenuAHook(HMENU hMenu, UINT uFlags, UINT_PTR uIDNewItem, LPCSTR lpNewItem);
@@ -88,4 +89,5 @@ private:
 
     static inline std::map<HWND, WNDPROC> WindowProcs{};
     static inline std::wstring PendingImeCompositionChars{};
+    static inline std::vector<MSG> PendingWindowMessages{};
 };
