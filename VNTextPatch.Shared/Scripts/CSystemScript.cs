@@ -175,7 +175,14 @@ namespace VNTextPatch.Shared.Scripts
                 writer.Write(1 + 4 + textBytes.Length);     // Length
                 writer.Write((byte)'S');                    // Type (string)
                 if (withXorKey)
-                    writer.Write(0);                        // XOR key
+                {
+                    byte xorKey = (byte)textBytes.Length;
+                    writer.Write((int)xorKey);              // XOR key
+                    for (int i = 0; i < textBytes.Length; i++)
+                    {
+                        textBytes[i] ^= xorKey;
+                    }
+                }
 
                 writer.Write(textBytes);                    // Text
             }
