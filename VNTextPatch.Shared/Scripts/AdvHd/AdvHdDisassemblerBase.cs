@@ -173,17 +173,26 @@ namespace VNTextPatch.Shared.Scripts.AdvHd
                     return _reader.ReadInt32();
 
                 case 'a':
-                    AddressEncountered?.Invoke((int)_stream.Position);
-                    return _reader.ReadInt32();
+                {
+                    int offset = (int)_stream.Position;
+                    int addr = _reader.ReadInt32();
+                    if (addr < 0 || addr >= _stream.Length)
+                        throw new InvalidDataException();
+
+                    AddressEncountered?.Invoke(offset);
+                    return addr;
+                }
 
                 case 'f':
                     return _reader.ReadSingle();
 
                 case 's':
+                {
                     int offset = (int)_stream.Position;
                     _reader.SkipZeroTerminatedSjisString();
                     int length = (int)_stream.Position - offset;
                     return new Range(offset, length, ScriptStringType.Internal);
+                }
 
                 default:
                     throw new ArgumentException();
