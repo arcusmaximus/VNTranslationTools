@@ -26,8 +26,8 @@ namespace VNTextPatch.Shared.Scripts.Mware
             _encoding = new GuessedEncoding();
 
             MemoryStream stream = new MemoryStream(_data);
-            //using StreamWriter writer = new StreamWriter(Path.ChangeExtension(location.ToFilePath(), ".txt"));
-            SquirrelV2Disassembler disassembler = new SquirrelV2Disassembler(stream, _encoding);
+            using StreamWriter writer = null; //new StreamWriter(Path.ChangeExtension(location.ToFilePath(), ".txt"));
+            SquirrelV2Disassembler disassembler = new SquirrelV2Disassembler(stream, _encoding, writer);
             disassembler.LiteralPoolEncountered += p => _literalPools.Add(p);
             disassembler.TextReferenceEncountered += r => _literalRefs.Add(r);
             disassembler.Disassemble();

@@ -121,6 +121,6 @@ namespace VNTextPatch.Shared.Util
 
         protected abstract int GetTextWidth(string text, int offset, int length);
 
-        protected abstract int LineWidth { get; }
+        public abstract int LineWidth { get; }
     }
 }

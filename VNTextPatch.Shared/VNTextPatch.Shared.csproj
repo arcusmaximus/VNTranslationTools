@@ -115,6 +115,8 @@
     <Compile Include="Scripts\Yuris\YurisAttribute.cs" />
     <Compile Include="Scripts\Yuris\YurisCommand.cs" />
     <Compile Include="Scripts\Yuris\YurisCommandList.cs" />
+    <Compile Include="Scripts\Yuris\YurisConfigScript.cs" />
+    <Compile Include="Scripts\Yuris\YurisScenarioScript.cs" />
     <Compile Include="Scripts\Yuris\YurisScript.cs" />
     <Compile Include="Scripts\GoogleDocsScriptCollection.cs" />
     <Compile Include="Scripts\FolderScriptCollection.cs" />

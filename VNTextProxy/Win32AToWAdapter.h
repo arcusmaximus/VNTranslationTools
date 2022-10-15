@@ -32,6 +32,7 @@ private:
     static BOOL __stdcall RemoveDirectoryAHook(LPCSTR lpPathName);
     static DWORD __stdcall GetCurrentDirectoryAHook(DWORD nBufferLength, LPSTR lpBuffer);
     static DWORD __stdcall GetTempPathAHook(DWORD nBufferLength, LPSTR lpBuffer);
+    static UINT __stdcall GetTempFileNameAHook(LPCSTR lpPathName, LPCSTR lpPrefixString, UINT uUnique, LPSTR lpTempFileName);
 
     static LSTATUS __stdcall RegCreateKeyExAHook(HKEY hKey, LPCSTR lpSubKey, DWORD Reserved, LPSTR lpClass, DWORD dwOptions, REGSAM samDesired, const LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition);
     static LSTATUS __stdcall RegOpenKeyExAHook(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult);

@@ -34,6 +34,7 @@ void Win32AToWAdapter::Init()
             { "RemoveDirectoryA", RemoveDirectoryA },
             { "GetCurrentDirectoryA", GetCurrentDirectoryAHook },
             { "GetTempPathA", GetTempPathAHook },
+            { "GetTempFileNameA", GetTempFileNameAHook },
 
             { "RegCreateKeyExA", RegCreateKeyExA },
             { "RegOpenKeyExA", RegOpenKeyExA },
@@ -335,6 +336,23 @@ DWORD Win32AToWAdapter::GetTempPathAHook(DWORD nBufferLength, LPSTR lpBuffer)
 
     memcpy(lpBuffer, tempPathA.c_str(), tempPathA.size() + 1);
     return tempPathA.size();
+}
+
+UINT Win32AToWAdapter::GetTempFileNameAHook(LPCSTR lpPathName, LPCSTR lpPrefixString, UINT uUnique, LPSTR lpTempFileName)
+{
+    wchar_t wszTempFileName[MAX_PATH];
+    UINT result = GetTempFileNameW(
+        SjisTunnelEncoding::Decode(lpPathName).c_str(),
+        SjisTunnelEncoding::Decode(lpPrefixString).c_str(),
+        uUnique,
+        wszTempFileName
+    );
+    if (result == 0)
+        return 0;
+
+    string strTempFileName = SjisTunnelEncoding::Encode(wszTempFileName);
+    strncpy_s(lpTempFileName, MAX_PATH, strTempFileName.c_str(), strTempFileName.size());
+    return result;
 }
 
 LSTATUS Win32AToWAdapter::RegCreateKeyExAHook(HKEY hKey, LPCSTR lpSubKey, DWORD Reserved, LPSTR lpClass, DWORD dwOptions, REGSAM samDesired, const LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition)

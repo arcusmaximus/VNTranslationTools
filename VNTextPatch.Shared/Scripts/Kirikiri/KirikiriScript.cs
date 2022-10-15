@@ -10,7 +10,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
     public class KirikiriScript : PlainTextScript
     {
         private static readonly Regex LineCommandRegex   = new Regex(@"^@(?<command>[^ ]+)(?: +(?<attrname>[^= ]+)(?: *= *(?<attrvalue>""(?:\\""|[^""])*""|'(?:\\'|[^'])*'|[^""' ]*))?)*", RegexOptions.Compiled);
-        private static readonly Regex InlineCommandRegex = new Regex(@"\[(?<command>[^\]' ]+)(?: +(?<attrname>[^\]= ]+)(?: *= *(?<attrvalue>""(?:\\""|[^""])*""|'(?:\\'|[^'])*'|[^\]""' ]*))?)*\]", RegexOptions.Compiled);
+        private static readonly Regex InlineCommandRegex = new Regex(@"\[(?<command>[^\]' ]+)(?: +(?<attrname>[^\]= ]+)(?: *= *(?<attrvalue>""(?:\\""|[^""])*""|'(?:\\'|[^'])*'|[^\]""' ]*))?)* *\]", RegexOptions.Compiled);
 
         private static readonly Regex PlainRubyRegex = new Regex(@"\[(?<text>[^/\]]+?)/(?<ruby>[^\]]+?)\]", RegexOptions.Compiled);
 
@@ -102,6 +102,9 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
             if (line.StartsWith("*"))
                 return GetLabelRanges(lineOffset, line);
 
+            if (line.StartsWith("#"))
+                return GetNameRanges(lineOffset, line);
+
             return GetMessageRanges(lineOffset, line);
         }
 
@@ -125,6 +128,11 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
 
             int nameIdx = pipeIdx + 1;
             return new[] { new Range(lineOffset + nameIdx, line.Length - nameIdx, ScriptStringType.Message) };
+        }
+
+        private IEnumerable<Range> GetNameRanges(int lineOffset, string line)
+        {
+            yield return new Range(lineOffset + 1, line.Length - 1, ScriptStringType.CharacterName);
         }
 
         private IEnumerable<Range> GetMessageRanges(int lineOffset, string line)

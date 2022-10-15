@@ -147,6 +147,24 @@ namespace VNTextPatch.Shared.Util
                 yield return (new Range(startPos, input.Length - startPos, ScriptStringType.Message), false);
         }
 
+        public static IEnumerable<(string, Match)> GetMatchingAndSurroundingTexts(string input, Regex regex)
+        {
+            int startPos = 0;
+            foreach (Match match in regex.Matches(input))
+            {
+                if (startPos < match.Index)
+                    yield return (input.Substring(startPos, match.Index - startPos), null);
+
+                if (match.Length > 0)
+                    yield return (null, match);
+
+                startPos = match.Index + match.Length;
+            }
+
+            if (startPos < input.Length)
+                yield return (input.Substring(startPos), null);
+        }
+
         public static string FancifyQuotes(string str, string tagRegex = null)
         {
             MatchCollection tagMatches = tagRegex != null ? Regex.Matches(str, tagRegex) : null;
