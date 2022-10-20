@@ -9,7 +9,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
 {
     public class KirikiriScript : PlainTextScript
     {
-        private static readonly Regex LineCommandRegex   = new Regex(@"^@(?<command>[^ ]+)(?: +(?<attrname>[^= ]+)(?: *= *(?<attrvalue>""(?:\\""|[^""])*""|'(?:\\'|[^'])*'|[^""' ]*))?)*", RegexOptions.Compiled);
+        private static readonly Regex LineCommandRegex   = new Regex(@"^\s*@(?<command>[^ ]+)(?: +(?<attrname>[^= ]+)(?: *= *(?<attrvalue>""(?:\\""|[^""])*""|'(?:\\'|[^'])*'|[^""' ]*))?)*", RegexOptions.Compiled);
         private static readonly Regex InlineCommandRegex = new Regex(@"\[(?<command>[^\]' ]+)(?: +(?<attrname>[^\]= ]+)(?: *= *(?<attrvalue>""(?:\\""|[^""])*""|'(?:\\'|[^'])*'|[^\]""' ]*))?)* *\]", RegexOptions.Compiled);
 
         private static readonly Regex PlainRubyRegex = new Regex(@"\[(?<text>[^/\]]+?)/(?<ruby>[^\]]+?)\]", RegexOptions.Compiled);
@@ -17,7 +17,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
         private static readonly string[] NameCommands = { "nm", "set_title", "speaker", "Talk" };
         private static readonly string[] EnterNameCommands = { "ns" };
         private static readonly string[] ExitNameCommands = { "nse" };
-        private static readonly string[] MessageCommands = { "sel01", "sel02", "sel03", "sel04" };
+        private static readonly string[] MessageCommands = { "sel01", "sel02", "sel03", "sel04", "AddSelect" };
         private static readonly string[] AllowedInlineCommands = { "r", "ruby", "ruby_c", "heart", "・" };
 
         private ScriptStringType _currentStringType;
@@ -93,16 +93,18 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
 
         private IEnumerable<Range> GetLineRanges(int lineOffset, string line)
         {
-            if (Regex.IsMatch(line, @"^\s*;"))
+            string trimmedLine = line.TrimStart();
+
+            if (trimmedLine.StartsWith(";"))
                 return Enumerable.Empty<Range>();
 
-            if (line.StartsWith("@"))
+            if (trimmedLine.StartsWith("@"))
                 return GetLineCommandRanges(lineOffset, line);
 
-            if (line.StartsWith("*"))
+            if (trimmedLine.StartsWith("*"))
                 return GetLabelRanges(lineOffset, line);
 
-            if (line.StartsWith("#"))
+            if (trimmedLine.StartsWith("#"))
                 return GetNameRanges(lineOffset, line);
 
             return GetMessageRanges(lineOffset, line);
@@ -114,10 +116,13 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
                 return new[] { new Range(lineOffset, line.Length, ScriptStringType.Message) };
 
             Match command = LineCommandRegex.Match(line);
-            if (!NameCommands.Contains(GetCommandName(command)))
-                return Enumerable.Empty<Range>();
+            if (NameCommands.Contains(GetCommandName(command)))
+                return GetAttributeValueRanges(lineOffset, command, ScriptStringType.CharacterName);
 
-            return GetAttributeValueRanges(lineOffset, command, ScriptStringType.CharacterName);
+            if (MessageCommands.Contains(GetCommandName(command)))
+                return GetAttributeValueRanges(lineOffset, command, ScriptStringType.Message);
+
+            return Enumerable.Empty<Range>();
         }
 
         private IEnumerable<Range> GetLabelRanges(int lineOffset, string line)
