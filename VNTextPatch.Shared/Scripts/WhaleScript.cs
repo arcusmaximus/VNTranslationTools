@@ -33,7 +33,7 @@ namespace VNTextPatch.Shared.Scripts
 
         private static IEnumerable<Range> GetLineRanges(string line, int lineStartPos)
         {
-            if (StringUtil.IsJapaneseCharacter(line[0]))
+            if (line[0] > 0xFF)
                 return GetMessageRanges(line, lineStartPos);
 
             if (line.StartsWith("SELECT "))
@@ -47,7 +47,7 @@ namespace VNTextPatch.Shared.Scripts
 
         private static IEnumerable<Range> GetMessageRanges(string line, int lineStartPos)
         {
-            Match dialogueMatch = Regex.Match(line, @"^(?:【(?<name>.+?)(?:,\w+)?】)?(?:「(?<message>.+)」|(?<message>（(?:.+)）))$");
+            Match dialogueMatch = Regex.Match(line, @"^(?:【(?<name>.+?)(?:,\w+)*】)?(?:「(?<message>.+?)」?|(?<message>（(?:.+?)）?))$");
             if (dialogueMatch.Success)
             {
                 Group name = dialogueMatch.Groups["name"];
