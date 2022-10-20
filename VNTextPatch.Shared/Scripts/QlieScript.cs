@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts
@@ -36,7 +37,7 @@ namespace VNTextPatch.Shared.Scripts
             using TrackingStringReader reader = new TrackingStringReader(script);
             while (true)
             {
-                int position = reader.Position;
+                int lineStartPos = reader.Position;
                 string line = reader.ReadLine();
                 if (line == null)
                     break;
@@ -47,7 +48,7 @@ namespace VNTextPatch.Shared.Scripts
 
                 if (line.StartsWith("^select,"))
                 {
-                    foreach (Range argRange in GetCommandArgumentRanges(position, line))
+                    foreach (Range argRange in GetCommandArgumentRanges(lineStartPos, line))
                     {
                         yield return argRange;
                     }
@@ -62,10 +63,20 @@ namespace VNTextPatch.Shared.Scripts
                     continue;
                 }
 
+                Match match;
                 if (line.StartsWith("【") && line.EndsWith("】"))
-                    yield return new Range(position + 1, line.Length - 2, ScriptStringType.CharacterName);
+                {
+                    yield return new Range(lineStartPos + 1, line.Length - 2, ScriptStringType.CharacterName);
+                }
+                else if ((match = Regex.Match(line, @"^\w+,(?<name>[^,]+),(?<message>.+)")).Success)
+                {
+                    yield return new Range(lineStartPos + match.Groups["name"].Index, match.Groups["name"].Length, ScriptStringType.CharacterName);
+                    yield return new Range(lineStartPos + match.Groups["message"].Index, match.Groups["message"].Length, ScriptStringType.Message);
+                }
                 else
-                    yield return new Range(position, line.Length, ScriptStringType.Message);
+                {
+                    yield return new Range(lineStartPos, line.Length, ScriptStringType.Message);
+                }
             }
         }
 
