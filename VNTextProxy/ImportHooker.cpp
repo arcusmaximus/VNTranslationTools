@@ -15,6 +15,11 @@ void ImportHooker::Hook(const map<string, void*>& replacementFuncs)
     DetourEnumerateImportsEx(hExe, (void*)&replacementFuncs, nullptr, PatchGameImport);
 }
 
+void ImportHooker::ApplyToModule(HMODULE hModule)
+{
+    DetourEnumerateImportsEx(hModule, (void*)&ReplacementFuncs, nullptr, PatchGameImport);
+}
+
 void ImportHooker::Init()
 {
     if (Initialized)

@@ -4,6 +4,7 @@ class ImportHooker
 {
 public:
     static void Hook(const std::map<std::string, void*>& replacementFuncs);
+    static void ApplyToModule(HMODULE hModule);
 
 private:
     static void Init();

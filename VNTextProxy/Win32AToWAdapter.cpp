@@ -168,12 +168,20 @@ DWORD Win32AToWAdapter::GetModuleFileNameAHook(HMODULE hModule, LPSTR lpFilename
 
 HMODULE Win32AToWAdapter::LoadLibraryAHook(LPCSTR lpLibFileName)
 {
-    return LoadLibraryW(SjisTunnelEncoding::Decode(lpLibFileName).c_str());
+    HMODULE hModule = LoadLibraryW(SjisTunnelEncoding::Decode(lpLibFileName).c_str());
+    if (hModule)
+        ImportHooker::ApplyToModule(hModule);
+
+    return hModule;
 }
 
 HMODULE Win32AToWAdapter::LoadLibraryExAHook(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
-    return LoadLibraryExW(SjisTunnelEncoding::Decode(lpLibFileName).c_str(), hFile, dwFlags);
+    HMODULE hModule = LoadLibraryExW(SjisTunnelEncoding::Decode(lpLibFileName).c_str(), hFile, dwFlags);
+    if (hModule)
+        ImportHooker::ApplyToModule(hModule);
+
+    return hModule;
 }
 
 DWORD Win32AToWAdapter::GetFullPathNameAHook(LPCSTR lpFileName, DWORD nBufferLength, LPSTR lpBuffer, LPSTR* lpFilePart)
@@ -528,8 +536,11 @@ LRESULT Win32AToWAdapter::DefWindowProcAHook(HWND hWnd, UINT msg, WPARAM wParam,
             wstring name = SjisTunnelEncoding::Decode(pCreateA->lpszName);
             createW.lpszName = name.c_str();
 
-            wstring className = StringUtil::ToWString(pCreateA->lpszClass);
-            createW.lpszClass = className.c_str();
+            if ((DWORD)pCreateA->lpszClass & 0xFFFF0000)
+            {
+                wstring className = StringUtil::ToWString(pCreateA->lpszClass);
+                createW.lpszClass = className.c_str();
+            }
 
             return DefWindowProcW(hWnd, msg, wParam, (LPARAM)&createW);
         }
