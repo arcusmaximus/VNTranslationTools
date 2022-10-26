@@ -191,6 +191,10 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                         _textCodeRanges.AddRange(choices);
                         break;
 
+                    case MajiroOpcodes.Callp when (int)operands[0] == MajiroSyscalls.MessageBox:
+                        _textCodeRanges.Add(ldstrRanges.Pop());
+                        break;
+
                     case MajiroOpcodes.Ret:
                         return;
 
