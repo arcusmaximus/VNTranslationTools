@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts.ArcGameEngine
 {
-    public class AgeDisassembler
+    internal class AgeDisassembler
     {
-        private static readonly Dictionary<int, int> NumOperands =
+        private static readonly Dictionary<int, int> OperandCounts =
             new Dictionary<int, int>
             {
                 { 0x0001, 0 },
@@ -529,111 +531,268 @@ namespace VNTextPatch.Shared.Scripts.ArcGameEngine
                 { 0x0352, 3 }
             };
 
+        private static readonly Dictionary<int, int[]> AddressOperands =
+            new Dictionary<int, int[]>
+            {
+                { 0x0064, new[] { 1 } },        // Array
+                { 0x007B, new[] { 0, 1 } },
+                { 0x008C, new[] { 0 } },        // Unconditional jump
+                { 0x008D, new[] { 1 } },        // Register choice
+                { 0x008F, new[] { 0 } },        // Call
+                { 0x0090, new[] { 4, 5, 6 } },  // Register choice
+                { 0x0092, new[] { 1 } },
+                { 0x0095, new[] { 1 } },
+                { 0x00A0, new[] { 1, 2 } },     // Conditional jump
+                { 0x00A2, new[] { 1 } },        // Register named label?
+                { 0x00A3, new[] { 1 } },        // Jump to named label?
+                { 0x00CC, new[] { 1 } },
+                { 0x00CE, new[] { 1, 2 } },
+                { 0x00D4, new[] { 2 } },
+                { 0x00D5, new[] { 0 } },
+                { 0x00D6, new[] { 4 } },
+                { 0x00FB, new[] { 1 } },
+                { 0x0102, new[] { 2 } }
+            };
+
+        private static readonly Dictionary<byte[], byte[]> TextReplacements =
+            new Dictionary<byte[], byte[]>
+            {
+                { new byte[] { 0xF0, 0x40 }, new byte[] { 0x81, 0x63 } },
+                { new byte[] { 0xF0, 0x41 }, new byte[] { 0x81, 0x5C } },
+                { new byte[] { 0xF0, 0x42 }, new byte[] { 0x81, 0x5C } },
+                { new byte[] { 0xF0, 0x43 }, new byte[] { 0x81, 0x5C } }
+            };
+
         private readonly Stream _stream;
         private readonly BinaryReader _reader;
+        private readonly TextWriter _writer;
+        private readonly byte[] _textBuffer = new byte[0x200];
 
-        public AgeDisassembler(Stream stream)
+        public AgeDisassembler(Stream stream, TextWriter writer = null)
         {
             _stream = stream;
             _reader = new BinaryReader(stream);
+            _writer = writer;
         }
 
-        public void Disassemble()
-        {
-            _stream.Position = 0x28;
-            StringTableOffset = ArrayTableOffset = LabelTableOffset = AddressToOffset(_reader.ReadInt32());
+        public delegate void AddressHandler(int addrOffset, bool isStringAddr);
 
-            _stream.Position = 0x3C;
-            while (_stream.Position < StringTableOffset)
+        public event AddressHandler AddressEncountered;
+
+        public Range StringPoolRange
+        {
+            get;
+            private set;
+        }
+
+        public List<AgeInstruction> Disassemble()
+        {
+            string magic = Encoding.ASCII.GetString(_reader.ReadBytes(4));
+            if (magic != "SYS4")
+                throw new InvalidDataException("Invalid AGE header");
+
+            _reader.Skip(4);            // Version number
+            _reader.Skip(6 * 4);        // Runtime variables counts
+
+            int addrTableHeaderSize = _reader.ReadInt32();
+            if (addrTableHeaderSize != 0x1C)
+                throw new InvalidDataException("Invalid address table header size");
+
+            List<AddressTable> addressTables = new List<AddressTable>();
+            for (int i = 0; i < 3; i++)
             {
-                Read();
+                int count = _reader.ReadInt32();
+                AddressEncountered?.Invoke((int)_stream.Position, false);
+                int addr = _reader.ReadInt32();
+                addressTables.Add(new AddressTable(AddressToOffset(addr), count));
             }
+
+            StringPoolRange = new Range(addressTables[0].Offset, 0, ScriptStringType.Internal);
+            List<AgeInstruction> instrs = ReadInstructions();
+
+            foreach (AddressTable addressTable in addressTables)
+            {
+                for (int i = 0; i < addressTable.Count; i++)
+                {
+                    AddressEncountered?.Invoke(addressTable.Offset + 4 * i, false);
+                }
+            }
+
+            return instrs;
         }
 
-        public int StringTableOffset
+        private List<AgeInstruction> ReadInstructions()
         {
-            get;
-            private set;
+            List<AgeInstruction> instrs = new List<AgeInstruction>();
+            while (_stream.Position < StringPoolRange.Offset)
+            {
+                AgeInstruction instr = ReadInstruction();
+                int[] addressOperands = AddressOperands.GetOrDefault(instr.Opcode);
+
+                for (int i = 0; i < instr.Operands.Count; i++)
+                {
+                    AgeOperand operand = instr.Operands[i];
+                    if (operand.Type == AgeOperandType.StringLiteral)
+                        HandleStringOperand(operand);
+                    else if (instr.Opcode == AgeOpcode.LoadArray && i == 1)
+                        HandleArrayOperand(operand);
+                    else if (addressOperands != null && addressOperands.Contains(i))
+                        AddressEncountered?.Invoke(operand.ValueOffset, false);
+                }
+
+                if (_writer != null)
+                    WriteInstruction(instr);
+
+                instrs.Add(instr);
+            }
+            return instrs;
         }
 
-        public int ArrayTableOffset
+        private void HandleStringOperand(AgeOperand operand)
         {
-            get;
-            private set;
+            AddressEncountered?.Invoke(operand.ValueOffset, true);
+
+            int offset = AddressToOffset(operand.Value);
+            if (offset < StringPoolRange.Offset)
+                StringPoolRange = new Range(offset, StringPoolRange.Offset + StringPoolRange.Length - offset, ScriptStringType.Internal);
         }
 
-        public int LabelTableOffset
+        private void HandleArrayOperand(AgeOperand operand)
         {
-            get;
-            private set;
+            AddressEncountered?.Invoke(operand.ValueOffset, false);
+
+            int offset = AddressToOffset(operand.Value);
+            if (offset < StringPoolRange.Offset)
+                StringPoolRange = new Range(offset, 0, ScriptStringType.Internal);
+
+            if (offset < StringPoolRange.Offset + StringPoolRange.Length)
+                StringPoolRange = new Range(StringPoolRange.Offset, offset - StringPoolRange.Offset, ScriptStringType.Internal);
         }
 
-        public event Action<int> TextAddressEncountered;
-        public event Action<Range> TextEncountered;
-
-        public event Action<int> ArrayAddressEncountered;
-        public event Action<Range> ArrayEncountered;
-
-        private void Read()
+        private AgeInstruction ReadInstruction()
         {
+            int offset = (int)_stream.Position;
             int opcode = _reader.ReadInt32();
-            int numOperands = NumOperands[opcode];
+            AgeInstruction instr = new AgeInstruction(offset, opcode);
+
+            int numOperands = OperandCounts[opcode];
             for (int i = 0; i < numOperands; i++)
             {
-                int type = _reader.ReadInt32();
+                AgeOperandType type = (AgeOperandType)_reader.ReadInt32();
+                int valueOffset = (int)_stream.Position;
                 int value = _reader.ReadInt32();
-                if (type == 2)
-                    HandleStringOperand((int)_stream.Position - 4, value);
-                else if (opcode == 0x64 && i == 1)
-                    HandleArrayOperand((int)_stream.Position - 4, value);
+                instr.Operands.Add(new AgeOperand(type, valueOffset, value));
             }
+            return instr;
         }
 
-        private void HandleStringOperand(int offset, int address)
+        private void WriteInstruction(AgeInstruction instr)
         {
-            TextAddressEncountered?.Invoke(offset);
+            _writer.Write($"{instr.Offset:X08} {instr.Opcode:X04}");
 
-            int originalPos = (int)_stream.Position;
-
-            int startPos = AddressToOffset(address);
-            _stream.Position = startPos;
-            while (_reader.ReadByte() != 0xFF)
+            int[] addressOperands = AddressOperands.GetOrDefault(instr.Opcode);
+            for (int i = 0; i < instr.Operands.Count; i++)
             {
+                _writer.Write(i == 0 ? " " : ", ");
+
+                AgeOperand operand = instr.Operands[i];
+
+                if (operand.Type == AgeOperandType.StringLiteral)
+                {
+                    string text = GetStringAtAddress(operand.Value);
+                    _writer.Write("\"" + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"");
+                }
+                else if (instr.Opcode == AgeOpcode.LoadArray && i == 1)
+                {
+                    List<int> array = GetArrayAtAddress(operand.Value);
+                    _writer.Write("[ " + string.Join(", ", array.Select(n => n.ToString("X"))) + " ]");
+                }
+                else if (addressOperands != null && addressOperands.Contains(i))
+                {
+                    _writer.Write(operand.Value < 0 ? "#none" : $"#{AddressToOffset(operand.Value):X08}");
+                }
+                else
+                {
+                    _writer.Write($"{(int)operand.Type:X}:{operand.Value:X08}");
+                }
             }
-            int endPos = (int)_stream.Position - 1;
-            TextEncountered?.Invoke(new Range(startPos, endPos - startPos, ScriptStringType.Message));
 
-            _stream.Position = originalPos;
-
-            StringTableOffset = Math.Min(StringTableOffset, startPos);
+            _writer.WriteLine();
         }
 
-        private void HandleArrayOperand(int offset, int address)
+        public string GetStringAtAddress(int addr)
         {
-            ArrayAddressEncountered?.Invoke(offset);
-
-            int originalPos = (int)_stream.Position;
-
-            int startPos = AddressToOffset(address);
-            _stream.Position = startPos;
-            int numItems = _reader.ReadInt32();
-
-            ArrayEncountered?.Invoke(new Range(startPos, 4 + numItems * 4, ScriptStringType.CharacterName));
-
-            _stream.Position = originalPos;
-
-            StringTableOffset = Math.Min(StringTableOffset, startPos);
-            ArrayTableOffset = Math.Min(ArrayTableOffset, startPos);
+            return GetStringAtOffset(AddressToOffset(addr));
         }
 
-        internal static int AddressToOffset(int addr)
+        public string GetStringAtOffset(int offset)
         {
+            int origPos = (int)_stream.Position;
+
+            _stream.Position = offset;
+            int i = 0;
+            while (true)
+            {
+                byte b = (byte)(_reader.ReadByte() ^ 0xFF);
+                if (b == 0)
+                    break;
+
+                _textBuffer[i++] = b;
+            }
+            BinaryUtil.ReplaceInPlace(_textBuffer, 0, i, TextReplacements);
+            string text = StringUtil.SjisEncoding.GetString(_textBuffer, 0, i);
+            _stream.Position = origPos;
+            return text;
+        }
+
+        public List<int> GetArrayAtAddress(int addr)
+        {
+            return GetArrayAtOffset(AddressToOffset(addr));
+        }
+
+        public List<int> GetArrayAtOffset(int offset)
+        {
+            int origPos = (int)_stream.Position;
+
+            _stream.Position = offset;
+            int count = _reader.ReadInt32();
+
+            List<int> values = new List<int>(count);
+            for (int i = 0; i < count; i++)
+            {
+                values.Add(_reader.ReadInt32());
+            }
+
+            _stream.Position = origPos;
+            return values;
+        }
+
+        public static int AddressToOffset(int addr)
+        {
+            if (addr < 0)
+                return -1;
+
             return 0x3C + 4 * addr;
         }
 
-        internal static int OffsetToAddress(int offset)
+        public static int OffsetToAddress(int offset)
         {
+            if (offset < 0)
+                return -1;
+
             return (offset - 0x3C) / 4;
+        }
+
+        private readonly struct AddressTable
+        {
+            public AddressTable(int offset, int count)
+            {
+                Offset = offset;
+                Count = count;
+            }
+
+            public readonly int Offset;
+            public readonly int Count;
         }
     }
 }

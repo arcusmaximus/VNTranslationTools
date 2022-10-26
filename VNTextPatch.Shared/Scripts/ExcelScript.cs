@@ -9,6 +9,8 @@ namespace VNTextPatch.Shared.Scripts
 {
     public class ExcelScript : IScript, ILineStatistics
     {
+        private const string EmptyTextMarker = "(empty)";
+
         private readonly ExcelScriptCollection _collection;
         private readonly IWorkbook _workbook;
         private ISheet _sheet;
@@ -76,10 +78,11 @@ namespace VNTextPatch.Shared.Scripts
             if (editedText != null)
                 Edited++;
 
-            return StringUtil.NullIf(editedText, ".") ??
-                   StringUtil.NullIf(checkedText, ".") ??
-                   translatedText ??
-                   originalText;
+            string text = StringUtil.NullIf(editedText, ".") ??
+                          StringUtil.NullIf(checkedText, ".") ??
+                          translatedText ??
+                          originalText;
+            return text != EmptyTextMarker ? text : string.Empty;
         }
 
         public void WritePatched(IEnumerable<ScriptString> strings, ScriptLocation location)
@@ -109,7 +112,7 @@ namespace VNTextPatch.Shared.Scripts
             if (characterNames.Count > 0)
                 FillCell(row, ExcelColumn.OriginalCharacter, JoinNames(characterNames));
 
-            FillCell(row, ExcelColumn.OriginalLine, message);
+            FillCell(row, ExcelColumn.OriginalLine, message.Length > 0 ? message : EmptyTextMarker);
 
             if (characterNames.Count > 0)
             {

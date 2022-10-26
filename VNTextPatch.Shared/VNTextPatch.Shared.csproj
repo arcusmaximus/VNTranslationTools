@@ -61,8 +61,13 @@
     <Compile Include="Scripts\AdvHd\AdvHdDisassemblerV2.cs" />
     <Compile Include="Scripts\AdvHd\AdvHdDisassemblerV3.cs" />
     <Compile Include="Scripts\AdvHd\AdvHdScript.cs" />
+    <Compile Include="Scripts\ArcGameEngine\AgeAssembler.cs" />
+    <Compile Include="Scripts\ArcGameEngine\AgeInstruction.cs" />
+    <Compile Include="Scripts\ArcGameEngine\AgeOperand.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeScript.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeDisassembler.cs" />
+    <Compile Include="Scripts\ArcGameEngine\AgeStringPoolBuilder.cs" />
+    <Compile Include="Scripts\ArcGameEngine\Enumerations.cs" />
     <Compile Include="Scripts\Artemis\ArtemisBinaryScript.cs" />
     <Compile Include="Scripts\Artemis\ArtemisTextScript.cs" />
     <Compile Include="Scripts\CatSystemScript.cs" />

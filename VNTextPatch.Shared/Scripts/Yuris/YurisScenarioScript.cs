@@ -131,7 +131,7 @@ namespace VNTextPatch.Shared.Scripts.Yuris
                     patcher.PatchAddress(attr.DescriptorOffset + 8);
                 }
 
-                int newAttributeValuesSize = patcher.CurrentOutputPosition - _attributeValuesOffset;
+                int newAttributeValuesSize = (int)patcher.OutputStream.Position - _attributeValuesOffset;
                 patcher.PatchInt32(0x14, newAttributeValuesSize);
 
                 patcher.CopyUpTo(_data.Length);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Google.Apis.Sheets.v4.Data;
 using Google.Apis.Util;
 using VNTextPatch.Shared.Util;
@@ -11,6 +10,8 @@ namespace VNTextPatch.Shared.Scripts
 {
     public class GoogleDocsScript : IScript, ILineStatistics
     {
+        private const string EmptyTextMarker = "(empty)";
+
         private IList<IList<object>> _cells;
 
         public string Extension
@@ -71,7 +72,11 @@ namespace VNTextPatch.Shared.Scripts
             if (editedText != null)
                 Edited++;
 
-            return StringUtil.NullIf(editedText, ".") ?? StringUtil.NullIf(checkedText, ".") ?? translatedText ?? originalText;
+            string text = StringUtil.NullIf(editedText, ".") ??
+                          StringUtil.NullIf(checkedText, ".") ??
+                          translatedText ??
+                          originalText;
+            return text != EmptyTextMarker ? text : string.Empty;
         }
 
         private string GetCellContent(int rowIdx, ExcelColumn column)

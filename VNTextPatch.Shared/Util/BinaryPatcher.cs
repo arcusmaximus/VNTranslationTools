@@ -6,9 +6,6 @@ namespace VNTextPatch.Shared.Util
 {
     internal class BinaryPatcher
     {
-        private readonly Stream _inputStream;
-        private readonly Stream _outputStream;
-
         private readonly BinaryReader _reader;
         private readonly BinaryWriter _writer;
 
@@ -25,8 +22,8 @@ namespace VNTextPatch.Shared.Util
 
         public BinaryPatcher(Stream inputStream, Stream outputStream, Func<int, int> addressToOffset, Func<int, int> offsetToAddress)
         {
-            _inputStream = inputStream;
-            _outputStream = outputStream;
+            InputStream = inputStream;
+            OutputStream = outputStream;
 
             _reader = new BinaryReader(inputStream);
             _writer = new BinaryWriter(outputStream);
@@ -35,26 +32,26 @@ namespace VNTextPatch.Shared.Util
             _offsetToAddress = offsetToAddress;
         }
 
-        public int CurrentInputPosition
+        public Stream InputStream
         {
-            get { return (int)_inputStream.Position; }
+            get;
         }
 
-        public int CurrentOutputPosition
+        public Stream OutputStream
         {
-            get { return (int)_outputStream.Position; }
+            get;
         }
 
         public void CopyUpTo(int originalOffset)
         {
-            if (originalOffset < _inputStream.Position || originalOffset > _inputStream.Length)
+            if (originalOffset < InputStream.Position || originalOffset > InputStream.Length)
                 throw new ArgumentOutOfRangeException(nameof(originalOffset));
 
-            int remainingLength = (int)(originalOffset - _inputStream.Position);
+            int remainingLength = (int)(originalOffset - InputStream.Position);
             while (remainingLength > 0)
             {
-                int amountRead = _inputStream.Read(_buffer, 0, Math.Min(remainingLength, _buffer.Length));
-                _outputStream.Write(_buffer, 0, amountRead);
+                int amountRead = InputStream.Read(_buffer, 0, Math.Min(remainingLength, _buffer.Length));
+                OutputStream.Write(_buffer, 0, amountRead);
                 remainingLength -= amountRead;
             }
         }
@@ -71,39 +68,39 @@ namespace VNTextPatch.Shared.Util
 
         public void ReplaceBytes(int originalLength, byte[] newData, int newDataOffset, int newDataLength)
         {
-            ReplaceBytes(originalLength, _ => _outputStream.Write(newData, newDataOffset, newDataLength));
+            ReplaceBytes(originalLength, _ => OutputStream.Write(newData, newDataOffset, newDataLength));
         }
 
         public void ReplaceBytes(int originalLength, Action<BinaryWriter> writeNewData)
         {
-            if (originalLength <= 0 || _inputStream.Position + originalLength > _inputStream.Length)
+            if (originalLength <= 0 || InputStream.Position + originalLength > InputStream.Length)
                 throw new ArgumentException(nameof(originalLength));
 
-            int newDataOffset = (int)_outputStream.Position;
+            int newDataOffset = (int)OutputStream.Position;
             writeNewData(_writer);
-            int newDataLength = (int)_outputStream.Position - newDataOffset;
+            int newDataLength = (int)OutputStream.Position - newDataOffset;
 
             if (newDataLength != originalLength)
             {
                 _rangeMappings.Add(
                     new RangeMapping(
-                        (int)_inputStream.Position,
-                        (int)_inputStream.Position + originalLength,
+                        (int)InputStream.Position,
+                        (int)InputStream.Position + originalLength,
                         newDataOffset,
                         newDataOffset + newDataLength
                     )
                 );
             }
 
-            _inputStream.Seek(originalLength, SeekOrigin.Current);
+            InputStream.Seek(originalLength, SeekOrigin.Current);
         }
 
         public void ReplaceZeroTerminatedSjisString(string newString)
         {
-            int originalOffset = (int)_inputStream.Position;
+            int originalOffset = (int)InputStream.Position;
             int originalLength = _reader.SkipZeroTerminatedSjisString();
 
-            int newOffset = (int)_outputStream.Position;
+            int newOffset = (int)OutputStream.Position;
             int newLength = _writer.WriteZeroTerminatedSjisString(newString);
 
             if (newLength != originalLength)
@@ -112,10 +109,10 @@ namespace VNTextPatch.Shared.Util
 
         public void ReplaceZeroTerminatedUtf8String(string newString)
         {
-            int originalOffset = (int)_inputStream.Position;
+            int originalOffset = (int)InputStream.Position;
             int originalLength = _reader.SkipZeroTerminatedUtf8String();
 
-            int newOffset = (int)_outputStream.Position;
+            int newOffset = (int)OutputStream.Position;
             int newLength = _writer.WriteZeroTerminatedUtf8String(newString);
 
             if (newLength != originalLength)
@@ -124,10 +121,10 @@ namespace VNTextPatch.Shared.Util
 
         public void ReplaceZeroTerminatedUtf16String(string newString)
         {
-            int originalOffset = (int)_inputStream.Position;
+            int originalOffset = (int)InputStream.Position;
             int originalLength = _reader.SkipZeroTerminatedUtf16String();
 
-            int newOffset = (int)_outputStream.Position;
+            int newOffset = (int)OutputStream.Position;
             int newLength = _writer.WriteZeroTerminatedUtf16String(newString);
 
             if (newLength != originalLength)
@@ -136,10 +133,10 @@ namespace VNTextPatch.Shared.Util
 
         public int MapOffset(int originalOffset)
         {
-            if (originalOffset < 0 || originalOffset > _inputStream.Length)
+            if (originalOffset < 0 || originalOffset > InputStream.Length)
                 throw new ArgumentOutOfRangeException();
 
-            if (originalOffset > _inputStream.Position)
+            if (originalOffset > InputStream.Position)
                 throw new InvalidOperationException();
 
             int start = 0;
@@ -163,7 +160,7 @@ namespace VNTextPatch.Shared.Util
 
             RangeMapping precedingSection = _rangeMappings[index];
             int newOffset = originalOffset - precedingSection.Original.EndOffset + precedingSection.New.EndOffset;
-            if (newOffset > _outputStream.Length)
+            if (newOffset > OutputStream.Length)
                 throw new InvalidOperationException();
 
             return newOffset;
@@ -171,62 +168,62 @@ namespace VNTextPatch.Shared.Util
 
         public void PatchByte(int originalOffset, byte value)
         {
-            if (originalOffset < 0 || originalOffset + 1 > _inputStream.Length)
+            if (originalOffset < 0 || originalOffset + 1 > InputStream.Length)
                 throw new ArgumentOutOfRangeException(nameof(originalOffset));
 
-            if (_inputStream.Position < originalOffset + 1)
+            if (InputStream.Position < originalOffset + 1)
                 throw new InvalidOperationException();
 
-            _outputStream.Position = MapOffset(originalOffset);
+            OutputStream.Position = MapOffset(originalOffset);
             _writer.Write(value);
-            _outputStream.Position = _outputStream.Length;
+            OutputStream.Position = OutputStream.Length;
         }
 
         public void PatchInt16(int originalOffset, short value)
         {
-            if (originalOffset < 0 || originalOffset + 2 > _inputStream.Length)
+            if (originalOffset < 0 || originalOffset + 2 > InputStream.Length)
                 throw new ArgumentOutOfRangeException(nameof(originalOffset));
 
-            if (_inputStream.Position < originalOffset + 2)
+            if (InputStream.Position < originalOffset + 2)
                 throw new InvalidOperationException();
 
-            _outputStream.Position = MapOffset(originalOffset);
+            OutputStream.Position = MapOffset(originalOffset);
             _writer.Write(value);
-            _outputStream.Position = _outputStream.Length;
+            OutputStream.Position = OutputStream.Length;
         }
 
         public void PatchInt32(int originalOffset, int value)
         {
-            if (originalOffset < 0 || originalOffset + 4 > _inputStream.Length)
+            if (originalOffset < 0 || originalOffset + 4 > InputStream.Length)
                 throw new ArgumentOutOfRangeException(nameof(originalOffset));
 
-            if (_inputStream.Position < originalOffset + 4)
+            if (InputStream.Position < originalOffset + 4)
                 throw new InvalidOperationException();
 
-            _outputStream.Position = MapOffset(originalOffset);
+            OutputStream.Position = MapOffset(originalOffset);
             _writer.Write(value);
-            _outputStream.Position = _outputStream.Length;
+            OutputStream.Position = OutputStream.Length;
         }
 
         public void PatchAddress(int originalOffset)
         {
-            if (originalOffset < 0 || originalOffset + 4 > _inputStream.Length)
+            if (originalOffset < 0 || originalOffset + 4 > InputStream.Length)
                 throw new ArgumentOutOfRangeException(nameof(originalOffset));
 
-            if (_inputStream.Position < originalOffset + 4)
+            if (InputStream.Position < originalOffset + 4)
                 throw new InvalidOperationException();
 
-            int inputPos = (int)_inputStream.Position;
-            _inputStream.Position = originalOffset;
+            int inputPos = (int)InputStream.Position;
+            InputStream.Position = originalOffset;
             int originalAddr = _reader.ReadInt32();
-            _inputStream.Position = inputPos;
+            InputStream.Position = inputPos;
 
             int newOffset = MapOffset(originalOffset);
             int newAddr = _offsetToAddress(MapOffset(_addressToOffset(originalAddr)));
 
-            _outputStream.Position = newOffset;
+            OutputStream.Position = newOffset;
             _writer.Write(newAddr);
-            _outputStream.Position = _outputStream.Length;
+            OutputStream.Position = OutputStream.Length;
         }
 
         private struct RangeMapping

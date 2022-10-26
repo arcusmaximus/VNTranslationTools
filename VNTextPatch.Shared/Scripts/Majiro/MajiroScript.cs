@@ -326,7 +326,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
             int newNumLines = origNumLines - _numInlineLineMarkers;
             patcher.PatchInt32(0x14, newNumLines);
 
-            int newCodeSize = patcher.CurrentOutputPosition - _codeOffset;
+            int newCodeSize = (int)patcher.OutputStream.Position - _codeOffset;
             patcher.PatchInt32(_codeOffset - 4, newCodeSize);
         }
 

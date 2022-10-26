@@ -64,9 +64,13 @@ namespace VNTextPatch.Shared.Util
             }
         }
 
-        public static int IndexOf(byte[] data, byte[] search, int startIdx = 0)
+        public static int IndexOf(byte[] data, byte[] search, int startIdx = 0, int length = -1)
         {
-            for (int i = startIdx; i <= data.Length - search.Length; i++)
+            if (length < 0)
+                length = data.Length - startIdx;
+
+            int endIdx = startIdx + length - search.Length;
+            for (int i = startIdx; i <= endIdx; i++)
             {
                 bool equal = true;
                 for (int j = 0; j < search.Length; j++)
@@ -83,38 +87,81 @@ namespace VNTextPatch.Shared.Util
             return -1;
         }
 
-        public static byte[] Replace(byte[] input, Dictionary<byte[], byte[]> replacements)
+        public static void ReplaceInPlace(byte[] data, int offset, int length, Dictionary<byte[], byte[]> replacements)
         {
-            MemoryStream inputStream = new MemoryStream(input);
-            MemoryStream outputStream = new MemoryStream();
-            BinaryPatcher patcher = new BinaryPatcher(inputStream, outputStream);
-            int nextIdx = 0;
-            while (nextIdx < input.Length)
+            int searchStartIdx = offset;
+            int searchEndIdx = offset + length;
+            while (searchStartIdx < searchEndIdx)
             {
-                int inputIdx = -1;
+                int foundIdx = -1;
                 byte[] search = null;
                 byte[] replace = null;
-
                 foreach (KeyValuePair<byte[], byte[]> replacement in replacements)
                 {
-                    int index = IndexOf(input, replacement.Key, nextIdx);
+                    int index = IndexOf(data, replacement.Key, searchStartIdx, searchEndIdx - searchStartIdx);
                     if (index < 0)
                         continue;
 
-                    if (inputIdx < 0 || index < inputIdx || (index == inputIdx && replacement.Key.Length > search.Length))
+                    if (foundIdx < 0 || index < foundIdx || (index == foundIdx && replacement.Key.Length > search.Length))
                     {
-                        inputIdx = index;
+                        foundIdx = index;
                         search = replacement.Key;
                         replace = replacement.Value;
                     }
                 }
 
-                if (inputIdx < 0)
+                if (foundIdx < 0)
                     break;
 
-                patcher.CopyUpTo(inputIdx);
+                if (search.Length != replace.Length)
+                    throw new ArgumentException();
+
+                for (int i = 0; i < search.Length; i++)
+                {
+                    data[foundIdx + i] = replace[i];
+                }
+                searchStartIdx = foundIdx + search.Length;
+            }
+        }
+
+        public static byte[] Replace(byte[] input, Dictionary<byte[], byte[]> replacements)
+        {
+            return Replace(input, 0, input.Length, replacements);
+        }
+
+        public static byte[] Replace(byte[] input, int offset, int length, Dictionary<byte[], byte[]> replacements)
+        {
+            MemoryStream inputStream = new MemoryStream(input);
+            MemoryStream outputStream = new MemoryStream();
+            BinaryPatcher patcher = new BinaryPatcher(inputStream, outputStream);
+            int searchStartIdx = offset;
+            int searchEndIdx = offset + length;
+            while (searchStartIdx < searchEndIdx)
+            {
+                int foundIdx = -1;
+                byte[] search = null;
+                byte[] replace = null;
+
+                foreach (KeyValuePair<byte[], byte[]> replacement in replacements)
+                {
+                    int index = IndexOf(input, replacement.Key, searchStartIdx, searchEndIdx - searchEndIdx);
+                    if (index < 0)
+                        continue;
+
+                    if (foundIdx < 0 || index < foundIdx || (index == foundIdx && replacement.Key.Length > search.Length))
+                    {
+                        foundIdx = index;
+                        search = replacement.Key;
+                        replace = replacement.Value;
+                    }
+                }
+
+                if (foundIdx < 0)
+                    break;
+
+                patcher.CopyUpTo(foundIdx);
                 patcher.ReplaceBytes(search.Length, replace);
-                nextIdx = inputIdx + search.Length;
+                searchStartIdx = foundIdx + search.Length;
             }
 
             patcher.CopyUpTo(input.Length);
