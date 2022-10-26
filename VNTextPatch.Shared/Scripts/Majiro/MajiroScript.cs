@@ -167,17 +167,28 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                         break;
 
                     case MajiroOpcodes.Ctrl when (string)operands[0] == "n":
+                        if (textStartOffset < 0)
+                            textStartOffset = instrOffset;
+
                         currentText += "\r\n";
                         break;
 
                     case MajiroOpcodes.Ctrl when (string)operands[0] == "d" && ldstrRanges.Count > 0:
+                        if (textStartOffset < 0)
+                            textStartOffset = ldstrRanges.Peek().Offset;
+
                         string append = ldstrRanges.Pop().Text;
                         currentText += append;
                         break;
 
                     case MajiroOpcodes.Callp when (int)operands[0] == MajiroSyscalls.Ruby:
-                        string ruby = ldstrRanges.Pop().Text;
-                        currentText += $"[{ruby}]";
+                        string rubyText = ldstrRanges.Pop().Text;
+
+                        if (textStartOffset < 0)
+                            textStartOffset = ldstrRanges.Peek().Offset;
+                        
+                        string baseText = ldstrRanges.Pop().Text;
+                        currentText += $"[{baseText}/{rubyText}]";
                         break;
 
                     case MajiroOpcodes.Call when (int)operands[0] == MajiroSyscalls.Select:
@@ -297,7 +308,7 @@ namespace VNTextPatch.Shared.Scripts.Majiro
             {
                 string line = lines[i];
                 int startIdx = 0;
-                foreach (Match rubyMatch in Regex.Matches(line, @"\[(.+?)\]"))
+                foreach (Match rubyMatch in Regex.Matches(line, @"\[([^\[\]/]+)/([^\[\]/]+)\]"))
                 {
                     if (startIdx < rubyMatch.Index)
                     {
@@ -306,7 +317,8 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                     }
 
                     assembler.Write(MajiroOpcodes.Ldstr, rubyMatch.Groups[1].Value);
-                    assembler.Write(MajiroOpcodes.Callp, MajiroSyscalls.Ruby, 0, 1);
+                    assembler.Write(MajiroOpcodes.Ldstr, rubyMatch.Groups[2].Value);
+                    assembler.Write(MajiroOpcodes.Callp, MajiroSyscalls.Ruby, 0, 2);
 
                     startIdx = rubyMatch.Index + rubyMatch.Length;
                 }
