@@ -191,7 +191,8 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                         currentText += $"[{baseText}/{rubyText}]";
                         break;
 
-                    case MajiroOpcodes.Call when (int)operands[0] == MajiroSyscalls.Select:
+                    case MajiroOpcodes.Call when (int)operands[0] == MajiroSyscalls.Select1:
+                    {
                         int numChoices = (int)operands[2];
                         List<MajiroTextCodeRange> choices = new List<MajiroTextCodeRange>();
                         for (int i = 0; i < numChoices; i++)
@@ -201,8 +202,29 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                         choices.Reverse();
                         _textCodeRanges.AddRange(choices);
                         break;
+                    }
 
-                    case MajiroOpcodes.Callp when (int)operands[0] == MajiroSyscalls.MessageBox:
+                    case MajiroOpcodes.Call when (int)operands[0] == MajiroSyscalls.Select2:
+                    {
+                        ldstrRanges.Pop();
+                        ldstrRanges.Pop();
+
+                        int numChoices = (int)operands[2] - 2;
+                        List<MajiroTextCodeRange> choices = new List<MajiroTextCodeRange>();
+                        for (int i = 0; i < numChoices; i++)
+                        {
+                            choices.Add(ldstrRanges.Pop());
+                        }
+                        choices.Reverse();
+                        _textCodeRanges.AddRange(choices);
+                        break;
+                    }
+
+                    case MajiroOpcodes.Callp when (int)operands[0] == MajiroSyscalls.OkMessageBox:
+                        _textCodeRanges.Add(ldstrRanges.Pop());
+                        break;
+
+                    case MajiroOpcodes.Call when (int)operands[0] == MajiroSyscalls.YesNoMessageBox:
                         _textCodeRanges.Add(ldstrRanges.Pop());
                         break;
 
