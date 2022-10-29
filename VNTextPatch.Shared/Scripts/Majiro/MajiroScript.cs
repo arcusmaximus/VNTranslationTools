@@ -146,6 +146,9 @@ namespace VNTextPatch.Shared.Scripts.Majiro
 
                 switch (opcode)
                 {
+                    case MajiroOpcodes.LdcI:
+                        break;
+
                     case MajiroOpcodes.Ldstr:
                         ldstrRanges.Push(new MajiroTextCodeRange(instrOffset, (int)stream.Position - instrOffset, (string)operands[0], MajiroTextCodeType.Ldstr));
                         break;
@@ -191,43 +194,6 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                         currentText += $"[{baseText}/{rubyText}]";
                         break;
 
-                    case MajiroOpcodes.Call when (int)operands[0] == MajiroSyscalls.Select1:
-                    {
-                        int numChoices = (int)operands[2];
-                        List<MajiroTextCodeRange> choices = new List<MajiroTextCodeRange>();
-                        for (int i = 0; i < numChoices; i++)
-                        {
-                            choices.Add(ldstrRanges.Pop());
-                        }
-                        choices.Reverse();
-                        _textCodeRanges.AddRange(choices);
-                        break;
-                    }
-
-                    case MajiroOpcodes.Call when (int)operands[0] == MajiroSyscalls.Select2:
-                    {
-                        ldstrRanges.Pop();
-                        ldstrRanges.Pop();
-
-                        int numChoices = (int)operands[2] - 2;
-                        List<MajiroTextCodeRange> choices = new List<MajiroTextCodeRange>();
-                        for (int i = 0; i < numChoices; i++)
-                        {
-                            choices.Add(ldstrRanges.Pop());
-                        }
-                        choices.Reverse();
-                        _textCodeRanges.AddRange(choices);
-                        break;
-                    }
-
-                    case MajiroOpcodes.Callp when (int)operands[0] == MajiroSyscalls.OkMessageBox:
-                        _textCodeRanges.Add(ldstrRanges.Pop());
-                        break;
-
-                    case MajiroOpcodes.Call when (int)operands[0] == MajiroSyscalls.YesNoMessageBox:
-                        _textCodeRanges.Add(ldstrRanges.Pop());
-                        break;
-
                     case MajiroOpcodes.Ret:
                         return;
 
@@ -244,11 +210,65 @@ namespace VNTextPatch.Shared.Scripts.Majiro
                             _textCodeRanges.Add(new MajiroTextCodeRange(textStartOffset, textEndOffset - textStartOffset, currentText.Trim(), MajiroTextCodeType.Text));
                         }
 
+                        if (opcode == MajiroOpcodes.Call || opcode == MajiroOpcodes.Callp)
+                            ReadSyscall((int)operands[0], (int)operands[2], ldstrRanges);
+
                         textStartOffset = -1;
                         currentText = null;
                         ldstrRanges.Clear();
                         break;
                 }
+            }
+        }
+
+        private void ReadSyscall(int nameHash, int numArgs, Stack<MajiroTextCodeRange> ldstrRanges)
+        {
+            switch (nameHash)
+            {
+                case MajiroSyscalls.Select1:
+                {
+                    List<MajiroTextCodeRange> choices = new List<MajiroTextCodeRange>();
+                    for (int i = 0; i < numArgs; i++)
+                    {
+                        choices.Add(ldstrRanges.Pop());
+                    }
+                    choices.Reverse();
+                    _textCodeRanges.AddRange(choices);
+                    break;
+                }
+
+                case MajiroSyscalls.Select2:
+                {
+                    ldstrRanges.Pop();
+                    ldstrRanges.Pop();
+
+                    int numChoices = numArgs - 2;
+                    List<MajiroTextCodeRange> choices = new List<MajiroTextCodeRange>();
+                    for (int i = 0; i < numChoices; i++)
+                    {
+                        choices.Add(ldstrRanges.Pop());
+                    }
+                    choices.Reverse();
+                    _textCodeRanges.AddRange(choices);
+                    break;
+                }
+
+                case MajiroSyscalls.SelectMenu:
+                {
+                    List<MajiroTextCodeRange> choices = new List<MajiroTextCodeRange>();
+                    for (int i = 0; i < numArgs / 2; i++)
+                    {
+                        choices.Add(ldstrRanges.Pop());
+                    }
+                    choices.Reverse();
+                    _textCodeRanges.AddRange(choices);
+                    break;
+                }
+
+                case MajiroSyscalls.OkMessageBox:
+                case MajiroSyscalls.YesNoMessageBox:
+                    _textCodeRanges.Add(ldstrRanges.Pop());
+                    break;
             }
         }
 
