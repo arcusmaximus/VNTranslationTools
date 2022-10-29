@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts.Softpal
@@ -18,16 +19,23 @@ namespace VNTextPatch.Shared.Scripts.Softpal
             string codeFilePath = location.ToFilePath();
             _code = File.ReadAllBytes(codeFilePath);
 
-            string textFilePath = Path.Combine(Path.GetDirectoryName(codeFilePath), "TEXT.DAT");
+            string folderPath = Path.GetDirectoryName(codeFilePath);
+            string textFilePath = Path.Combine(folderPath, "TEXT.DAT");
             if (!File.Exists(textFilePath))
                 throw new FileNotFoundException($"TEXT.DAT not found at {textFilePath}");
 
+            string pointFilePath = Path.Combine(folderPath, "POINT.DAT");
+            if (!File.Exists(pointFilePath))
+                throw new FileNotFoundException($"POINT.DAT not found at {pointFilePath}");
+
             _text = File.ReadAllBytes(textFilePath);
             _text[0] = (byte)'_';       // Explicitly mark as not encrypted
+            List<int> labelOffsets = ReadPointDat(pointFilePath);
 
             _textOperands.Clear();
             using MemoryStream codeStream = new MemoryStream(_code);
-            SoftpalDisassembler disassembler = new SoftpalDisassembler(codeStream);
+            using StreamWriter writer = GetDisassemblyWriter(codeFilePath);
+            SoftpalDisassembler disassembler = new SoftpalDisassembler(codeStream, labelOffsets, writer);
             disassembler.TextAddressEncountered += (offset, type) => _textOperands.Add(new TextOperand(offset, type));
             disassembler.Disassemble();
         }
@@ -82,6 +90,32 @@ namespace VNTextPatch.Shared.Scripts.Softpal
 
             if (stringEnumerator.MoveNext())
                 throw new InvalidDataException("Too many lines in translation");
+        }
+
+        private static List<int> ReadPointDat(string filePath)
+        {
+            using Stream stream = File.OpenRead(filePath);
+            BinaryReader reader = new BinaryReader(stream);
+
+            string magic = Encoding.ASCII.GetString(reader.ReadBytes(0x10));
+            if (magic != "$POINT_LIST_****")
+                throw new InvalidDataException("Failed to read POINT.DAT: invalid magic");
+
+            List<int> labelOffsets = new List<int>();
+            while (stream.Position < stream.Length)
+            {
+                labelOffsets.Add(SoftpalDisassembler.CodeOffset + reader.ReadInt32());
+            }
+            labelOffsets.Reverse();
+            return labelOffsets;
+        }
+
+        private static StreamWriter GetDisassemblyWriter(string codeFilePath)
+        {
+            return null;
+
+            Stream stream = File.Open(Path.ChangeExtension(codeFilePath, ".txt"), FileMode.Create, FileAccess.Write);
+            return new StreamWriter(stream);
         }
 
         private readonly struct TextOperand
