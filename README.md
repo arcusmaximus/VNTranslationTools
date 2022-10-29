@@ -17,7 +17,7 @@ A tool for extracting original text from, and patching translated text into, a v
 * ShSystem (.hst)
 * Silky's/AI6WIN (.mes/.map)
 * Qlie (.s)
-* Softpal (script.src - make sure text.dat is available in the same folder)
+* Softpal (script.src - make sure text.dat and point.dat are available in the same folder)
 * SystemNNN (.nnn/.spt)
 * TmrHiroAdvSystem (.srp/extensionless - append `--format=tmrhiroadvsystemtext` to command line for the latter)
 * Whale (.txt; append `--format=whale` to command line)
