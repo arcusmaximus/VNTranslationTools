@@ -108,6 +108,7 @@
     <Compile Include="Scripts\Silkys\SilkysDisassemblerBase.cs" />
     <Compile Include="Scripts\Silkys\SilkysSyscalls.cs" />
     <Compile Include="Scripts\Softpal\SoftpalDisassembler.cs" />
+    <Compile Include="Scripts\Softpal\SoftpalOpcodes.cs" />
     <Compile Include="Scripts\Softpal\SoftpalScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnBaseScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnDevScript.cs" />
