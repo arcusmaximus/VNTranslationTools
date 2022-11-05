@@ -3,7 +3,10 @@
 class Proxy
 {
 public:
-    static void Init();
+    static void Init(HMODULE hProxy);
+
+    static inline HMODULE ProxyModuleHandle{};
+    static inline HMODULE OriginalModuleHandle{};
 
     static inline void* OriginalAcquireDDThreadLock{};
     static inline void* OriginalCompleteCreateSysmemSurface{};

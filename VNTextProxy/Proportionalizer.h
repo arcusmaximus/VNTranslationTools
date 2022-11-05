@@ -6,13 +6,14 @@ public:
     static void Init();
     static int MeasureStringWidth(const std::wstring& str, int fontSize);
     
+    static inline std::wstring CustomFontName{};
+    static inline std::wstring CustomFontFilePath{};
+    static inline std::wstring LastFontName{};
     static inline int LastLineEnd;
 
 protected:
     static bool AdaptRenderArgs(const wchar_t* pText, int length, int fontSize, int& x, int& y);
     
-    static inline std::wstring CustomFontName{};
-    static inline std::wstring LastFontName{};
     static inline FontManager FontManager{};
     static inline bool Bold{};
     static inline bool Italic{};

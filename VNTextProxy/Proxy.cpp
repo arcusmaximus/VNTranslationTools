@@ -1,18 +1,20 @@
 #include "pch.h"
 
-void Proxy::Init()
+void Proxy::Init(HMODULE hProxy)
 {
+    ProxyModuleHandle = hProxy;
+
     wchar_t path[MAX_PATH];
     GetSystemDirectory(path, MAX_PATH);
     wcscat_s(path, L"\\d2d1.dll");
-    HMODULE hDll = LoadLibrary(path);
-    if (hDll == nullptr)
+    OriginalModuleHandle = LoadLibrary(path);
+    if (OriginalModuleHandle == nullptr)
     {
         MessageBox(nullptr, L"Cannot load original D2D1 library", L"Proxy", MB_ICONERROR);
         ExitProcess(0);
     }
 
-#define RESOLVE(fn) Original##fn = reinterpret_cast<decltype(Original##fn)>(GetProcAddress(hDll, #fn))
+#define RESOLVE(fn) Original##fn = reinterpret_cast<decltype(Original##fn)>(GetProcAddress(OriginalModuleHandle, #fn))
 
     RESOLVE(D2D1ComputeMaximumScaleFactor);
     RESOLVE(D2D1ConvertColorSpace);

@@ -1,18 +1,20 @@
 #include "pch.h"
 
-void Proxy::Init()
+void Proxy::Init(HMODULE hProxy)
 {
+    ProxyModuleHandle = hProxy;
+    
     wchar_t realDllPath[MAX_PATH];
     GetSystemDirectory(realDllPath, MAX_PATH);
     wcscat_s(realDllPath, L"\\version.dll");
-    HMODULE hDll = LoadLibrary(realDllPath);
-    if (hDll == nullptr)
+    OriginalModuleHandle = LoadLibrary(realDllPath);
+    if (OriginalModuleHandle == nullptr)
     {
         MessageBox(nullptr, L"Cannot load original version.dll library", L"Proxy", MB_ICONERROR);
         ExitProcess(0);
     }
 
-#define RESOLVE(fn) Original##fn = reinterpret_cast<decltype(Original##fn)>(GetProcAddress(hDll, #fn))
+#define RESOLVE(fn) Original##fn = reinterpret_cast<decltype(Original##fn)>(GetProcAddress(OriginalModuleHandle, #fn))
     RESOLVE(GetFileVersionInfoA);
     RESOLVE(GetFileVersionInfoByHandle);
     RESOLVE(GetFileVersionInfoExA);

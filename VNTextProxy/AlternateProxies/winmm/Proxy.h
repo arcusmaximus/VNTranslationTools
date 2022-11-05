@@ -1,9 +1,14 @@
 #pragma once
 
+#define VNTEXTPROXY_WINMM
+
 class Proxy
 {
 public:
-    static void Init();
+    static void Init(HMODULE hProxy);
+
+    static inline HMODULE ProxyModuleHandle{};
+    static inline HMODULE OriginalModuleHandle{};
     
     static inline void* OriginalCloseDriver{};
     static inline void* OriginalDefDriverProc{};

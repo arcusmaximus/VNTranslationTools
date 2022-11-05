@@ -85,15 +85,15 @@ bool Proportionalizer::HandleFormattingCode(wchar_t c)
 
 wstring Proportionalizer::LoadCustomFont()
 {
-    wstring fontFilePath = FindCustomFontFile();
-    if (fontFilePath.empty())
+    CustomFontFilePath = FindCustomFontFile();
+    if (CustomFontFilePath.empty())
         return L"";
 
-    int numFonts = AddFontResourceExW(fontFilePath.c_str(), FR_PRIVATE, nullptr);
+    int numFonts = AddFontResourceExW(CustomFontFilePath.c_str(), FR_PRIVATE, nullptr);
     if (numFonts == 0)
         return L"";
 
-    wstring fontFileName = fontFilePath;
+    wstring fontFileName = CustomFontFilePath;
     fontFileName.erase(0, fontFileName.rfind(L'\\') + 1);
     fontFileName.erase(fontFileName.find(L'.'), -1);
     return fontFileName;

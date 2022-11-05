@@ -3,7 +3,10 @@
 class Proxy
 {
 public:
-    static void Init();
+    static void Init(HMODULE hProxy);
+
+    static inline HMODULE ProxyModuleHandle{};
+    static inline HMODULE OriginalModuleHandle{};
 
     static inline void* OriginalD3DPERF_BeginEvent{};
     static inline void* OriginalD3DPERF_EndEvent{};

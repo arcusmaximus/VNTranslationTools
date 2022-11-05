@@ -67,7 +67,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
-      <AdditionalDependencies>ddraw.lib;dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ddraw.lib;dwrite.lib;d3d11.lib;dsound.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -90,7 +90,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
-      <AdditionalDependencies>ddraw.lib;dwrite.lib;d3d11.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ddraw.lib;dwrite.lib;d3d11.lib;dsound.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -106,7 +106,11 @@
     <ClInclude Include="Proportionalizer.h" />
     <ClInclude Include="SjisTunnelEncoding.h" />
     <ClInclude Include="ImeListener.h" />
+    <ClInclude Include="Subtitles\SubtitleDocument.h" />
+    <ClInclude Include="Subtitles\SubtitleLine.h" />
+    <ClInclude Include="Subtitles\SubtitleRenderer.h" />
     <ClInclude Include="Util\ComPtr.h" />
+    <ClInclude Include="Util\membuf.h" />
     <ClInclude Include="Util\MemoryUnprotector.h" />
     <ClInclude Include="Util\MemoryUtil.h" />
     <ClInclude Include="Util\Path.h" />
@@ -130,6 +134,9 @@
     <ClCompile Include="Proportionalizer.cpp" />
     <ClCompile Include="SjisTunnelEncoding.cpp" />
     <ClCompile Include="ImeListener.cpp" />
+    <ClCompile Include="Subtitles\SubtitleDocument.cpp" />
+    <ClCompile Include="Subtitles\SubtitleLine.cpp" />
+    <ClCompile Include="Subtitles\SubtitleRenderer.cpp" />
     <ClCompile Include="Util\MemoryUnprotector.cpp" />
     <ClCompile Include="Util\MemoryUtil.cpp" />
     <ClCompile Include="Util\Path.cpp" />
