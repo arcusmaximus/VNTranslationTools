@@ -18,7 +18,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
         private static readonly string[] EnterNameCommands = { "ns" };
         private static readonly string[] ExitNameCommands = { "nse" };
         private static readonly string[] MessageCommands = { "sel01", "sel02", "sel03", "sel04", "AddSelect", "ruby" };
-        private static readonly string[] AllowedInlineCommands = { "r", "ruby", "ruby_c", "heart", "・" };
+        private static readonly string[] AllowedInlineCommands = { "r", "ruby", "ruby_c", "heart", "・", "★" };
 
         private ScriptStringType _currentStringType;
 
