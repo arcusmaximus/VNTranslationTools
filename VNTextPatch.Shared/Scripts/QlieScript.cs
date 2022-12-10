@@ -58,6 +58,7 @@ namespace VNTextPatch.Shared.Scripts
                 if (line.StartsWith("@") ||
                     line.StartsWith("^") ||
                     line.StartsWith("\\") ||
+                    line.StartsWith("亾") ||
                     line.StartsWith("％"))
                 {
                     continue;
