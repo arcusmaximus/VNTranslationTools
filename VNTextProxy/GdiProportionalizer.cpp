@@ -17,7 +17,8 @@ void GdiProportionalizer::Init()
             { "DeleteObject", DeleteObjectHook },
             { "GetTextExtentPointA", GetTextExtentPointAHook },
             { "GetTextExtentPoint32A", GetTextExtentPoint32AHook },
-            { "TextOutA", TextOutAHook }
+            { "TextOutA", TextOutAHook },
+            { "GetGlyphOutlineA", GetGlyphOutlineAHook }
         }
     );
 }
@@ -167,6 +168,18 @@ BOOL GdiProportionalizer::TextOutAHook(HDC dc, int x, int y, LPCSTR pString, int
     }
 
     return TextOutW(dc, x, y, text.data(), text.size());
+}
+
+DWORD GdiProportionalizer::GetGlyphOutlineAHook(HDC hdc, UINT uChar, UINT fuFormat, LPGLYPHMETRICS lpgm, DWORD cjBuffer, LPVOID pvBuffer, MAT2* lpmat2)
+{
+    string str;
+    while (uChar != 0)
+    {
+        str.insert(0, 1, (char)uChar);
+        uChar >>= 8;
+    }
+    wstring wstr = SjisTunnelEncoding::Decode(str);
+    return GetGlyphOutlineW(hdc, wstr[0], fuFormat, lpgm, cjBuffer, pvBuffer, lpmat2);
 }
 
 LOGFONTA GdiProportionalizer::ConvertLogFontWToA(const LOGFONTW& logFontW)

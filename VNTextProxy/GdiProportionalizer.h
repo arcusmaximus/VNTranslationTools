@@ -23,6 +23,7 @@ private:
     static BOOL __stdcall GetTextExtentPointAHook(HDC hdc, LPCSTR lpString, int c, LPSIZE lpsz);
     static BOOL __stdcall GetTextExtentPoint32AHook(HDC hdc, LPCSTR lpString, int c, LPSIZE psizl);
     static BOOL __stdcall TextOutAHook(HDC dc, int x, int y, LPCSTR pString, int count);
+    static DWORD __stdcall GetGlyphOutlineAHook(HDC hdc, UINT uChar, UINT fuFormat, LPGLYPHMETRICS lpgm, DWORD cjBuffer, LPVOID pvBuffer, MAT2* lpmat2);
 
     static inline std::map<HDC, Font*> CurrentFonts{};
 
