@@ -68,9 +68,9 @@
     <Compile Include="Scripts\ArcGameEngine\AgeDisassembler.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeStringPoolBuilder.cs" />
     <Compile Include="Scripts\ArcGameEngine\Enumerations.cs" />
-    <Compile Include="Scripts\Artemis\ArtemisArtScript.cs" />
     <Compile Include="Scripts\Artemis\ArtemisAsbScript.cs" />
     <Compile Include="Scripts\Artemis\ArtemisAstScript.cs" />
+    <Compile Include="Scripts\Artemis\ArtemisTxtScript.cs" />
     <Compile Include="Scripts\Artemis\ILuaNode.cs" />
     <Compile Include="Scripts\Artemis\LuaAttribute.cs" />
     <Compile Include="Scripts\Artemis\LuaNumber.cs" />

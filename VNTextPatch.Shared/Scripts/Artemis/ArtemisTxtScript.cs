@@ -5,7 +5,7 @@ using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts.Artemis
 {
-    internal class ArtemisArtScript : PlainTextScript
+    internal class ArtemisTxtScript : PlainTextScript
     {
         public override string Extension => ".art";
         
