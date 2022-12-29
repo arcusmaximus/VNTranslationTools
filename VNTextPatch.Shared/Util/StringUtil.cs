@@ -15,6 +15,19 @@ namespace VNTextPatch.Shared.Util
         private static readonly char[] ControlChars = "\a\b\f\n\r\t\v".ToCharArray();
         private static readonly char[] EscapeChars = "abfnrtv".ToCharArray();
 
+        public static string QuoteC(string str)
+        {
+            return "\"" + EscapeC(str).Replace("\"", "\\\"") + "\"";
+        }
+
+        public static string UnquoteC(string str)
+        {
+            if (str.Length < 2 || !str.StartsWith("\"") || !str.EndsWith("\""))
+                throw new ArgumentException("String is not quoted");
+
+            return UnescapeC(str.Substring(1, str.Length - 2));
+        }
+
         public static string EscapeC(string str)
         {
             StringBuilder result = null;
@@ -25,15 +38,13 @@ namespace VNTextPatch.Shared.Util
                 if (controlCharOffset < 0)
                     break;
 
-                if (result == null)
-                    result = new StringBuilder();
-
+                result ??= new StringBuilder();
                 result.Append(str, startOffset, controlCharOffset - startOffset);
                 result.Append('\\');
                 result.Append(MapChar(str[controlCharOffset], ControlChars, EscapeChars));
                 startOffset = controlCharOffset + 1;
             }
-            if (startOffset == 0)
+            if (result == null)
                 return str;
 
             result.Append(str, startOffset, str.Length - startOffset);
@@ -50,9 +61,7 @@ namespace VNTextPatch.Shared.Util
                 if (backslashOffset < 0)
                     break;
 
-                if (startOffset == 0)
-                    result = new StringBuilder();
-
+                result ??= new StringBuilder();
                 result.Append(str, startOffset, backslashOffset - startOffset);
                 startOffset = backslashOffset + 2;
                 if (backslashOffset < str.Length - 1)
@@ -60,7 +69,7 @@ namespace VNTextPatch.Shared.Util
                 else
                     result.Append('\\');
             }
-            if (startOffset == 0)
+            if (result == null)
                 return str;
 
             result.Append(str, startOffset, str.Length - startOffset);

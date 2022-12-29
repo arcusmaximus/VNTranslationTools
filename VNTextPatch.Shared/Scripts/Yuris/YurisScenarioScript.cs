@@ -369,25 +369,25 @@ namespace VNTextPatch.Shared.Scripts.Yuris
             switch (attr.Type)
             {
                 case YurisAttributeType.Raw:
-                    {
-                        byte[] data = StringUtil.SjisTunnelEncoding.GetBytes(value);
-                        StandardControlCodesToYuris(data, 0, data.Length);
-                        return data;
-                    }
+                {
+                    byte[] data = StringUtil.SjisTunnelEncoding.GetBytes(value);
+                    StandardControlCodesToYuris(data, 0, data.Length);
+                    return data;
+                }
 
                 case YurisAttributeType.Expression:
-                    {
-                        value = value.Replace("\r", "");
-                        value = QuoteString(value);
+                {
+                    value = value.Replace("\r", "");
+                    value = QuoteString(value);
 
-                        int numBytes = StringUtil.SjisTunnelEncoding.GetByteCount(value);
-                        byte[] data = new byte[3 + numBytes];
-                        data[0] = 0x4D;
-                        data[1] = (byte)numBytes;
-                        data[2] = (byte)(numBytes >> 8);
-                        StringUtil.SjisTunnelEncoding.GetBytes(value, 0, value.Length, data, 3);
-                        return data;
-                    }
+                    int numBytes = StringUtil.SjisTunnelEncoding.GetByteCount(value);
+                    byte[] data = new byte[3 + numBytes];
+                    data[0] = 0x4D;
+                    data[1] = (byte)numBytes;
+                    data[2] = (byte)(numBytes >> 8);
+                    StringUtil.SjisTunnelEncoding.GetBytes(value, 0, value.Length, data, 3);
+                    return data;
+                }
 
                 default:
                     throw new NotSupportedException();

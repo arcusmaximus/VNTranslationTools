@@ -30,8 +30,9 @@ namespace VNTextPatch.Shared.Scripts
                 new IScript[]
                 {
                     new AdvHdScript(),
-                    new ArtemisBinaryScript(),
-                    new ArtemisTextScript(),
+                    new ArtemisArtScript(),
+                    new ArtemisAsbScript(),
+                    new ArtemisAstScript(),
                     new AgeScript(),
                     new CatSystemScript(),
                     new CSystemScript(),

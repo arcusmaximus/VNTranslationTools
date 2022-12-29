@@ -62,8 +62,15 @@ namespace VNTextPatch.Shared.Util
 
             foreach (int position in GetWrapPositions(cleanedText.ToString()))
             {
-                int mappingIdx = positionMapping.Values.BinaryLastLessOrEqual(position);
-                yield return position - positionMapping.Values[mappingIdx] + positionMapping.Keys[mappingIdx];
+                if (position == cleanedText.Length)
+                {
+                    yield return text.Length;
+                }
+                else
+                {
+                    int mappingIdx = positionMapping.Values.BinaryLastLessOrEqual(position);
+                    yield return position - positionMapping.Values[mappingIdx] + positionMapping.Keys[mappingIdx];
+                }
             }
         }
 

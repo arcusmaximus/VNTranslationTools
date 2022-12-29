@@ -4,7 +4,7 @@ using namespace std;
 
 void Proportionalizer::Init()
 {
-    CustomFontName = LoadCustomFont();
+    LastFontName = CustomFontName = LoadCustomFont();
 }
 
 int Proportionalizer::MeasureStringWidth(const wstring& str, int fontSize)

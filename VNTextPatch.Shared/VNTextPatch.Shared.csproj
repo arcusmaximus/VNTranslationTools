@@ -68,8 +68,15 @@
     <Compile Include="Scripts\ArcGameEngine\AgeDisassembler.cs" />
     <Compile Include="Scripts\ArcGameEngine\AgeStringPoolBuilder.cs" />
     <Compile Include="Scripts\ArcGameEngine\Enumerations.cs" />
-    <Compile Include="Scripts\Artemis\ArtemisBinaryScript.cs" />
-    <Compile Include="Scripts\Artemis\ArtemisTextScript.cs" />
+    <Compile Include="Scripts\Artemis\ArtemisArtScript.cs" />
+    <Compile Include="Scripts\Artemis\ArtemisAsbScript.cs" />
+    <Compile Include="Scripts\Artemis\ArtemisAstScript.cs" />
+    <Compile Include="Scripts\Artemis\ILuaNode.cs" />
+    <Compile Include="Scripts\Artemis\LuaAttribute.cs" />
+    <Compile Include="Scripts\Artemis\LuaNumber.cs" />
+    <Compile Include="Scripts\Artemis\LuaParser.cs" />
+    <Compile Include="Scripts\Artemis\LuaString.cs" />
+    <Compile Include="Scripts\Artemis\LuaTable.cs" />
     <Compile Include="Scripts\CatSystemScript.cs" />
     <Compile Include="Scripts\CSystemScript.cs" />
     <Compile Include="Scripts\Ethornell\EthornellDisassembler.cs" />
@@ -162,6 +169,7 @@
     <Content Include="names.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Scripts\Nexas\Notes.txt" />
     <Content Include="Scripts\Yuris\Notes.txt" />
     <Content Include="template.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -198,6 +206,9 @@
     <PackageReference Include="System.Security.Cryptography.X509Certificates">
       <Version>4.3.2</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Scripts\Nexas\spm.ksy" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

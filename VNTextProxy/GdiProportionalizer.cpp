@@ -161,7 +161,7 @@ BOOL GdiProportionalizer::TextOutAHook(HDC dc, int x, int y, LPCSTR pString, int
     if (!AdaptRenderArgs(text.c_str(), text.size(), pFont->GetHeight(), x, y))
         return false;
 
-    if (!CustomFontName.empty() && pFont->IsBold() != Bold || pFont->IsItalic() != Italic || pFont->IsUnderline() != Underline)
+    if (!CustomFontName.empty() && (pFont->IsBold() != Bold || pFont->IsItalic() != Italic || pFont->IsUnderline() != Underline))
     {
         pFont = FontManager.FetchFont(CustomFontName, pFont->GetHeight(), Bold, Italic, Underline);
         SelectObjectHook(dc, pFont->GetGdiHandle());

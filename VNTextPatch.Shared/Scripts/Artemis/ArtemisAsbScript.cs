@@ -6,29 +6,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using VNTextPatch.Shared.Util;
 
-
-/*
-
-+		[43]	{RegisterTextToHistory(0=NULL, 1=幾多の人生が逃れ得ぬ汚泥に囚われているように。)}	object {VNTextPatch.Shared.Scripts.Artemis.ArtemisBinaryScript.Command}
-+		[143]	{name(0=少女)}	object {VNTextPatch.Shared.Scripts.Artemis.ArtemisBinaryScript.Command}
-+		[144]	{print(data=「っ……！？」)}	object {VNTextPatch.Shared.Scripts.Artemis.ArtemisBinaryScript.Command}
-
--		command	{sel_text(label=SelectItem0000601, exp=t.ens:0, text=機嫌を取る)}	VNTextPatch.Shared.Scripts.Artemis.ArtemisBinaryScript.Command
-
-
-
-
-+		[230]	{ruby(text=しゅんげん)}	object {VNTextPatch.Shared.Scripts.Artemis.ArtemisBinaryScript.Command}
-+		[231]	{print(data=峻厳)}	object {VNTextPatch.Shared.Scripts.Artemis.ArtemisBinaryScript.Command}
-+		[232]	{/ruby()}	object {VNTextPatch.Shared.Scripts.Artemis.ArtemisBinaryScript.Command}
-+		[233]	{print(data=な崖壁により周囲から隔絶された、都市の底だ。)}	object {VNTextPatch.Shared.Scripts.Artemis.ArtemisBinaryScript.Command}
-
-
-*/
-
 namespace VNTextPatch.Shared.Scripts.Artemis
 {
-    public class ArtemisBinaryScript : IScript
+    public class ArtemisAsbScript : IScript
     {
         private List<object> _items;
         private List<TextReference> _textRefs;
