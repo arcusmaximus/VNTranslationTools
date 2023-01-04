@@ -82,6 +82,9 @@ namespace VNTextPatch.Shared.Scripts.Artemis
                 throw new InvalidDataException("No \"=\" found after attribute name");
 
             ILuaNode value = Read(text, ref pos);
+            if (value == null)
+                throw new InvalidDataException("Attribute without value encountered");
+
             return new LuaAttribute(name, value);
         }
 
