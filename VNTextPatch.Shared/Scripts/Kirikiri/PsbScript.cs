@@ -62,7 +62,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
                 {
                     if (str.Type == ScriptStringType.Message)
                     {
-                        psb.Text.Value = ProportionalWordWrapper.Default.Wrap(StringUtil.FancifyQuotes(str.Text, @"\$.+?;"));
+                        psb.Text.Value = ProportionalWordWrapper.Default.Wrap(StringUtil.FancifyQuotes(str.Text, new Regex(@"\$.+?;")), null, "\\n");
                     }
                     else
                     {

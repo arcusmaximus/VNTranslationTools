@@ -174,9 +174,9 @@ namespace VNTextPatch.Shared.Util
                 yield return (input.Substring(startPos), null);
         }
 
-        public static string FancifyQuotes(string str, string tagRegex = null)
+        public static string FancifyQuotes(string str, Regex tagRegex = null)
         {
-            MatchCollection tagMatches = tagRegex != null ? Regex.Matches(str, tagRegex) : null;
+            MatchCollection tagMatches = tagRegex?.Matches(str);
             str = Regex.Replace(
                 str,
                 @"(?<=^|\s|"")'",
