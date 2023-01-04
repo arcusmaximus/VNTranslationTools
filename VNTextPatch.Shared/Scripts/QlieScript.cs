@@ -94,5 +94,18 @@ namespace VNTextPatch.Shared.Scripts
                 start = end;
             }
         }
+        
+        protected override string GetTextForRead(Range range)
+        {
+            return base.GetTextForRead(range).Replace("[n]", "\r\n");
+        }
+
+        protected override string GetTextForWrite(Range range, ScriptString str)
+        {
+            string text = base.GetTextForWrite(range, str);
+            text = MonospaceWordWrapper.Default.Wrap(text);
+            text = text.Replace("\r\n", "[n]");
+            return text;
+        }
     }
 }
