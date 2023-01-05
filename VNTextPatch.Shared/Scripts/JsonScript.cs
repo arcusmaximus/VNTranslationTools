@@ -21,11 +21,9 @@ namespace VNTextPatch.Shared.Scripts
         {
             foreach (Entry entry in _entries)
             {
-                if (!string.IsNullOrEmpty(entry.Name))
-                {
-                    yield return new ScriptString(entry.Name, ScriptStringType.CharacterName);
-                }
-                else if (entry.Names != null)
+                yield return new ScriptString(entry.Name, ScriptStringType.CharacterName);
+
+                if (entry.Names != null)
                 {
                     foreach (string name in entry.Names)
                     {

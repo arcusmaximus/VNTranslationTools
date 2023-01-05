@@ -38,6 +38,9 @@ VNTextPatch insertlocal <folder containing original game files> <folder containi
 
 Google Documents:
 VNTextPatch insertgdocs <folder containing original game files> <Google Docs spreadsheet identifier> <folder to receive patched game files>
+
+For Kirikiri Optional:
+--language=1 // 0 is Default, 1...N etc is other Languages
 ```
 
 The input folder should only contain the original scenario files. If it contains files of another format, VNTextPatch may not be able to determine the input format to use.

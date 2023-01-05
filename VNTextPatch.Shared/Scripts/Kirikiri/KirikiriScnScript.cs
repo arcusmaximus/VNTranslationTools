@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -7,9 +8,9 @@ using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts.Kirikiri
 {
-    public class KirikiriScnScript : IScript
+    public class KirikiriScnScript : IScript, ILoadWithParams
     {
-        private const int LanguageIndex = 0;
+        private int LanguageIndex = 0;
 
         private static readonly Regex ControlCodeRegex = new Regex(
           @"    \\.        # Escape sequence
@@ -47,6 +48,21 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
         public void Load(ScriptLocation location)
         {
             _psb = new PSB(location.ToFilePath());
+        }
+
+        public void LoadWithParams(ScriptLocation location, params object[] values)
+        {
+            Load(location);
+
+            try
+            {
+                LanguageIndex = (int)values[0];
+            }
+            catch
+            {
+                LanguageIndex = 0;
+                Console.WriteLine("[WARNING] Bad Language Params, Selected Default Language");
+            }
         }
 
         public IEnumerable<ScriptString> GetStrings()

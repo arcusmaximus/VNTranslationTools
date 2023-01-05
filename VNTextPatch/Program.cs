@@ -52,12 +52,6 @@ namespace VNTextPatch
 
         private static void ExtractLocal(string[] args, Options options)
         {
-            if (args.Length != 3)
-            {
-                PrintUsage();
-                return;
-            }
-
             string inputPath = Path.GetFullPath(args[1]);
             string textPath = Path.GetFullPath(args[2]);
 
@@ -72,9 +66,9 @@ namespace VNTextPatch
             {
                 
                 if (inputLocation.ScriptName != null)
-                    extracter.ExtractOne(inputLocation.ScriptName, textLocation.ScriptName);
+                    extracter.ExtractOne(inputLocation.ScriptName, textLocation.ScriptName, options.Values.ToArray());
                 else
-                    extracter.ExtractAll();
+                    extracter.ExtractAll(options.Values.ToArray());
 
                 PrintExtractionStatistics(extracter.TotalLines, extracter.TotalCharacters);
             }
@@ -92,12 +86,6 @@ namespace VNTextPatch
 
         private static void InsertLocal(string[] args, Options options)
         {
-            if (args.Length != 4 && args.Length != 5)
-            {
-                PrintUsage();
-                return;
-            }
-
             string inputPath = Path.GetFullPath(args[1]);
             string textPath = Path.GetFullPath(args[2]);
             string outputPath = Path.GetFullPath(args[3]);
@@ -122,14 +110,14 @@ namespace VNTextPatch
                 {
                     ScriptLocation outputLocation = ScriptLocation.FromFilePath(outputPath, options.Format);
                     inserter = new Inserter(inputLocation.Collection, textLocation.Collection, outputLocation.Collection);
-                    inserter.InsertOne(inputLocation.ScriptName, textLocation.ScriptName, outputLocation.ScriptName);
+                    inserter.InsertOne(inputLocation.ScriptName, textLocation.ScriptName, outputLocation.ScriptName, options.Values.ToArray());
                 }
                 else
                 {
                     FolderScriptCollection inputCollection = (FolderScriptCollection)inputLocation.Collection;
                     FolderScriptCollection outputCollection = new FolderScriptCollection(outputPath, options.Format, inputCollection.Extension);
                     inserter = new Inserter(inputCollection, textLocation.Collection, outputCollection);
-                    inserter.InsertAll();
+                    inserter.InsertAll(options.Values.ToArray());
                 }
 
                 byte[] sjisExtContent = StringUtil.SjisTunnelEncoding.GetMappingTable();
@@ -148,12 +136,6 @@ namespace VNTextPatch
 
         private static void InsertGoogleDocs(string[] args, Options options)
         {
-            if (args.Length != 4 && args.Length != 5)
-            {
-                PrintUsage();
-                return;
-            }
-
             string inputPath = Path.GetFullPath(args[1]);
             string spreadsheetId = args[2];
             string outputPath = Path.GetFullPath(args[3]);
@@ -295,6 +277,9 @@ namespace VNTextPatch
                     string value = match.Groups["value"].Value;
                     switch (name)
                     {
+                        case "language":
+                            options.Values.Add(int.Parse(value));
+                            break;
                         case "format":
                             options.Format = value;
                             break;
@@ -310,6 +295,14 @@ namespace VNTextPatch
                 get;
                 private set;
             }
+
+            public List<object> Values
+            {
+                get => _values;
+                private set => _values = value;
+            }
+
+            private List<object> _values = new List<object>();
         }
     }
 }

@@ -34,12 +34,20 @@ namespace VNTextPatch.Shared
             private set;
         }
 
-        public void ExtractOne(string inputScriptName, string textScriptName)
+        public void ExtractOne(string inputScriptName, string textScriptName, params object[] values)
         {
             if (!_inputCollection.Exists(inputScriptName))
                 throw new FileNotFoundException($"{inputScriptName} does not exist in {_inputCollection.Name}");
 
-            _inputScript.Load(new ScriptLocation(_inputCollection, inputScriptName));
+            if (_inputScript is ILoadWithParams _inputScriptWithParams)
+            {
+                _inputScriptWithParams.LoadWithParams(new ScriptLocation(_inputCollection, inputScriptName), values);
+            }
+            else
+            {
+                _inputScript.Load(new ScriptLocation(_inputCollection, inputScriptName));
+            }
+
             List<ScriptString> strings = _inputScript.GetStrings().ToList();
             if (strings.Count == 0)
                 return;
@@ -56,7 +64,7 @@ namespace VNTextPatch.Shared
             }
         }
 
-        public void ExtractAll()
+        public void ExtractAll(params object[] values)
         {
             foreach (string inputScriptName in _inputCollection.Scripts)
             {
@@ -68,7 +76,7 @@ namespace VNTextPatch.Shared
                 else
                     textScriptName = inputScriptName + _textScript.Extension;
 
-                ExtractOne(inputScriptName, textScriptName);
+                ExtractOne(inputScriptName, textScriptName, values);
             }
         }
     }

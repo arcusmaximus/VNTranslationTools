@@ -32,7 +32,7 @@ namespace VNTextPatch.Shared
             get { return _textScript as ILineStatistics; }
         }
 
-        public void InsertOne(string inputScriptName, string textScriptName, string outputScriptName)
+        public void InsertOne(string inputScriptName, string textScriptName, string outputScriptName, params object[] values)
         {
             if (!_inputCollection.Exists(inputScriptName))
                 throw new FileNotFoundException($"{inputScriptName} does not exist in {_inputCollection.Name}");
@@ -40,16 +40,30 @@ namespace VNTextPatch.Shared
             if (!_textCollection.Exists(textScriptName))
                 throw new FileNotFoundException($"{textScriptName} does not exist in {_textCollection.Name}");
 
-            _textScript.Load(new ScriptLocation(_textCollection, textScriptName));
+            if (_textScript is ILoadWithParams _inputScriptWithParams)
+            {
+                _inputScriptWithParams.LoadWithParams(new ScriptLocation(_textCollection, textScriptName), values);
+            }
+            else
+            {
+                _textScript.Load(new ScriptLocation(_textCollection, textScriptName));
+            }
             IEnumerable<ScriptString> strings = _textScript.GetStrings();
 
-            _inputOutputScript.Load(new ScriptLocation(_inputCollection, inputScriptName));
+            if (_inputOutputScript is ILoadWithParams _inputOutputScriptWithParams)
+            {
+                _inputOutputScriptWithParams.LoadWithParams(new ScriptLocation(_inputCollection, inputScriptName), values);
+            }
+            else
+            {
+                _inputOutputScript.Load(new ScriptLocation(_inputCollection, inputScriptName));
+            }
 
             _outputCollection.Add(outputScriptName);
             _inputOutputScript.WritePatched(strings, new ScriptLocation(_outputCollection, outputScriptName));
         }
 
-        public void InsertAll()
+        public void InsertAll(params object[] values)
         {
             foreach (string inputScriptName in _inputCollection.Scripts)
             {
@@ -63,7 +77,7 @@ namespace VNTextPatch.Shared
 
                 if (_textCollection.Exists(textScriptName))
                 {
-                    InsertOne(inputScriptName, textScriptName, inputScriptName);
+                    InsertOne(inputScriptName, textScriptName, inputScriptName, values);
                 }
                 else
                 {
