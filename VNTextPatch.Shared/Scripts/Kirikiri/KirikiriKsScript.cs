@@ -7,14 +7,14 @@ using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts.Kirikiri
 {
-    public class KirikiriScript : PlainTextScript
+    public class KirikiriKsScript : PlainTextScript
     {
         private static readonly Regex LineCommandRegex   = new Regex(@"^\s*@(?<command>[^ ]+)(?: +(?<attrname>[^= ]+)(?: *= *(?<attrvalue>""(?:\\""|[^""])*""|'(?:\\'|[^'])*'|[^""' ]*))?)*", RegexOptions.Compiled);
         private static readonly Regex InlineCommandRegex = new Regex(@"\[(?<command>[^\]' ]+)(?: +(?<attrname>[^\]= ]+)(?: *= *(?<attrvalue>""(?:\\""|[^""])*""|'(?:\\'|[^'])*'|[^\]""' ]*))?)* *\]", RegexOptions.Compiled);
 
         private static readonly Regex PlainRubyRegex = new Regex(@"\[(?<text>[^/\]]+?)/(?<ruby>[^\]]+?)\]", RegexOptions.Compiled);
 
-        private static readonly string[] NameCommands = { "nm", "set_title", "speaker", "Talk", "cn" , "name", "名前" };
+        private static readonly string[] NameCommands = { "nm", "set_title", "speaker", "Talk", "talk", "cn", "name", "名前" };
         private static readonly string[] EnterNameCommands = { "ns" };
         private static readonly string[] ExitNameCommands = { "nse" };
         private static readonly string[] MessageCommands = { "sel01", "sel02", "sel03", "sel04", "AddSelect", "ruby" };

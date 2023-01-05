@@ -7,7 +7,7 @@ using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts.Kirikiri
 {
-    public class PsbScript : IScript
+    public class KirikiriScnScript : IScript
     {
         private const int LanguageIndex = 0;
 
@@ -62,7 +62,7 @@ namespace VNTextPatch.Shared.Scripts.Kirikiri
                 {
                     if (str.Type == ScriptStringType.Message)
                     {
-                        psb.Text.Value = ProportionalWordWrapper.Default.Wrap(StringUtil.FancifyQuotes(str.Text, new Regex(@"\$.+?;")), null, "\\n");
+                        psb.Text.Value = ProportionalWordWrapper.Default.Wrap(StringUtil.FancifyQuotes(str.Text, ControlCodeRegex), ControlCodeRegex, "\\n");
                     }
                     else
                     {

@@ -87,7 +87,10 @@
     <Compile Include="Scripts\JsonScript.cs" />
     <Compile Include="Scripts\KaguyaScript.cs" />
     <Compile Include="Scripts\Kirikiri\KirikiriDescrambler.cs" />
-    <Compile Include="Scripts\Kirikiri\PsbScript.cs" />
+    <Compile Include="Scripts\Kirikiri\KirikiriKsScript.cs" />
+    <Compile Include="Scripts\Kirikiri\KirikiriScnScript.cs" />
+    <Compile Include="Scripts\Kirikiri\KirikiriSocScript.cs" />
+    <Compile Include="Scripts\Kirikiri\KirikiriTjsScript.cs" />
     <Compile Include="Scripts\Majiro\MajiroAssembler.cs" />
     <Compile Include="Scripts\Majiro\MajiroDisassembler.cs" />
     <Compile Include="Scripts\Majiro\MajiroOpcodes.cs" />
@@ -120,7 +123,6 @@
     <Compile Include="Scripts\SystemNnn\SystemNnnBaseScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnDevScript.cs" />
     <Compile Include="Scripts\SystemNnn\SystemNnnReleaseScript.cs" />
-    <Compile Include="Scripts\Kirikiri\TjsScript.cs" />
     <Compile Include="CharacterNames.cs" />
     <Compile Include="Scripts\TmrHiroAdvSystem\TmrHiroAdvSystemCodeScript.cs" />
     <Compile Include="Scripts\TmrHiroAdvSystem\TmrHiroAdvSystemTextScript.cs" />
@@ -141,7 +143,6 @@
     <Compile Include="Scripts\GoogleDocsScript.cs" />
     <Compile Include="Scripts\PlainTextScript.cs" />
     <Compile Include="Scripts\RenpyScript.cs" />
-    <Compile Include="Scripts\Kirikiri\KirikiriScript.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripts\Range.cs" />
     <Compile Include="ScriptLocation.cs" />

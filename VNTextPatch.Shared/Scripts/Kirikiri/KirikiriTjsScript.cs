@@ -7,7 +7,7 @@ using VNTextPatch.Shared.Util;
 
 namespace VNTextPatch.Shared.Scripts.Kirikiri
 {
-    public class TjsScript : IScript
+    public class KirikiriTjsScript : IScript
     {
         private static readonly byte[] Magic = { 0x54, 0x4A, 0x53, 0x32, 0x31, 0x30, 0x30, 0x00 };
         private static readonly byte[] DataTag = { 0x44, 0x41, 0x54, 0x41 };
