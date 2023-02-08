@@ -168,7 +168,12 @@ DWORD Win32AToWAdapter::GetModuleFileNameAHook(HMODULE hModule, LPSTR lpFilename
 
 HMODULE Win32AToWAdapter::LoadLibraryAHook(LPCSTR lpLibFileName)
 {
-    HMODULE hModule = LoadLibraryW(SjisTunnelEncoding::Decode(lpLibFileName).c_str());
+    wstring libName = SjisTunnelEncoding::Decode(lpLibFileName);
+    HMODULE hModule = GetModuleHandleW(libName.c_str());
+    if (hModule != nullptr)
+        return hModule;
+
+    hModule = LoadLibraryW(libName.c_str());
     if (hModule)
         ImportHooker::ApplyToModule(hModule);
 

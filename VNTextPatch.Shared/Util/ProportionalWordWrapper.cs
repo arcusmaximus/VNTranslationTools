@@ -9,17 +9,17 @@ namespace VNTextPatch.Shared.Util
         public static readonly ProportionalWordWrapper Default =
             new ProportionalWordWrapper(
                 ConfigurationManager.AppSettings["ProportionalFontName"],
-                Convert.ToInt32(ConfigurationManager.AppSettings["ProportionalFontSize"]) * 2,
+                Convert.ToInt32(ConfigurationManager.AppSettings["ProportionalFontSize"]),
                 Convert.ToBoolean(ConfigurationManager.AppSettings["ProportionalFontBold"]),
-                Convert.ToInt32(ConfigurationManager.AppSettings["ProportionalLineWidth"]) * 2
+                Convert.ToInt32(ConfigurationManager.AppSettings["ProportionalLineWidth"])
             );
 
         public static readonly ProportionalWordWrapper Secondary =
             new ProportionalWordWrapper(
                 ConfigurationManager.AppSettings["ProportionalFontName"],
-                Convert.ToInt32(ConfigurationManager.AppSettings["ProportionalFontSize"]) * 2,
+                Convert.ToInt32(ConfigurationManager.AppSettings["ProportionalFontSize"]),
                 Convert.ToBoolean(ConfigurationManager.AppSettings["ProportionalFontBold"]),
-                Convert.ToInt32(ConfigurationManager.AppSettings["SecondaryProportionalLineWidth"]) * 2
+                Convert.ToInt32(ConfigurationManager.AppSettings["SecondaryProportionalLineWidth"])
             );
 
         private readonly IntPtr _dc;
