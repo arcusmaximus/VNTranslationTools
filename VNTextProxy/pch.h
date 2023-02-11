@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+#define _ITERATOR_DEBUG_LEVEL 0
 
 #include <windows.h>
 #include <ctffunc.h>
@@ -34,9 +35,19 @@
 #include "Util/MemoryUnprotector.h"
 #include "Util/StringUtil.h"
 
+#include "PE/PE.h"
+
+#include "CompilerSpecific/Enumerations.h"
+#include "CompilerSpecific/CompilerHelper.h"
+#include "CompilerSpecific/Rtti/BorlandTypeDescriptor.h"
+#include "CompilerSpecific/Rtti/MsvcRttiCompleteObjectLocator.h"
+
 #include "Subtitles/SubtitleLine.h"
 #include "Subtitles/SubtitleDocument.h"
 #include "Subtitles/SubtitleRenderer.h"
+
+#include "Patches/BabelPatch.h"
+#include "Patches/EnginePatches.h"
 
 #include "Proxy.h"
 #include "ImportHooker.h"
@@ -47,7 +58,6 @@
 #include "Proportionalizer.h"
 #include "GdiProportionalizer.h"
 #include "D2DProportionalizer.h"
-#include "EnginePatches.h"
 #include "LocaleEmulator.h"
 
 #include "ImeListener.h"

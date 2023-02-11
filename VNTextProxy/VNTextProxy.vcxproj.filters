@@ -33,9 +33,6 @@
     <ClInclude Include="GdiProportionalizer.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="EnginePatches.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="LocaleEmulator.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -81,6 +78,27 @@
     <ClInclude Include="Util\membuf.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="PE\PE.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="CompilerSpecific\Rtti\BorlandTypeDescriptor.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="CompilerSpecific\Rtti\MsvcRttiCompleteObjectLocator.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="CompilerSpecific\CompilerHelper.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="CompilerSpecific\Enumerations.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Patches\EnginePatches.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Patches\BabelPatch.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -102,9 +120,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="GdiProportionalizer.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="EnginePatches.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="LocaleEmulator.cpp">
@@ -144,6 +159,18 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Subtitles\SubtitleRenderer.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="PE\PE.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="CompilerSpecific\CompilerHelper.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Patches\EnginePatches.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Patches\BabelPatch.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

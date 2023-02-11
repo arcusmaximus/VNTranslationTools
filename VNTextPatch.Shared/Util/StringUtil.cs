@@ -97,6 +97,13 @@ namespace VNTextPatch.Shared.Util
             return c >= 0x3000;
         }
 
+        public static string ToHalfWidth(string str)
+        {
+            StringBuilder result = new StringBuilder(str.Length);
+            result.Length = NativeMethods.LCMapStringEx("ja-JP", NativeMethods.LCMAP_HALFWIDTH, str, str.Length, result, result.Capacity + 1, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            return result.ToString();
+        }
+
         public static string ToFullWidth(string str)
         {
             StringBuilder result = new StringBuilder(str.Length);

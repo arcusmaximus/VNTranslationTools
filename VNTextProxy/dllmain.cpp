@@ -28,12 +28,12 @@ void Initialize()
     }
     //*/
 
+    CompilerHelper::Init();
     Win32AToWAdapter::Init();
     SjisTunnelEncoding::PatchGameLookupTable();
 
-    // Uncomment one of these depending on what the game uses
     GdiProportionalizer::Init();
-    //D2DProportionalizer::Init();
+    D2DProportionalizer::Init();
 
     EnginePatches::Init();
 

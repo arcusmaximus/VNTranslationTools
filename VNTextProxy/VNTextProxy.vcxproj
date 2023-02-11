@@ -94,11 +94,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CompilerSpecific\CompilerHelper.h" />
+    <ClInclude Include="CompilerSpecific\Enumerations.h" />
+    <ClInclude Include="CompilerSpecific\Rtti\BorlandTypeDescriptor.h" />
+    <ClInclude Include="CompilerSpecific\Rtti\MsvcRttiCompleteObjectLocator.h" />
     <ClInclude Include="D2DProportionalizer.h" />
-    <ClInclude Include="EnginePatches.h" />
     <ClInclude Include="GdiProportionalizer.h" />
     <ClInclude Include="ImportHooker.h" />
     <ClInclude Include="LocaleEmulator.h" />
+    <ClInclude Include="Patches\BabelPatch.h" />
+    <ClInclude Include="Patches\EnginePatches.h" />
+    <ClInclude Include="PE\PE.h" />
     <ClInclude Include="Proxy.h" />
     <ClInclude Include="Font.h" />
     <ClInclude Include="FontManager.h" />
@@ -118,12 +124,15 @@
     <ClInclude Include="Win32AToWAdapter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CompilerSpecific\CompilerHelper.cpp" />
     <ClCompile Include="D2DProportionalizer.cpp" />
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="EnginePatches.cpp" />
     <ClCompile Include="GdiProportionalizer.cpp" />
     <ClCompile Include="ImportHooker.cpp" />
     <ClCompile Include="LocaleEmulator.cpp" />
+    <ClCompile Include="Patches\BabelPatch.cpp" />
+    <ClCompile Include="Patches\EnginePatches.cpp" />
+    <ClCompile Include="PE\PE.cpp" />
     <ClCompile Include="Proxy.cpp" />
     <ClCompile Include="Font.cpp" />
     <ClCompile Include="FontManager.cpp" />
