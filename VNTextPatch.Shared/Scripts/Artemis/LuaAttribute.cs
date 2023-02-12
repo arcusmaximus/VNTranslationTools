@@ -31,7 +31,17 @@ namespace VNTextPatch.Shared.Scripts.Artemis
 
         public void ToString(StringBuilder result, int indentLevel)
         {
-            result.Append(Name);
+            if (char.IsDigit(Name[0]))
+            {
+                result.Append('[');
+                result.Append(Name);
+                result.Append(']');
+            }
+            else
+            {
+                result.Append(Name);
+            }
+
             result.Append(" = ");
             Value.ToString(result, indentLevel);
         }

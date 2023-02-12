@@ -16,9 +16,12 @@ namespace VNTextPatch.Shared.Scripts.Artemis
                 return ReadNumber(text, ref pos);
 
             if (c == '"' || c == '\'')
-                return ReadString(text, ref pos);
+                return ReadQuotedString(text, ref pos);
 
-            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')
+            if (c == '[' && pos + 1 < text.Length && (text[pos + 1] == '[' || text[pos + 1] == '='))
+                return ReadBracketedString(text, ref pos);
+
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '[')
                 return ReadAttribute(text, ref pos);
 
             if (c == '{')
@@ -49,7 +52,7 @@ namespace VNTextPatch.Shared.Scripts.Artemis
             return new LuaNumber(text.Substring(startPos, pos - startPos));
         }
 
-        private static LuaString ReadString(string text, ref int pos)
+        private static LuaString ReadQuotedString(string text, ref int pos)
         {
             int startPos = pos;
             char quote = text[pos++];
@@ -64,18 +67,89 @@ namespace VNTextPatch.Shared.Scripts.Artemis
             return new LuaString(StringUtil.UnescapeC(text.Substring(startPos + 1, pos - startPos - 2)));
         }
 
+        private static LuaString ReadBracketedString(string text, ref int pos)
+        {
+            pos++;
+            int openBracketLevel = 0;
+            while (pos < text.Length && text[pos] == '=')
+            {
+                openBracketLevel++;
+                pos++;
+            }
+
+            if (pos == text.Length || text[pos] != '[')
+                throw new InvalidDataException("No second [ found in literal string");
+
+            pos++;
+            int startPos = pos;
+            int endPos = 0;
+            bool inClosingBracket = false;
+            int closeBracketLevel = 0;
+            while (true)
+            {
+                if (pos == text.Length)
+                    throw new InvalidDataException("Unclosed literal string encountered");
+
+                char c = text[pos++];
+                if (c == ']')
+                {
+                    if (!inClosingBracket || closeBracketLevel != openBracketLevel)
+                    {
+                        endPos = pos - 1;
+                        inClosingBracket = true;
+                        closeBracketLevel = 0;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                else if (c == '=')
+                {
+                    if (inClosingBracket)
+                        closeBracketLevel++;
+                }
+                else
+                {
+                    inClosingBracket = false;
+                }
+            }
+
+            return new LuaString(text.Substring(startPos, endPos - startPos));
+        }
+
         private static LuaAttribute ReadAttribute(string text, ref int pos)
         {
             int nameStartPos = pos;
-            while (pos < text.Length)
+            string name;
+            if (text[pos] == '[')
             {
-                char c = text[pos];
-                if (char.IsLetterOrDigit(c) || c == '_')
-                    pos++;
-                else
-                    break;
+                pos++;
+                ILuaNode nameNode = Read(text, ref pos);
+                name = nameNode switch
+                       {
+                           LuaNumber num => num.Value,
+                           LuaString str => str.Value,
+                           _ => throw new InvalidDataException("Invalid data type in attribute name")
+                       };
+                SkipWhitespace(text, ref pos);
+                if (pos == text.Length || text[pos] != ']')
+                    throw new InvalidDataException("No \"]\" found after attribute name");
+
+                pos++;
             }
-            string name = text.Substring(nameStartPos, pos - nameStartPos);
+            else
+            {
+                while (pos < text.Length)
+                {
+                    char c = text[pos];
+                    if (char.IsLetterOrDigit(c) || c == '_')
+                        pos++;
+                    else
+                        break;
+                }
+                name = text.Substring(nameStartPos, pos - nameStartPos);
+            }
 
             SkipWhitespace(text, ref pos);
             if (pos == text.Length || text[pos++] != '=')

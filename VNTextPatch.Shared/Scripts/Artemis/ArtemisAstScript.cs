@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -40,44 +41,15 @@ namespace VNTextPatch.Shared.Scripts.Artemis
 
         public IEnumerable<ScriptString> GetStrings()
         {
-            foreach (LuaTable line in GetLineTables())
+            foreach ((ILuaNode node, ScriptStringType type) in GetStringNodes())
             {
-                StringBuilder text = new StringBuilder();
-                foreach (ILuaNode item in line)
-                {
-                    switch (item)
-                    {
-                        case LuaAttribute attr:
-                            if (attr.Name == "name" && attr.Value is LuaTable names)
-                            {
-                                foreach (LuaString name in names.OfType<LuaString>())
-                                {
-                                    yield return new ScriptString(name.Value, ScriptStringType.CharacterName);
-                                }
-                            }
-                            else
-                            {
-                                throw new InvalidDataException($"Encountered unknown attribute \"{attr.Name}\" in message");
-                            }
-                            break;
-
-                        case LuaString str:
-                            text.Append(str.Value);
-                            break;
-
-                        case LuaTable table:
-                            if (table.Count == 1 && table[0] is LuaString cmdName && cmdName.Value == "rt2")
-                                text.AppendLine();
-                            else
-                                TableToCommand(table, text);
-
-                            break;
-
-                        default:
-                            throw new InvalidDataException("Message contains invalid item types");
-                    }
-                }
-                yield return new ScriptString(text.ToString().Trim(), ScriptStringType.Message);
+                string text = node switch
+                              {
+                                  LuaString str => str.Value,
+                                  LuaTable table => SerializeMessage(table),
+                                  _ => throw new InvalidDataException()
+                              };
+                yield return new ScriptString(text, type);
             }
         }
 
@@ -85,32 +57,26 @@ namespace VNTextPatch.Shared.Scripts.Artemis
         {
             using IEnumerator<ScriptString> stringEnumerator = strings.GetEnumerator();
 
-            foreach (LuaTable line in GetLineTables())
+            foreach ((ILuaNode node, ScriptStringType type) in GetStringNodes())
             {
-                line.Clear();
                 if (!stringEnumerator.MoveNext())
-                    throw new InvalidDataException("Not enough strings in translation");
+                    throw new InvalidDataException("Too few strings in translation");
 
-                LuaTable names = null;
-                while (stringEnumerator.Current.Type == ScriptStringType.CharacterName)
-                {
-                    names ??= new LuaTable();
-                    names.Add(new LuaString(stringEnumerator.Current.Text));
-                    if (!stringEnumerator.MoveNext())
-                        throw new InvalidDataException("Not enough strings in translation");
-                }
-                if (names != null)
-                    line.Add(new LuaAttribute("name", names));
+                if (stringEnumerator.Current.Type != type)
+                    throw new InvalidDataException("Translation type mismatch");
 
-                string text = ProportionalWordWrapper.Default.Wrap(stringEnumerator.Current.Text, CommandRegex);
-                foreach ((string segment, Match match) in StringUtil.GetMatchingAndSurroundingTexts(text, new Regex(@"\r\n|\[.+?\]")))
+                string text = stringEnumerator.Current.Text;
+
+                switch (node)
                 {
-                    if (segment != null)
-                        line.Add(new LuaString(segment));
-                    else if (match.Value == "\r\n")
-                        line.Add(new LuaTable { new LuaString("rt2") });
-                    else
-                        line.Add(CommandToTable(match.Value));
+                    case LuaString str:
+                        str.Value = stringEnumerator.Current.Text;
+                        break;
+
+                    case LuaTable table:
+                        text = ProportionalWordWrapper.Default.Wrap(text, CommandRegex);
+                        DeserializeMessage(text, table);
+                        break;
                 }
             }
 
@@ -125,29 +91,123 @@ namespace VNTextPatch.Shared.Scripts.Artemis
             }
         }
 
-        private IEnumerable<LuaTable> GetLineTables()
+        private IEnumerable<(ILuaNode, ScriptStringType)> GetStringNodes()
+        {
+            LuaNumber version = _rootNodes.OfType<LuaAttribute>()
+                                          .FirstOrDefault(a => a.Name == "astver")
+                                          ?.Value as LuaNumber;
+            return version?.Value switch
+                   {
+                       null => GetStringNodesV1(),
+                       "2.0" => GetStringNodesV2(),
+                       _ => throw new NotSupportedException($".ast with version {version} is not supported")
+                   };
+        }
+
+        private IEnumerable<(ILuaNode, ScriptStringType)> GetStringNodesV1()
+        {
+            LuaTable texts = _ast["text"] as LuaTable;
+            if (texts == null)
+                yield break;
+
+            foreach (LuaTable text in texts.OfType<LuaAttribute>()
+                                           .Select(a => a.Value)
+                                           .OfType<LuaTable>())
+            {
+                LuaString name = (text["name"] as LuaTable)?["name"] as LuaString;
+                if (name != null)
+                    yield return (name, ScriptStringType.CharacterName);
+
+                LuaTable select = text["select"] as LuaTable;
+                if (select != null)
+                {
+                    foreach (LuaString choice in select.OfType<LuaString>())
+                    {
+                        yield return (choice, ScriptStringType.Message);
+                    }
+                }
+
+                LuaTable message = text.OfType<LuaTable>().FirstOrDefault();
+                if (message != null)
+                    yield return (message, ScriptStringType.Message);
+            }
+        }
+
+        private IEnumerable<(ILuaNode, ScriptStringType)> GetStringNodesV2()
         {
             foreach (LuaTable block in _ast.OfType<LuaAttribute>()
                                            .Select(a => a.Value)
                                            .OfType<LuaTable>())
             {
-                LuaTable text = block["text"] as LuaTable;
-                if (text == null)
-                    continue;
+                LuaTable select = (block["select"] as LuaTable)?["ja"] as LuaTable;
+                if (select != null)
+                {
+                    foreach (LuaString choice in select.OfType<LuaString>())
+                    {
+                        yield return (choice, ScriptStringType.Message);
+                    }
+                }
 
-                LuaTable ja = text["ja"] as LuaTable;
-                if (ja == null || ja.Count != 1)
-                    continue;
+                LuaTable text = (block["text"] as LuaTable)?["ja"] as LuaTable;
+                if (text != null && text.Count == 1)
+                {
+                    LuaTable message = text[0] as LuaTable;
+                    if (message == null)
+                        continue;
 
-                LuaTable line = ja[0] as LuaTable;
-                if (line == null)
-                    continue;
+                    LuaTable names = message["name"] as LuaTable;
+                    if (names != null)
+                    {
+                        foreach (LuaString name in names.OfType<LuaString>())
+                        {
+                            yield return (name, ScriptStringType.CharacterName);
+                        }
+                    }
 
-                yield return line;
+                    yield return (message, ScriptStringType.Message);
+                }
             }
         }
 
-        private static void TableToCommand(LuaTable table, StringBuilder cmd)
+        private string SerializeMessage(LuaTable message)
+        {
+            StringBuilder text = new StringBuilder();
+            foreach (ILuaNode item in message)
+            {
+                switch (item)
+                {
+                    case LuaString str:
+                        text.Append(str.Value);
+                        break;
+
+                    case LuaTable table:
+                        if (table.Count == 1 && table[0] is LuaString cmdName && cmdName.Value == "rt2")
+                            text.AppendLine();
+                        else
+                            SerializeCommand(table, text);
+
+                        break;
+                }
+            }
+
+            return text.ToString().Trim();
+        }
+
+        private void DeserializeMessage(string text, LuaTable table)
+        {
+            table.RemoveAll(n => !(n is LuaAttribute));
+            foreach ((string segment, Match match) in StringUtil.GetMatchingAndSurroundingTexts(text, new Regex(@"\r\n|\[.+?\]")))
+            {
+                if (segment != null)
+                    table.Add(new LuaString(segment));
+                else if (match.Value == "\r\n")
+                    table.Add(new LuaTable { new LuaString("rt2") });
+                else
+                    table.Add(DeserializeCommand(match.Value));
+            }
+        }
+
+        private static void SerializeCommand(LuaTable table, StringBuilder cmd)
         {
             cmd.Append("[");
 
@@ -168,7 +228,7 @@ namespace VNTextPatch.Shared.Scripts.Artemis
             cmd.Append("]");
         }
 
-        private static LuaTable CommandToTable(string cmd)
+        private static LuaTable DeserializeCommand(string cmd)
         {
             Match match = CommandRegex.Match(cmd);
             if (!match.Success)
