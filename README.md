@@ -1,27 +1,30 @@
 # VNTextPatch
 A tool for extracting original text from, and patching translated text into, a variety of visual novel formats. Currently the following engines are supported:
-* AdvHD (.ws2)
-* ArcGameEngine (.bin)
-* Artemis (.asb/.ast/.txt; append `--format=artemistxt` to command line for .txt)
-* Buriko General Interpreter/Ethornell (no file extension; rename to .bgi or append `--format=ethornell` to command line)
-* CatSystem2 (.cst)
-* Cyberworks C,system (.a0)
-* KaGuYa (message.dat)
-* Kirikiri (.ks/.scn)
-* Majiro (.mjo)
-* Musica (.sc)
-* Mware (.nut)
-* Propeller/Stuff Script Engine (.msc)
-* RealLive (.txt; rename to .rl or append `--format=reallive` to command line)
-* Ren'Py (.rpy)
-* ShSystem (.hst)
-* Silky's/AI6WIN (.mes/.map)
-* Qlie (.s)
-* Softpal (script.src - make sure text.dat and point.dat are available in the same folder)
-* SystemNNN (.nnn/.spt)
-* TmrHiroAdvSystem (.srp/extensionless - append `--format=tmrhiroadvsystemtext` to command line for the latter)
-* Whale (.txt; append `--format=whale` to command line)
-* YU-RIS (.ybn)
+
+| Engine                               | Extension(s)   | Remarks                                                                        |
+| ------------------------------------ | -------------- | ------------------------------------------------------------------------------ |
+| AdvHD                                | .ws2           |                                                                                |
+| ArcGameEngine                        | .bin           |                                                                                |
+| Artemis                              | .asb/.ast/.txt | Append `--format=artemistxt` to command line for .txt                          |
+| Buriko General Interpreter/Ethornell | (none)         | Append `--format=ethornell` to command line                                    |
+| CatSystem2                           | .cst           |                                                                                |
+| Cyberworks C,system                  | .a0            |                                                                                |
+| KaGuYa                               |  message.dat   |                                                                                |
+| Kirikiri                             |  .ks/.scn/.txt | Append `--format=kirikiriks` to command line for .txt                          |
+| Majiro                               | .mjo           |                                                                                |
+| Musica                               | .sc            |                                                                                |
+| Mware                                | .nut           |                                                                                |
+| Propeller/Stuff Script Engine        | .msc           |                                                                                |
+| RealLive                             | .txt           | Append `--format=reallive` to command line                                     |
+| Ren'Py                               | .rpy           |                                                                                |
+| ShSystem                             | .hst           |                                                                                |
+| Silky's/AI6WIN                       | .mes/.map      |                                                                                |
+| Qlie                                 | .s             |                                                                                |
+| Softpal                              | script.src     | Make sure text.dat and point.dat are available in the same folder              |
+| SystemNNN                            | .nnn/.spt      |                                                                                |
+| TmrHiroAdvSystem                     | .srp/(none)    | Append `--format=tmrhiroadvsystemtext` to command line in case of no extension |
+| Whale                                | .txt           | Append `--format=whale` to command line                                        |
+| YU-RIS                               | .ybn           |                                                                                |
 
 The tool can extract text into Excel workbooks (.xlsx) or JSON files (.json), and reinsert text from Excel, JSON, or Google Docs Spreadsheets. Working with .xlsx files does not require Microsoft Excel to be installed.
 
