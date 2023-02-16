@@ -36,5 +36,6 @@ private:
     {
         FONTENUMPROCA OriginalProc;
         LPARAM OriginalContext;
+        bool Extended;
     };
 };

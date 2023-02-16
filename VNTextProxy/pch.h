@@ -14,6 +14,7 @@
 #include <gdiplus.h>
 #include <Mmreg.h>
 #include <msctf.h>
+#include <MSAcm.h>
 
 #include <codecvt>
 #include <cstdlib>

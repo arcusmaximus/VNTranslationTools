@@ -28,6 +28,7 @@ int GdiProportionalizer::EnumFontsAHook(HDC hdc, LPCSTR lpLogfont, FONTENUMPROCA
     EnumFontsContext context;
     context.OriginalProc = lpProc;
     context.OriginalContext = lParam;
+    context.Extended = false;
     return EnumFontsW(hdc, lpLogfont != nullptr ? SjisTunnelEncoding::Decode(lpLogfont).c_str() : nullptr, &EnumFontsProc, (LPARAM)&context);
 }
 
@@ -37,15 +38,26 @@ int GdiProportionalizer::EnumFontFamiliesExAHook(HDC hdc, LPLOGFONTA lpLogfont, 
     EnumFontsContext context;
     context.OriginalProc = lpProc;
     context.OriginalContext = lParam;
+    context.Extended = true;
     return EnumFontFamiliesExW(hdc, &logFontW, &EnumFontsProc, (LPARAM)&context, dwFlags);
 }
 
 int GdiProportionalizer::EnumFontsProc(const LOGFONTW* lplf, const TEXTMETRICW* lptm, DWORD dwType, LPARAM lpData)
 {
     EnumFontsContext* pContext = (EnumFontsContext*)lpData;
-    LOGFONTA logFontA = ConvertLogFontWToA(*lplf);
+    ENUMLOGFONTEXDVA logFontExA;
+    logFontExA.elfEnumLogfontEx.elfLogFont = ConvertLogFontWToA(*lplf);
+    if (pContext->Extended)
+    {
+        ENUMLOGFONTEXDVW* pLogFontExW = (ENUMLOGFONTEXDVW*)lplf;
+        strcpy_s((char*)logFontExA.elfEnumLogfontEx.elfFullName, sizeof(logFontExA.elfEnumLogfontEx.elfFullName), SjisTunnelEncoding::Encode(pLogFontExW->elfEnumLogfontEx.elfFullName).c_str());
+        strcpy_s((char*)logFontExA.elfEnumLogfontEx.elfScript,   sizeof(logFontExA.elfEnumLogfontEx.elfScript),   SjisTunnelEncoding::Encode(pLogFontExW->elfEnumLogfontEx.elfScript).c_str());
+        strcpy_s((char*)logFontExA.elfEnumLogfontEx.elfStyle,    sizeof(logFontExA.elfEnumLogfontEx.elfStyle),    SjisTunnelEncoding::Encode(pLogFontExW->elfEnumLogfontEx.elfStyle).c_str());
+        logFontExA.elfDesignVector = pLogFontExW->elfDesignVector;
+    }
+
     TEXTMETRICA textMetricA = ConvertTextMetricWToA(*lptm);
-    return pContext->OriginalProc(&logFontA, &textMetricA, dwType, pContext->OriginalContext);
+    return pContext->OriginalProc(&logFontExA.elfEnumLogfontEx.elfLogFont, &textMetricA, dwType, pContext->OriginalContext);
 }
 
 HFONT GdiProportionalizer::CreateFontAHook(int cHeight, int cWidth, int cEscapement, int cOrientation, int cWeight,
