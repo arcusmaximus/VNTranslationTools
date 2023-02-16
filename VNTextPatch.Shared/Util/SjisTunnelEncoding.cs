@@ -9,7 +9,7 @@ namespace VNTextPatch.Shared.Util
     {
         private static readonly Encoding SjisEncoding = GetEncoding(932, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
 
-        private readonly char[] _charArray = new char[1];
+        private readonly byte[] _byteArray = new byte[2];
         private readonly Dictionary<char, char> _mappings = new Dictionary<char, char>();
 
         public SjisTunnelEncoding()
@@ -30,15 +30,10 @@ namespace VNTextPatch.Shared.Util
 
                 if (!tunneled)
                 {
-                    try
-                    {
-                        _charArray[0] = str[i];
-                        byteCount += SjisEncoding.GetByteCount(_charArray);
-                    }
-                    catch
-                    {
+                    if (TrySjisEncode(str, i, 1, _byteArray, 0, out int charByteCount))
+                        byteCount += charByteCount;
+                    else
                         tunneled = true;
-                    }
                 }
 
                 if (tunneled)
