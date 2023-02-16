@@ -170,6 +170,12 @@ BOOL GdiProportionalizer::TextOutAHook(HDC dc, int x, int y, LPCSTR pString, int
 {
     wstring text = SjisTunnelEncoding::Decode(pString, count);
     Font* pFont = CurrentFonts[dc];
+    if (pFont == nullptr)
+    {
+        pFont = FontManager.FetchFont(L"System", 12, false, false, false);
+        SelectObjectHook(dc, pFont->GetGdiHandle());
+    }
+
     if (!AdaptRenderArgs(text.c_str(), text.size(), pFont->GetHeight(), x, y))
         return false;
 
