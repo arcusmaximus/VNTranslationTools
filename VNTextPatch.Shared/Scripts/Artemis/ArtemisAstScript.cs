@@ -169,7 +169,7 @@ namespace VNTextPatch.Shared.Scripts.Artemis
             }
         }
 
-        private string SerializeMessage(LuaTable message)
+        private static string SerializeMessage(LuaTable message)
         {
             StringBuilder text = new StringBuilder();
             foreach (ILuaNode item in message)
@@ -193,7 +193,7 @@ namespace VNTextPatch.Shared.Scripts.Artemis
             return text.ToString().Trim();
         }
 
-        private void DeserializeMessage(string text, LuaTable table)
+        private static void DeserializeMessage(string text, LuaTable table)
         {
             table.RemoveAll(n => !(n is LuaAttribute));
             foreach ((string segment, Match match) in StringUtil.GetMatchingAndSurroundingTexts(text, new Regex(@"\r\n|\[.+?\]")))
