@@ -177,7 +177,7 @@ namespace VNTextPatch.Shared.Scripts.Yuris
 
         private IEnumerable<List<YurisAttribute>> GetStringAttributeGroups()
         {
-            bool gameUsesPageBreaks = GetAttributes().Any(a => (GetAttributeValue(a) ?? "").Contains("\\p"));
+            // bool gameUsesPageBreaks = GetAttributes().Any(a => (GetAttributeValue(a) ?? "").Contains("\\p"));
 
             using IEnumerator<YurisAttribute> attrEnumerator = GetAttributes().GetEnumerator();
             List<YurisAttribute> commandAttrs = new List<YurisAttribute>();
@@ -195,7 +195,7 @@ namespace VNTextPatch.Shared.Scripts.Yuris
 
                 IEnumerable<YurisAttribute> commandStringAttrs = GetStringAttributes(command, commandAttrs).Where(a => a.ValueLength > 0);
                 if (command.Id == _wordCommandId ||
-                    command.Id == _returnCodeCommandId && commandAttrs[0].ValueLength == 0 && gameUsesPageBreaks ||
+                    // command.Id == _returnCodeCommandId && commandAttrs[0].ValueLength == 0 && gameUsesPageBreaks ||
                     command.Id == _evalCommandId && !(GetAttributeValue(commandAttrs[0]) ?? "").Contains("\\p"))
                 {
                     stringAttrs.AddRange(commandStringAttrs);
